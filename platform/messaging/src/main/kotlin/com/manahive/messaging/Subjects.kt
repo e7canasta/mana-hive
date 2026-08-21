@@ -1,0 +1,24 @@
+package com.manahive.messaging
+
+import com.manahive.kernel.AlertId
+import com.manahive.kernel.BedId
+import com.manahive.kernel.ResidentId
+
+/**
+ * The subject taxonomy of the bus. Version is part of the subject: a breaking
+ * change is a NEW subject, and old consumers keep working until retired.
+ */
+public object Subjects {
+    public fun perceptionObservation(bed: BedId): String = "perception.observation.v1.${bed.value}"
+    public fun sceneFact(bed: BedId): String = "scene.fact.v1.${bed.value}"
+    public fun sentinelSignal(bed: BedId): String = "sentinel.signal.v1.${bed.value}"
+    public fun alarmEvent(alert: AlertId): String = "alarm.event.v1.${alert.value}"
+    public fun effectiveRules(resident: ResidentId): String = "hub.policy.effective-rules.v1.${resident.value}"
+
+    public const val CENSUS_SNAPSHOT: String = "hub.census.snapshot.v1"
+
+    public const val PERCEPTION_WILDCARD: String = "perception.observation.v1.>"
+    public const val SCENE_WILDCARD: String = "scene.fact.v1.>"
+    public const val SENTINEL_WILDCARD: String = "sentinel.signal.v1.>"
+    public const val ALARM_WILDCARD: String = "alarm.event.v1.>"
+}

@@ -1,0 +1,10 @@
+spring:
+  application:
+    name: vigia
+
+manahive:
+  nats:
+    url: nats://localhost:4222
+    durable: vigia
+  delivery:
+    adapter: console

@@ -1,0 +1,12 @@
+spring:
+  application:
+    name: scene-engine
+
+manahive:
+  nats:
+    url: nats://localhost:4222
+    durable: scene-engine
+  sweep:
+    interval: 5s
+  calibration:
+    heartbeat-timeout: 90s

@@ -1,0 +1,10 @@
+spring:
+  application:
+    name: sentinel
+
+manahive:
+  nats:
+    url: nats://localhost:4222
+    durable: sentinel
+  fatigue:
+    max-interruptions-per-shift: 12

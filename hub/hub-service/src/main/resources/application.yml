@@ -1,0 +1,12 @@
+spring:
+  application:
+    name: hub
+  datasource:
+    url: jdbc:postgresql://localhost:5432/manahive
+    username: manahive
+    password: manahive
+
+manahive:
+  nats:
+    url: nats://localhost:4222
+    durable: hub-ingest
