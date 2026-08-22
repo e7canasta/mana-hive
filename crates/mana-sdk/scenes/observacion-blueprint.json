@@ -1,0 +1,361 @@
+{
+  "meta": {
+    "id": "observacion-blueprint",
+    "title": "Blueprint de observacion",
+    "description": "Ingesta idempotente, monitor_key sin resolver, proyeccion, board y resumenes diarios",
+    "requires_demo_seed": true
+  },
+  "context": "observacion",
+  "commands": [
+    {
+      "name": "login",
+      "action": "login",
+      "args": { "username": "admin", "password_default": "mana123" },
+      "capture": "login"
+    },
+    {
+      "name": "crear facility",
+      "action": "facilities.create",
+      "args": { "name": "Hogar Observacion", "timezone": "America/Argentina/Buenos_Aires" },
+      "capture": "facility",
+      "status": 201
+    },
+    {
+      "name": "crear wing",
+      "action": "wings.create",
+      "args": { "facility_id": "{{facility.id}}", "name": "Ala Observacion", "floor": "1" },
+      "capture": "wing",
+      "status": 201
+    },
+    {
+      "name": "crear room",
+      "action": "rooms.create",
+      "args": { "wing_id": "{{wing.id}}", "number": "201", "type": "standard", "stream_key": "home-obs-201" },
+      "capture": "room",
+      "status": 201
+    },
+    {
+      "name": "crear bed",
+      "action": "beds.create",
+      "args": { "room_id": "{{room.id}}", "label": "201-A", "monitor_key": "mana-camera-obs-201" },
+      "capture": "bed",
+      "status": 201
+    },
+    {
+      "name": "crear residente",
+      "action": "residents.create",
+      "args": { "full_name": "Observacion Test Resident", "admission_date": "2025-03-01" },
+      "capture": "resident",
+      "status": 201
+    },
+    {
+      "name": "asignar cama",
+      "action": "residents.assignments.create",
+      "args": { "resident_id": "{{resident.resident.id}}", "bed_id": "{{bed.id}}" },
+      "capture": "assignment",
+      "status": 201
+    },
+    {
+      "name": "OBS-01 ingestar evento resuelto",
+      "action": "custom",
+      "args": {
+        "method": "POST",
+        "path": "/internal/v1/events",
+        "headers": { "x-clinical-secret": "clinical-dev-secret" },
+        "body": {
+          "source_event_id": "evt-obs-001",
+          "monitor_key": "mana-camera-obs-201",
+          "kind": "room_state",
+          "room_state": "occupied",
+          "state": "laying_in_bed",
+          "occurred_at": "2026-08-18T02:00:00.000Z"
+        }
+      },
+      "capture": "evento1",
+      "status": 201,
+      "assert": { "resolved": true, "duplicate": false }
+    },
+    {
+      "name": "OBS-02 reintento del bridge es idempotente",
+      "action": "custom",
+      "args": {
+        "method": "POST",
+        "path": "/internal/v1/events",
+        "headers": { "x-clinical-secret": "clinical-dev-secret" },
+        "body": {
+          "source_event_id": "evt-obs-001",
+          "monitor_key": "mana-camera-obs-201",
+          "kind": "room_state",
+          "state": "standing",
+          "occurred_at": "2026-08-18T02:00:00.000Z"
+        }
+      },
+      "status": 200,
+      "assert": { "duplicate": true }
+    },
+    {
+      "name": "OBS-03 la proyeccion conserva el primer estado",
+      "action": "custom",
+      "args": {
+        "method": "GET",
+        "path": "/api/v1/residents/{{resident.resident.id}}/current-state"
+      },
+      "assert": { "current_state.state": "laying_in_bed" }
+    },
+    {
+      "name": "OBS-04 monitor_key sin vincular no tira el evento",
+      "action": "custom",
+      "args": {
+        "method": "POST",
+        "path": "/internal/v1/events",
+        "headers": { "x-clinical-secret": "clinical-dev-secret" },
+        "body": {
+          "source_event_id": "evt-obs-huerfano",
+          "monitor_key": "mana-camera-sin-vincular",
+          "kind": "room_state",
+          "state": "standing",
+          "occurred_at": "2026-08-18T02:05:00.000Z"
+        }
+      },
+      "status": 201,
+      "assert": { "resolved": false }
+    },
+    {
+      "name": "OBS-05 cambio de estado se proyecta",
+      "action": "custom",
+      "args": {
+        "method": "POST",
+        "path": "/internal/v1/events",
+        "headers": { "x-clinical-secret": "clinical-dev-secret" },
+        "body": {
+          "source_event_id": "evt-obs-002",
+          "monitor_key": "mana-camera-obs-201",
+          "kind": "room_state",
+          "state": "standing",
+          "sleeping": false,
+          "occurred_at": "2026-08-18T02:10:00.000Z"
+        }
+      },
+      "status": 201
+    },
+    {
+      "name": "OBS-06 eventos del residente",
+      "action": "custom",
+      "args": {
+        "method": "GET",
+        "path": "/api/v1/residents/{{resident.resident.id}}/events"
+      },
+      "assert": { "events.length": 2 }
+    },
+    {
+      "name": "OBS-07 el board muestra la cama y los huerfanos",
+      "action": "custom",
+      "args": {
+        "method": "GET",
+        "path": "/api/v1/wings/{{wing.id}}/board"
+      },
+      "assert": { "rooms.length": 1, "rooms.0.beds.0.current_state.state": "standing" }
+    },
+    {
+      "name": "OBS-08 habitaciones del companion",
+      "action": "custom",
+      "args": { "method": "GET", "path": "/api/v1/companion/rooms" }
+    },
+    {
+      "name": "OBS-09 autorizar mirada al stream",
+      "action": "custom",
+      "args": { "method": "POST", "path": "/api/v1/rooms/{{room.id}}/peek" },
+      "assert": { "stream_key": "home-obs-201" }
+    },
+    {
+      "name": "OBS-10 ingestar resumen de sueno",
+      "action": "custom",
+      "args": {
+        "method": "POST",
+        "path": "/internal/v1/clinical/sleep-summaries",
+        "headers": { "x-clinical-secret": "clinical-dev-secret" },
+        "body": {
+          "source_record_id": "sleep-obs-001",
+          "resident_id": "{{resident.resident.id}}",
+          "observed_on": "2026-08-17",
+          "calm_minutes": 320,
+          "restless_minutes": 40,
+          "awake_minutes": 25,
+          "out_of_bed_minutes": 15,
+          "bed_exit_count": 2,
+          "wake_count": 3,
+          "source": "percepcion",
+          "model_version": "v1",
+          "confidence": 0.88
+        }
+      },
+      "status": 201,
+      "assert": { "replaced": false }
+    },
+    {
+      "name": "OBS-11 recalcular el dia reemplaza, no duplica",
+      "action": "custom",
+      "args": {
+        "method": "POST",
+        "path": "/internal/v1/clinical/sleep-summaries",
+        "headers": { "x-clinical-secret": "clinical-dev-secret" },
+        "body": {
+          "source_record_id": "sleep-obs-002",
+          "resident_id": "{{resident.resident.id}}",
+          "observed_on": "2026-08-17",
+          "calm_minutes": 340,
+          "restless_minutes": 30,
+          "awake_minutes": 20,
+          "out_of_bed_minutes": 10,
+          "bed_exit_count": 2,
+          "wake_count": 3,
+          "source": "percepcion",
+          "model_version": "v2",
+          "confidence": 0.93
+        }
+      },
+      "status": 200,
+      "assert": { "replaced": true }
+    },
+    {
+      "name": "OBS-12 salir de la cama sin despertarse se rechaza",
+      "action": "custom",
+      "args": {
+        "method": "POST",
+        "path": "/internal/v1/clinical/sleep-summaries",
+        "headers": { "x-clinical-secret": "clinical-dev-secret" },
+        "body": {
+          "source_record_id": "sleep-obs-003",
+          "resident_id": "{{resident.resident.id}}",
+          "observed_on": "2026-08-16",
+          "calm_minutes": 300,
+          "restless_minutes": 30,
+          "awake_minutes": 20,
+          "out_of_bed_minutes": 10,
+          "bed_exit_count": 5,
+          "wake_count": 1,
+          "source": "percepcion",
+          "model_version": "v1"
+        }
+      },
+      "status": 422
+    },
+    {
+      "name": "OBS-13 sueno del residente con eficiencia calculada",
+      "action": "custom",
+      "args": {
+        "method": "GET",
+        "path": "/api/v1/residents/{{resident.resident.id}}/sleep"
+      },
+      "assert": { "summaries.length": 1, "summaries.0.calm_minutes": 340 }
+    },
+    {
+      "name": "OBS-14 ingestar movilidad",
+      "action": "custom",
+      "args": {
+        "method": "POST",
+        "path": "/internal/v1/clinical/mobility-summaries",
+        "headers": { "x-clinical-secret": "clinical-dev-secret" },
+        "body": {
+          "source_record_id": "mob-obs-001",
+          "resident_id": "{{resident.resident.id}}",
+          "observed_on": "2026-08-17",
+          "in_bed_minutes": 600,
+          "out_of_bed_minutes": 300,
+          "out_of_sight_minutes": 60,
+          "walking_minutes": 90,
+          "distance_meters": 420.5,
+          "transfer_count": 6,
+          "source": "percepcion",
+          "model_version": "v1"
+        }
+      },
+      "status": 201
+    },
+    {
+      "name": "OBS-15 caminar no puede superar estar fuera de la cama",
+      "action": "custom",
+      "args": {
+        "method": "POST",
+        "path": "/internal/v1/clinical/mobility-summaries",
+        "headers": { "x-clinical-secret": "clinical-dev-secret" },
+        "body": {
+          "source_record_id": "mob-obs-002",
+          "resident_id": "{{resident.resident.id}}",
+          "observed_on": "2026-08-16",
+          "in_bed_minutes": 600,
+          "out_of_bed_minutes": 60,
+          "out_of_sight_minutes": 30,
+          "walking_minutes": 200,
+          "transfer_count": 3,
+          "source": "percepcion",
+          "model_version": "v1"
+        }
+      },
+      "status": 422
+    },
+    {
+      "name": "OBS-16 ingestar bano",
+      "action": "custom",
+      "args": {
+        "method": "POST",
+        "path": "/internal/v1/clinical/bathroom-summaries",
+        "headers": { "x-clinical-secret": "clinical-dev-secret" },
+        "body": {
+          "source_record_id": "bath-obs-001",
+          "resident_id": "{{resident.resident.id}}",
+          "observed_on": "2026-08-17",
+          "visit_count": 6,
+          "night_visit_count": 2,
+          "assisted_count": 1,
+          "total_minutes": 48,
+          "longest_visit_minutes": 12,
+          "source": "percepcion",
+          "model_version": "v1"
+        }
+      },
+      "status": 201
+    },
+    {
+      "name": "OBS-17 visitas nocturnas no pueden superar el total",
+      "action": "custom",
+      "args": {
+        "method": "POST",
+        "path": "/internal/v1/clinical/bathroom-summaries",
+        "headers": { "x-clinical-secret": "clinical-dev-secret" },
+        "body": {
+          "source_record_id": "bath-obs-002",
+          "resident_id": "{{resident.resident.id}}",
+          "observed_on": "2026-08-16",
+          "visit_count": 3,
+          "night_visit_count": 9,
+          "assisted_count": 1,
+          "total_minutes": 30,
+          "longest_visit_minutes": 10,
+          "source": "percepcion",
+          "model_version": "v1"
+        }
+      },
+      "status": 422
+    },
+    {
+      "name": "OBS-18 timeline junta los tres ejes",
+      "action": "custom",
+      "args": {
+        "method": "GET",
+        "path": "/api/v1/residents/{{resident.resident.id}}/timeline"
+      },
+      "assert": { "sleep.length": 1, "mobility.length": 1, "bathroom.length": 1 }
+    },
+    {
+      "name": "OBS-19 reporte de residencia",
+      "action": "custom",
+      "args": { "method": "GET", "path": "/api/v1/reports/summary" }
+    },
+    {
+      "name": "logout",
+      "action": "logout",
+      "args": {}
+    }
+  ]
+}

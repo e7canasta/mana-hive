@@ -1,0 +1,412 @@
+openapi: 3.1.0
+info:
+  title: Virtual Rounds Hub API
+  version: 0.1.0
+  description: >-
+    Contrato HTTP independiente del runtime. El archivo se mantiene a mano;
+    los DTOs Rust y los clientes TypeScript son implementaciones separadas.
+servers:
+  - url: http://localhost:8780
+    description: Desarrollo local
+tags:
+  - name: platform
+  - name: identity
+  - name: audit
+  - name: residence
+  - name: poblacion
+  - name: cobertura
+  - name: cuidado
+  - name: historia
+  - name: politica
+  - name: vigilancia
+  - name: observacion
+paths:
+  /health:
+    $ref: './modulos/plataforma.yaml#/paths/~1health'
+  /api/v1/auth/login:
+    $ref: './modulos/identidad.yaml#/paths/~1api~1v1~1auth~1login'
+  /api/v1/auth/me:
+    $ref: './modulos/identidad.yaml#/paths/~1api~1v1~1auth~1me'
+  /api/v1/auth/logout:
+    $ref: './modulos/identidad.yaml#/paths/~1api~1v1~1auth~1logout'
+  /api/v1/users:
+    $ref: './modulos/identidad.yaml#/paths/~1api~1v1~1users'
+  /api/v1/users/{userId}:
+    $ref: './modulos/identidad.yaml#/paths/~1api~1v1~1users~1{userId}'
+  /api/v1/audit-log:
+    $ref: './modulos/auditoria.yaml#/paths/~1api~1v1~1audit-log'
+  /api/v1/facilities:
+    $ref: './modulos/residencia.yaml#/paths/~1api~1v1~1facilities'
+  /api/v1/facilities/{facilityId}:
+    $ref: './modulos/residencia.yaml#/paths/~1api~1v1~1facilities~1{facilityId}'
+  /api/v1/facilities/{facilityId}/wings:
+    $ref: './modulos/residencia.yaml#/paths/~1api~1v1~1facilities~1{facilityId}~1wings'
+  /api/v1/wings:
+    $ref: './modulos/residencia.yaml#/paths/~1api~1v1~1wings'
+  /api/v1/wings/{wingId}:
+    $ref: './modulos/residencia.yaml#/paths/~1api~1v1~1wings~1{wingId}'
+  /api/v1/wings/{wingId}/rooms:
+    $ref: './modulos/residencia.yaml#/paths/~1api~1v1~1wings~1{wingId}~1rooms'
+  /api/v1/wings/{wingId}/planogram:
+    $ref: './modulos/residencia.yaml#/paths/~1api~1v1~1wings~1{wingId}~1planogram'
+  /api/v1/rooms/{roomId}:
+    $ref: './modulos/residencia.yaml#/paths/~1api~1v1~1rooms~1{roomId}'
+  /api/v1/rooms/{roomId}/beds:
+    $ref: './modulos/residencia.yaml#/paths/~1api~1v1~1rooms~1{roomId}~1beds'
+  /api/v1/rooms/{roomId}/privacy-regions:
+    $ref: './modulos/residencia.yaml#/paths/~1api~1v1~1rooms~1{roomId}~1privacy-regions'
+  /api/v1/beds:
+    $ref: './modulos/residencia.yaml#/paths/~1api~1v1~1beds'
+  /api/v1/beds/{bedId}:
+    $ref: './modulos/residencia.yaml#/paths/~1api~1v1~1beds~1{bedId}'
+  /api/v1/residents:
+    $ref: './modulos/poblacion.yaml#/paths/~1api~1v1~1residents'
+  /api/v1/residents/{residentId}:
+    $ref: './modulos/poblacion.yaml#/paths/~1api~1v1~1residents~1{residentId}'
+  /api/v1/residents/{residentId}/discharge:
+    $ref: './modulos/poblacion.yaml#/paths/~1api~1v1~1residents~1{residentId}~1discharge'
+  /api/v1/residents/{residentId}/assignments:
+    $ref: './modulos/poblacion.yaml#/paths/~1api~1v1~1residents~1{residentId}~1assignments'
+  /api/v1/beds/{bedId}/assignment:
+    $ref: './modulos/poblacion.yaml#/paths/~1api~1v1~1beds~1{bedId}~1assignment'
+  /api/v1/facilities/{facilityId}/shifts:
+    $ref: './modulos/cobertura.yaml#/paths/~1api~1v1~1facilities~1{facilityId}~1shifts'
+  /api/v1/staff-groups:
+    $ref: './modulos/cobertura.yaml#/paths/~1api~1v1~1staff-groups'
+  /api/v1/staff-groups/{groupId}:
+    $ref: './modulos/cobertura.yaml#/paths/~1api~1v1~1staff-groups~1{groupId}'
+  /api/v1/staff-groups/{groupId}/members:
+    $ref: './modulos/cobertura.yaml#/paths/~1api~1v1~1staff-groups~1{groupId}~1members'
+  /api/v1/wings/{wingId}/coverage:
+    $ref: './modulos/cobertura.yaml#/paths/~1api~1v1~1wings~1{wingId}~1coverage'
+  /api/v1/rounds:
+    $ref: './modulos/cuidado.yaml#/paths/~1api~1v1~1rounds'
+  /api/v1/rounds/current:
+    $ref: './modulos/cuidado.yaml#/paths/~1api~1v1~1rounds~1current'
+  /api/v1/rounds/{roundId}:
+    $ref: './modulos/cuidado.yaml#/paths/~1api~1v1~1rounds~1{roundId}'
+  /api/v1/round-tasks/{taskId}:
+    $ref: './modulos/cuidado.yaml#/paths/~1api~1v1~1round-tasks~1{taskId}'
+  /api/v1/residents/{residentId}/care:
+    $ref: './modulos/cuidado.yaml#/paths/~1api~1v1~1residents~1{residentId}~1care'
+  /api/v1/residents/{residentId}/notes:
+    $ref: './modulos/cuidado.yaml#/paths/~1api~1v1~1residents~1{residentId}~1notes'
+  /internal/v1/clinical/incidents:
+    $ref: './modulos/historia.yaml#/paths/~1internal~1v1~1clinical~1incidents'
+  /api/v1/residents/{residentId}/incidents:
+    $ref: './modulos/historia.yaml#/paths/~1api~1v1~1residents~1{residentId}~1incidents'
+  /api/v1/incidents/{incidentId}/sequence:
+    $ref: './modulos/historia.yaml#/paths/~1api~1v1~1incidents~1{incidentId}~1sequence'
+  /api/v1/incidents/{incidentId}/reviews:
+    $ref: './modulos/historia.yaml#/paths/~1api~1v1~1incidents~1{incidentId}~1reviews'
+  /api/v1/alarm-presets/catalog:
+    $ref: './modulos/politica.yaml#/paths/~1api~1v1~1alarm-presets~1catalog'
+  /api/v1/alarm-presets:
+    $ref: './modulos/politica.yaml#/paths/~1api~1v1~1alarm-presets'
+  /api/v1/alarm-presets/{residentId}:
+    $ref: './modulos/politica.yaml#/paths/~1api~1v1~1alarm-presets~1{residentId}'
+  /api/v1/alarm-presets/{residentId}/history:
+    $ref: './modulos/politica.yaml#/paths/~1api~1v1~1alarm-presets~1{residentId}~1history'
+  /api/v1/alarm-presets/apply-recommendations:
+    $ref: './modulos/politica.yaml#/paths/~1api~1v1~1alarm-presets~1apply-recommendations'
+  /api/v1/alarm-presets/autopilot:
+    $ref: './modulos/politica.yaml#/paths/~1api~1v1~1alarm-presets~1autopilot'
+  /api/v1/alarm-presets/{residentId}/apply-recommendation:
+    $ref: './modulos/politica.yaml#/paths/~1api~1v1~1alarm-presets~1{residentId}~1apply-recommendation'
+  /api/v1/alerts:
+    $ref: './modulos/vigilancia.yaml#/paths/~1api~1v1~1alerts'
+  /api/v1/alerts/{alertId}:
+    $ref: './modulos/vigilancia.yaml#/paths/~1api~1v1~1alerts~1{alertId}'
+  /api/v1/alerts/{alertId}/view:
+    $ref: './modulos/vigilancia.yaml#/paths/~1api~1v1~1alerts~1{alertId}~1view'
+  /api/v1/alerts/{alertId}/deliveries:
+    $ref: './modulos/vigilancia.yaml#/paths/~1api~1v1~1alerts~1{alertId}~1deliveries'
+  /api/v1/deliveries/{deliveryId}/events:
+    $ref: './modulos/vigilancia.yaml#/paths/~1api~1v1~1deliveries~1{deliveryId}~1events'
+  /internal/v1/events:
+    $ref: './modulos/observacion.yaml#/paths/~1internal~1v1~1events'
+  /internal/v1/clinical/sleep-summaries:
+    $ref: './modulos/observacion.yaml#/paths/~1internal~1v1~1clinical~1sleep-summaries'
+  /internal/v1/clinical/mobility-summaries:
+    $ref: './modulos/observacion.yaml#/paths/~1internal~1v1~1clinical~1mobility-summaries'
+  /internal/v1/clinical/bathroom-summaries:
+    $ref: './modulos/observacion.yaml#/paths/~1internal~1v1~1clinical~1bathroom-summaries'
+  /api/v1/wings/{wingId}/board:
+    $ref: './modulos/observacion.yaml#/paths/~1api~1v1~1wings~1{wingId}~1board'
+  /api/v1/companion/rooms:
+    $ref: './modulos/observacion.yaml#/paths/~1api~1v1~1companion~1rooms'
+  /api/v1/rooms/{roomId}/peek:
+    $ref: './modulos/observacion.yaml#/paths/~1api~1v1~1rooms~1{roomId}~1peek'
+  /api/v1/residents/{residentId}/current-state:
+    $ref: './modulos/observacion.yaml#/paths/~1api~1v1~1residents~1{residentId}~1current-state'
+  /api/v1/residents/{residentId}/events:
+    $ref: './modulos/observacion.yaml#/paths/~1api~1v1~1residents~1{residentId}~1events'
+  /api/v1/residents/{residentId}/sleep:
+    $ref: './modulos/observacion.yaml#/paths/~1api~1v1~1residents~1{residentId}~1sleep'
+  /api/v1/residents/{residentId}/mobility:
+    $ref: './modulos/observacion.yaml#/paths/~1api~1v1~1residents~1{residentId}~1mobility'
+  /api/v1/residents/{residentId}/bathroom:
+    $ref: './modulos/observacion.yaml#/paths/~1api~1v1~1residents~1{residentId}~1bathroom'
+  /api/v1/residents/{residentId}/timeline:
+    $ref: './modulos/observacion.yaml#/paths/~1api~1v1~1residents~1{residentId}~1timeline'
+  /api/v1/reports/summary:
+    $ref: './modulos/observacion.yaml#/paths/~1api~1v1~1reports~1summary'
+
+  /api/v1/incidents/{incidentId}:
+    $ref: './modulos/historia.yaml#/paths/~1api~1v1~1incidents~1{incidentId}'
+  "*":
+    $ref: './modulos/plataforma.yaml#/paths/*'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      $ref: './modulos/identidad.yaml#/components/securitySchemes/bearerAuth'
+  parameters:
+    UserId:
+      $ref: './modulos/identidad.yaml#/components/parameters/UserId'
+  schemas:
+    HealthResponse:
+      $ref: './modulos/plataforma.yaml#/components/schemas/HealthResponse'
+    LoginRequest:
+      $ref: './modulos/identidad.yaml#/components/schemas/LoginRequest'
+    LoginResponse:
+      $ref: './modulos/identidad.yaml#/components/schemas/LoginResponse'
+    AuthUser:
+      $ref: './modulos/identidad.yaml#/components/schemas/AuthUser'
+    AdminUser:
+      $ref: './modulos/identidad.yaml#/components/schemas/AdminUser'
+    Role:
+      $ref: './modulos/identidad.yaml#/components/schemas/Role'
+    CreateUserRequest:
+      $ref: './modulos/identidad.yaml#/components/schemas/CreateUserRequest'
+    UpdateUserRequest:
+      $ref: './modulos/identidad.yaml#/components/schemas/UpdateUserRequest'
+    AuditEntry:
+      $ref: './modulos/auditoria.yaml#/components/schemas/AuditEntry'
+    AuditResponse:
+      $ref: './modulos/auditoria.yaml#/components/schemas/AuditResponse'
+    Facility:
+      $ref: './modulos/residencia.yaml#/components/schemas/Facility'
+    FacilityDetail:
+      $ref: './modulos/residencia.yaml#/components/schemas/FacilityDetail'
+    FacilitiesResponse:
+      $ref: './modulos/residencia.yaml#/components/schemas/FacilitiesResponse'
+    FacilityResponse:
+      $ref: './modulos/residencia.yaml#/components/schemas/FacilityResponse'
+    Wing:
+      $ref: './modulos/residencia.yaml#/components/schemas/Wing'
+    WingsResponse:
+      $ref: './modulos/residencia.yaml#/components/schemas/WingsResponse'
+    WingResponse:
+      $ref: './modulos/residencia.yaml#/components/schemas/WingResponse'
+    Room:
+      $ref: './modulos/residencia.yaml#/components/schemas/Room'
+    RoomsResponse:
+      $ref: './modulos/residencia.yaml#/components/schemas/RoomsResponse'
+    RoomResponse:
+      $ref: './modulos/residencia.yaml#/components/schemas/RoomResponse'
+    Bed:
+      $ref: './modulos/residencia.yaml#/components/schemas/Bed'
+    BedsResponse:
+      $ref: './modulos/residencia.yaml#/components/schemas/BedsResponse'
+    BedResponse:
+      $ref: './modulos/residencia.yaml#/components/schemas/BedResponse'
+    ResidenceBed:
+      $ref: './modulos/residencia.yaml#/components/schemas/ResidenceBed'
+    ResidenceBedsResponse:
+      $ref: './modulos/residencia.yaml#/components/schemas/ResidenceBedsResponse'
+    PlanogramPlacement:
+      $ref: './modulos/residencia.yaml#/components/schemas/PlanogramPlacement'
+    PlanogramResponse:
+      $ref: './modulos/residencia.yaml#/components/schemas/PlanogramResponse'
+    PrivacyRegion:
+      $ref: './modulos/residencia.yaml#/components/schemas/PrivacyRegion'
+    PrivacyRegionsResponse:
+      $ref: './modulos/residencia.yaml#/components/schemas/PrivacyRegionsResponse'
+    CreateFacilityRequest:
+      $ref: './modulos/residencia.yaml#/components/schemas/CreateFacilityRequest'
+    UpdateFacilityRequest:
+      $ref: './modulos/residencia.yaml#/components/schemas/UpdateFacilityRequest'
+    CreateWingRequest:
+      $ref: './modulos/residencia.yaml#/components/schemas/CreateWingRequest'
+    UpdateWingRequest:
+      $ref: './modulos/residencia.yaml#/components/schemas/UpdateWingRequest'
+    CreateRoomRequest:
+      $ref: './modulos/residencia.yaml#/components/schemas/CreateRoomRequest'
+    UpdateRoomRequest:
+      $ref: './modulos/residencia.yaml#/components/schemas/UpdateRoomRequest'
+    CreateBedRequest:
+      $ref: './modulos/residencia.yaml#/components/schemas/CreateBedRequest'
+    UpdateBedRequest:
+      $ref: './modulos/residencia.yaml#/components/schemas/UpdateBedRequest'
+    SavePlanogramRequest:
+      $ref: './modulos/residencia.yaml#/components/schemas/SavePlanogramRequest'
+    SavePrivacyRegionsRequest:
+      $ref: './modulos/residencia.yaml#/components/schemas/SavePrivacyRegionsRequest'
+    Resident:
+      $ref: './modulos/poblacion.yaml#/components/schemas/ResidentRecord'
+    ResidentListItem:
+      $ref: './modulos/poblacion.yaml#/components/schemas/ResidentListItem'
+    ResidentsResponse:
+      $ref: './modulos/poblacion.yaml#/components/schemas/ResidentsResponse'
+    ResidentResponse:
+      $ref: './modulos/poblacion.yaml#/components/schemas/ResidentResponse'
+    BedAssignmentRecord:
+      $ref: './modulos/poblacion.yaml#/components/schemas/BedAssignmentRecord'
+    AssignmentsResponse:
+      $ref: './modulos/poblacion.yaml#/components/schemas/AssignmentsResponse'
+    AssignmentResponse:
+      $ref: './modulos/poblacion.yaml#/components/schemas/AssignmentResponse'
+    CreateResidentRequest:
+      $ref: './modulos/poblacion.yaml#/components/schemas/CreateResidentRequest'
+    UpdateResidentRequest:
+      $ref: './modulos/poblacion.yaml#/components/schemas/UpdateResidentRequest'
+    DischargeRequest:
+      $ref: './modulos/poblacion.yaml#/components/schemas/DischargeRequest'
+    AssignBedRequest:
+      $ref: './modulos/poblacion.yaml#/components/schemas/AssignBedRequest'
+    ShiftGridResponse:
+      $ref: './modulos/cobertura.yaml#/components/schemas/ShiftGridResponse'
+    StaffGroup:
+      $ref: './modulos/cobertura.yaml#/components/schemas/StaffGroup'
+    StaffGroupsResponse:
+      $ref: './modulos/cobertura.yaml#/components/schemas/StaffGroupsResponse'
+    StaffGroupResponse:
+      $ref: './modulos/cobertura.yaml#/components/schemas/StaffGroupResponse'
+    Member:
+      $ref: './modulos/cobertura.yaml#/components/schemas/Member'
+    MembersResponse:
+      $ref: './modulos/cobertura.yaml#/components/schemas/MembersResponse'
+    WingCoverage:
+      $ref: './modulos/cobertura.yaml#/components/schemas/WingCoverage'
+    CoveragesResponse:
+      $ref: './modulos/cobertura.yaml#/components/schemas/CoveragesResponse'
+    CoverageResponse:
+      $ref: './modulos/cobertura.yaml#/components/schemas/CoverageResponse'
+    Round:
+      $ref: './modulos/cuidado.yaml#/components/schemas/Round'
+    RoundTask:
+      $ref: './modulos/cuidado.yaml#/components/schemas/RoundTask'
+    CareNote:
+      $ref: './modulos/cuidado.yaml#/components/schemas/CareNote'
+    RoundResponse:
+      $ref: './modulos/cuidado.yaml#/components/schemas/RoundResponse'
+    RoundsResponse:
+      $ref: './modulos/cuidado.yaml#/components/schemas/RoundsResponse'
+    TaskResponse:
+      $ref: './modulos/cuidado.yaml#/components/schemas/TaskResponse'
+    NotesResponse:
+      $ref: './modulos/cuidado.yaml#/components/schemas/NotesResponse'
+    NoteResponse:
+      $ref: './modulos/cuidado.yaml#/components/schemas/NoteResponse'
+    IncidentView:
+      $ref: './modulos/historia.yaml#/components/schemas/IncidentView'
+    IncidentResponse:
+      $ref: './modulos/historia.yaml#/components/schemas/IncidentResponse'
+    IncidentsResponse:
+      $ref: './modulos/historia.yaml#/components/schemas/IncidentsResponse'
+    IngestResponse:
+      $ref: './modulos/historia.yaml#/components/schemas/IngestResponse'
+    IngestIncidentRequest:
+      $ref: './modulos/historia.yaml#/components/schemas/IngestIncidentRequest'
+    CreateReviewRequest:
+      $ref: './modulos/historia.yaml#/components/schemas/CreateReviewRequest'
+    AlarmCatalog:
+      $ref: './modulos/politica.yaml#/components/schemas/AlarmCatalog'
+    AlarmGroup:
+      $ref: './modulos/politica.yaml#/components/schemas/AlarmGroup'
+    AlarmRule:
+      $ref: './modulos/politica.yaml#/components/schemas/AlarmRule'
+    AlarmPreset:
+      $ref: './modulos/politica.yaml#/components/schemas/AlarmPreset'
+    ProfileVersion:
+      $ref: './modulos/politica.yaml#/components/schemas/ProfileVersion'
+    PresetResponse:
+      $ref: './modulos/politica.yaml#/components/schemas/PresetResponse'
+    PresetsResponse:
+      $ref: './modulos/politica.yaml#/components/schemas/PresetsResponse'
+    ProfileHistoryResponse:
+      $ref: './modulos/politica.yaml#/components/schemas/ProfileHistoryResponse'
+    UpdatePresetRequest:
+      $ref: './modulos/politica.yaml#/components/schemas/UpdatePresetRequest'
+    ApplyRecommendationRequest:
+      $ref: './modulos/politica.yaml#/components/schemas/ApplyRecommendationRequest'
+    ApplyBulkRequest:
+      $ref: './modulos/politica.yaml#/components/schemas/ApplyBulkRequest'
+    CreateAlertRequest:
+      $ref: './modulos/vigilancia.yaml#/components/schemas/CreateAlertRequest'
+    TransitionAlertRequest:
+      $ref: './modulos/vigilancia.yaml#/components/schemas/TransitionAlertRequest'
+    CreateDeliveryRequest:
+      $ref: './modulos/vigilancia.yaml#/components/schemas/CreateDeliveryRequest'
+    AddDeliveryEventRequest:
+      $ref: './modulos/vigilancia.yaml#/components/schemas/AddDeliveryEventRequest'
+    AlertView:
+      $ref: './modulos/vigilancia.yaml#/components/schemas/AlertView'
+    EscalationView:
+      $ref: './modulos/vigilancia.yaml#/components/schemas/EscalationView'
+    DeliverySummaryView:
+      $ref: './modulos/vigilancia.yaml#/components/schemas/DeliverySummaryView'
+    DeliveryView:
+      $ref: './modulos/vigilancia.yaml#/components/schemas/DeliveryView'
+    DeliveryEventView:
+      $ref: './modulos/vigilancia.yaml#/components/schemas/DeliveryEventView'
+    IngestEventRequest:
+      $ref: './modulos/observacion.yaml#/components/schemas/IngestEventRequest'
+    IngestEventResponse:
+      $ref: './modulos/observacion.yaml#/components/schemas/IngestEventResponse'
+    BedStateView:
+      $ref: './modulos/observacion.yaml#/components/schemas/BedStateView'
+    CurrentStateView:
+      $ref: './modulos/observacion.yaml#/components/schemas/CurrentStateView'
+    SensorEventView:
+      $ref: './modulos/observacion.yaml#/components/schemas/SensorEventView'
+    EventsView:
+      $ref: './modulos/observacion.yaml#/components/schemas/EventsView'
+    BoardBedView:
+      $ref: './modulos/observacion.yaml#/components/schemas/BoardBedView'
+    BoardView:
+      $ref: './modulos/observacion.yaml#/components/schemas/BoardView'
+    CompanionRoom:
+      $ref: './modulos/observacion.yaml#/components/schemas/CompanionRoom'
+    PeekView:
+      $ref: './modulos/observacion.yaml#/components/schemas/PeekView'
+    SummaryEnvelope:
+      $ref: './modulos/observacion.yaml#/components/schemas/SummaryEnvelope'
+    SleepSummaryRequest:
+      $ref: './modulos/observacion.yaml#/components/schemas/SleepSummaryRequest'
+    MobilitySummaryRequest:
+      $ref: './modulos/observacion.yaml#/components/schemas/MobilitySummaryRequest'
+    BathroomSummaryRequest:
+      $ref: './modulos/observacion.yaml#/components/schemas/BathroomSummaryRequest'
+    SummaryIngestView:
+      $ref: './modulos/observacion.yaml#/components/schemas/SummaryIngestView'
+    SleepSummaryView:
+      $ref: './modulos/observacion.yaml#/components/schemas/SleepSummaryView'
+    MobilitySummaryView:
+      $ref: './modulos/observacion.yaml#/components/schemas/MobilitySummaryView'
+    BathroomSummaryView:
+      $ref: './modulos/observacion.yaml#/components/schemas/BathroomSummaryView'
+    TimelineView:
+      $ref: './modulos/observacion.yaml#/components/schemas/TimelineView'
+    ReportsSummaryView:
+      $ref: './modulos/observacion.yaml#/components/schemas/ReportsSummaryView'
+    ErrorDetail:
+      $ref: './modulos/identidad.yaml#/components/schemas/ErrorDetail'
+    ErrorEnvelope:
+      $ref: './modulos/identidad.yaml#/components/schemas/ErrorEnvelope'
+  responses:
+    InvalidCredentials:
+      $ref: './modulos/identidad.yaml#/components/responses/InvalidCredentials'
+    Unauthenticated:
+      $ref: './modulos/identidad.yaml#/components/responses/Unauthenticated'
+    Forbidden:
+      $ref: './modulos/identidad.yaml#/components/responses/Forbidden'
+    Conflict:
+      $ref: './modulos/identidad.yaml#/components/responses/Conflict'
+    NotFound:
+      $ref: './modulos/identidad.yaml#/components/responses/NotFound'
+    ValidationError:
+      $ref: './modulos/identidad.yaml#/components/responses/ValidationError'
+    RateLimited:
+      $ref: './modulos/identidad.yaml#/components/responses/RateLimited'

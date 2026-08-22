@@ -1,6 +1,7 @@
 package com.manahive.scene
 
 import com.manahive.contracts.perception.Observation
+import com.manahive.contracts.policy.DwellThreshold
 import com.manahive.contracts.scene.SceneFact
 import com.manahive.contracts.scene.StateKind
 import com.manahive.kernel.Engine
@@ -31,7 +32,6 @@ public interface SceneInterpreter : Engine {
         twin: DigitalTwin,
         observation: Observation,
         now: Instant,
-        calibration: SceneCalibration,
     ): Explained<SceneVerdict>
 }
 
@@ -44,4 +44,5 @@ public data class SceneCalibration(
     public val table: TransitionTable,
     public val minConfidence: Map<StateKind, Double>,
     public val heartbeatTimeout: Duration,
+    public val dwellThresholds: Map<StateKind, DwellThreshold> = emptyMap(),
 )

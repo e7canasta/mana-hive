@@ -1,0 +1,13 @@
+[package]
+name = "mana-engine-worker"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+futures = "0.3"
+mana-engine-v2 = { path = "../mana-engine-v2" }
+mana-nats = { path = "../mana-nats" }
+thiserror = "2"
+tokio.workspace = true
+tracing.workspace = true

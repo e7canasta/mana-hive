@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "files/10-diseno-c4-modelo-dominio.md",
-                "mode": "preview",
+                "file": "docs/r1-ignition/scene-engine/spec.md",
+                "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "10-diseno-c4-modelo-dominio"
+              "title": "spec"
             }
           }
         ]
@@ -188,25 +188,43 @@
       "bases:Create new base": false
     }
   },
-  "active": "c1910a96b6989bd3",
+  "active": "ae09372bf2e70171",
   "lastOpenFiles": [
+    "docs/r1-ignition/scene-engine/codebases/complete analysis.md",
+    "docs/r1-ignition/scene-engine/codebases/1.md",
+    "docs/r1-ignition/scene-engine/codebases/complete BDD scenario inventory.md",
+    "docs/r1-ignition/scene-engine/spec.md",
+    "docs/r1-ignition/scene-engine/big-picture.md",
+    "docs/r1-ignition/scene-engine/codebases",
+    "docs/r1-ignition/scene-engine/sprint3-diseno.md",
+    "docs/r1-ignition/scene-engine/thinking.md",
+    "docs/r1-ignition/scene-engine/modelo-clases.md",
+    "docs/r1-ignition/scene-engine/diseno.md",
+    "docs/r1-ignition/scene-engine/archive/historias.md",
+    "engines/politica-engine/politica-domain/src/main/kotlin/com/manahive/politica/PolicyCalibrationDsl.kt",
+    "platform/contracts/src/main/kotlin/com/manahive/contracts/policy/PolicySource.kt",
+    "platform/contracts/src/main/kotlin/com/manahive/contracts/policy/CalibrationChanged.kt",
+    "platform/contracts/src/main/kotlin/com/manahive/contracts/policy/PolicyCalibration.kt",
+    "docs/r1-ignition/scene-engine/codebase.md.md",
+    "engines/scene-engine/scene-domain/build/kotlin/compileTestKotlin/classpath-snapshot/shrunk-classpath-snapshot.bin",
+    "engines/scene-engine/scene-domain/build/kotlin/compileTestKotlin/cacheable/last-build.bin",
+    "engines/scene-engine/scene-domain/build/classes/kotlin/test/META-INF/mana-hive.engines.scene-engine_engines-scene-engine-scene-domain_test.kotlin_module",
+    "engines/scene-engine/scene-domain/build/classes/kotlin/test/META-INF",
+    "engines/scene-engine/scene-domain/build/classes/kotlin/test/com/manahive/scene/SceneTestDslKt.class",
+    "docs/r1-ignition/scene-engine/handoff-sprint1.md",
+    "docs/r1-ignition/scene-engine/sprint2-diseno.md",
+    "docs/r1-ignition/scene-engine/handoff-sprint2.md",
+    "engines/politica-engine/README.md",
+    "docs/r1-ignition/policies/thinking.md",
+    "docs/r1-ignition/scene-engine/historias-sprint2.md",
+    "docs/design/engine-digital-twin.md",
+    "docs/design/end-to-end-flow.md",
+    "docs/especificacion/motores/politica.md",
+    "docs/r1-ignition/scene-engine/historias.md",
+    "files/10-diseno-c4-modelo-dominio.md",
     "files/11-acta-workspace-real.md",
-    "build/reports/configuration-cache/3z85uv95x5zeofcjwysz4s8je/6emqzg9v1o7898xte6n992wmv/configuration-cache-report.html",
-    "build/reports/configuration-cache/3z85uv95x5zeofcjwysz4s8je/6emqzg9v1o7898xte6n992wmv",
-    "build/reports/configuration-cache/3z85uv95x5zeofcjwysz4s8je",
-    "build/reports/configuration-cache/gvifkzevwaosfd6kgqy9hy3c/9itly0xt9ua9ug6ksqxhoy8p6/configuration-cache-report.html",
-    "build/reports/configuration-cache/gvifkzevwaosfd6kgqy9hy3c/9itly0xt9ua9ug6ksqxhoy8p6",
-    "build/reports/configuration-cache/gvifkzevwaosfd6kgqy9hy3c",
-    "build/reports/configuration-cache/ef79iji5sbt0gd59jy8v9uv3b/d5djfa4saykmq8wxz4oo2jnde/configuration-cache-report.html",
-    "build/reports/configuration-cache/ef79iji5sbt0gd59jy8v9uv3b/d5djfa4saykmq8wxz4oo2jnde",
-    "build/reports/configuration-cache/ef79iji5sbt0gd59jy8v9uv3b",
-    "engines/vigia/vigia-service/build/libs/engines-vigia-vigia-service.jar",
     "README.md",
     "files/08-acta-segunda-sesion.md",
-    "files/10-diseno-c4-modelo-dominio.md",
-    "files/09-bigpicture-y-sprint-1.md",
-    "files/07-workspace-gradle.md",
-    "files/registro-v2-diseno-arquitectura.md",
-    "files/06-evaluacion-e-implementacion.md"
+    "files/09-bigpicture-y-sprint-1.md"
   ]
 }

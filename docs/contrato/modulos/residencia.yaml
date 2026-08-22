@@ -1,0 +1,889 @@
+openapi: 3.1.0
+info:
+  title: Virtual Rounds Hub API - Residencia
+  version: 0.1.0
+  description: >-
+    Contrato HTTP del contexto de residencia F2.1: facilities, wings, rooms,
+    beds, planograma y regiones de privacidad. Sirve desde Rust.
+servers:
+  - url: http://localhost:8780
+    description: Desarrollo local
+tags:
+  - name: residence
+paths:
+  /api/v1/facilities:
+    get:
+      operationId: listFacilities
+      tags: [residence]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Facilities activas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FacilitiesResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      operationId: createFacility
+      tags: [residence]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateFacilityRequest'
+      responses:
+        '201':
+          description: Facility creada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Facility'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /api/v1/facilities/{facilityId}:
+    parameters:
+      - name: facilityId
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      operationId: getFacility
+      tags: [residence]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Detalle de facility con sus wings
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FacilityDetail'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      operationId: updateFacility
+      tags: [residence]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateFacilityRequest'
+      responses:
+        '200':
+          description: Facility actualizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FacilityResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /api/v1/facilities/{facilityId}/wings:
+    parameters:
+      - name: facilityId
+        in: path
+        required: true
+        schema:
+          type: string
+    post:
+      operationId: createWing
+      tags: [residence]
+      summary: Crear un ala en la residencia
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateWingRequest'
+      responses:
+        '201':
+          description: Ala creada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WingResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /api/v1/wings:
+    get:
+      operationId: listWings
+      tags: [residence]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Wings con conteo de camas por ala
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WingsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/v1/wings/{wingId}:
+    parameters:
+      - name: wingId
+        in: path
+        required: true
+        schema:
+          type: string
+    patch:
+      operationId: updateWing
+      tags: [residence]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateWingRequest'
+      responses:
+        '200':
+          description: Wing actualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WingResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /api/v1/wings/{wingId}/rooms:
+    parameters:
+      - name: wingId
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      operationId: listWingRooms
+      tags: [residence]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Habitaciones del wing
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoomsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      operationId: createRoom
+      tags: [residence]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRoomRequest'
+      responses:
+        '201':
+          description: Habitacion creada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Room'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /api/v1/wings/{wingId}/planogram:
+    parameters:
+      - name: wingId
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      operationId: getPlanogram
+      tags: [residence]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Planograma del wing con el detalle de cada habitacion
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlanogramResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      operationId: savePlanogram
+      tags: [residence]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SavePlanogramRequest'
+      responses:
+        '200':
+          description: Planograma guardado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlanogramResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /api/v1/rooms/{roomId}:
+    parameters:
+      - name: roomId
+        in: path
+        required: true
+        schema:
+          type: string
+    patch:
+      operationId: updateRoom
+      tags: [residence]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateRoomRequest'
+      responses:
+        '200':
+          description: Habitacion actualizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoomResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /api/v1/rooms/{roomId}/beds:
+    parameters:
+      - name: roomId
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      operationId: listRoomBeds
+      tags: [residence]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Camas de la habitacion
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BedsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      operationId: createBed
+      tags: [residence]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBedRequest'
+      responses:
+        '201':
+          description: Cama creada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Bed'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /api/v1/rooms/{roomId}/privacy-regions:
+    parameters:
+      - name: roomId
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      operationId: getPrivacyRegions
+      tags: [residence]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Regiones de privacidad de la habitacion
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PrivacyRegionsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      operationId: savePrivacyRegions
+      tags: [residence]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SavePrivacyRegionsRequest'
+      responses:
+        '200':
+          description: Regiones de privacidad guardadas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PrivacyRegionsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /api/v1/beds:
+    get:
+      operationId: listBeds
+      tags: [residence]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Read model global de camas con ubicacion
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResidenceBedsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/v1/beds/{bedId}:
+    parameters:
+      - name: bedId
+        in: path
+        required: true
+        schema:
+          type: string
+    patch:
+      operationId: updateBed
+      tags: [residence]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateBedRequest'
+      responses:
+        '200':
+          description: Cama actualizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BedResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: opaque
+  schemas:
+    ErrorDetail:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+    ErrorEnvelope:
+      type: object
+      required: [error]
+      properties:
+        error:
+          $ref: '#/components/schemas/ErrorDetail'
+    Facility:
+      type: object
+      required: [id, name, timezone]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        timezone:
+          type: string
+    FacilityDetail:
+      type: object
+      required: [id, name, timezone, wings]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        timezone:
+          type: string
+        wings:
+          type: array
+          items:
+            $ref: '#/components/schemas/Wing'
+    FacilitiesResponse:
+      type: object
+      required: [facilities]
+      properties:
+        facilities:
+          type: array
+          items:
+            $ref: '#/components/schemas/Facility'
+    FacilityResponse:
+      type: object
+      required: [facility]
+      properties:
+        facility:
+          $ref: '#/components/schemas/Facility'
+    CreateFacilityRequest:
+      type: object
+      required: [name, timezone]
+      properties:
+        name:
+          type: string
+        timezone:
+          type: string
+    UpdateFacilityRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        timezone:
+          type: string
+    Wing:
+      type: object
+      required: [id, facility_id, name, floor, sort_order]
+      properties:
+        id:
+          type: string
+        facility_id:
+          type: string
+        name:
+          type: string
+        floor:
+          type: string
+        sort_order:
+          type: integer
+          format: int32
+        bed_count:
+          type: integer
+          format: int32
+          nullable: true
+          description: 'Read model: camas activas del ala'
+    WingsResponse:
+      type: object
+      required: [wings]
+      properties:
+        wings:
+          type: array
+          items:
+            $ref: '#/components/schemas/Wing'
+    WingResponse:
+      type: object
+      required: [wing]
+      properties:
+        wing:
+          $ref: '#/components/schemas/Wing'
+    CreateWingRequest:
+      type: object
+      required: [name, floor]
+      properties:
+        name:
+          type: string
+        floor:
+          type: string
+        sort_order:
+          type: integer
+          format: int32
+    UpdateWingRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        floor:
+          type: string
+        sort_order:
+          type: integer
+          format: int32
+    Room:
+      type: object
+      required: [id, wing_id, number, type]
+      properties:
+        id:
+          type: string
+        wing_id:
+          type: string
+        number:
+          type: string
+        type:
+          type: string
+        stream_key:
+          type: string
+          nullable: true
+    RoomsResponse:
+      type: object
+      required: [rooms]
+      properties:
+        rooms:
+          type: array
+          items:
+            $ref: '#/components/schemas/Room'
+    RoomResponse:
+      type: object
+      required: [room]
+      properties:
+        room:
+          $ref: '#/components/schemas/Room'
+    CreateRoomRequest:
+      type: object
+      required: [number]
+      properties:
+        number:
+          type: string
+        type:
+          type: string
+        stream_key:
+          type: string
+    UpdateRoomRequest:
+      type: object
+      properties:
+        number:
+          type: string
+        type:
+          type: string
+        stream_key:
+          type: string
+          nullable: true
+    Bed:
+      type: object
+      required: [id, room_id, label]
+      properties:
+        id:
+          type: string
+        room_id:
+          type: string
+        label:
+          type: string
+        monitor_key:
+          type: string
+          nullable: true
+    BedsResponse:
+      type: object
+      required: [beds]
+      properties:
+        beds:
+          type: array
+          items:
+            $ref: '#/components/schemas/Bed'
+    BedResponse:
+      type: object
+      required: [bed]
+      properties:
+        bed:
+          $ref: '#/components/schemas/Bed'
+    CreateBedRequest:
+      type: object
+      required: [label]
+      properties:
+        label:
+          type: string
+        monitor_key:
+          type: string
+    UpdateBedRequest:
+      type: object
+      properties:
+        label:
+          type: string
+        monitor_key:
+          type: string
+          nullable: true
+    ResidenceBed:
+      type: object
+      required:
+        - id
+        - room_id
+        - label
+        - room_number
+        - type
+        - wing_id
+        - wing_name
+        - wing_floor
+      properties:
+        id:
+          type: string
+        room_id:
+          type: string
+        label:
+          type: string
+        monitor_key:
+          type: string
+          nullable: true
+        room_number:
+          type: string
+        type:
+          type: string
+        stream_key:
+          type: string
+          nullable: true
+        wing_id:
+          type: string
+        wing_name:
+          type: string
+        wing_floor:
+          type: string
+    ResidenceBedsResponse:
+      type: object
+      required: [beds]
+      properties:
+        beds:
+          type: array
+          items:
+            $ref: '#/components/schemas/ResidenceBed'
+    PlanogramPlacement:
+      type: object
+      required: [id, wing_id, room_id, x, y, sort_order, room_number, type]
+      properties:
+        id:
+          type: string
+        wing_id:
+          type: string
+        room_id:
+          type: string
+        x:
+          type: number
+          format: double
+        y:
+          type: number
+          format: double
+        sort_order:
+          type: integer
+          format: int32
+        room_number:
+          type: string
+        type:
+          type: string
+        stream_key:
+          type: string
+          nullable: true
+    PlanogramResponse:
+      type: object
+      required: [wing_id, placements]
+      properties:
+        wing_id:
+          type: string
+        placements:
+          type: array
+          items:
+            $ref: '#/components/schemas/PlanogramPlacement'
+    PlanogramPlacementRequest:
+      type: object
+      required: [room_id, x, y, sort_order]
+      properties:
+        room_id:
+          type: string
+        x:
+          type: number
+          format: double
+        y:
+          type: number
+          format: double
+        sort_order:
+          type: integer
+          format: int32
+    SavePlanogramRequest:
+      type: object
+      required: [placements]
+      properties:
+        placements:
+          type: array
+          items:
+            $ref: '#/components/schemas/PlanogramPlacementRequest'
+    PrivacyRegion:
+      type: object
+      required: [x, y, w, h]
+      properties:
+        x:
+          type: number
+          format: double
+        y:
+          type: number
+          format: double
+        w:
+          type: number
+          format: double
+        h:
+          type: number
+          format: double
+    PrivacyRegionsResponse:
+      type: object
+      required: [room_id, regions]
+      properties:
+        room_id:
+          type: string
+        regions:
+          type: array
+          items:
+            $ref: '#/components/schemas/PrivacyRegion'
+    PrivacyRegionRequest:
+      type: object
+      required: [x, y, w, h]
+      properties:
+        x:
+          type: number
+          format: double
+        y:
+          type: number
+          format: double
+        w:
+          type: number
+          format: double
+        h:
+          type: number
+          format: double
+    SavePrivacyRegionsRequest:
+      type: object
+      required: [regions]
+      properties:
+        regions:
+          type: array
+          items:
+            $ref: '#/components/schemas/PrivacyRegionRequest'
+  responses:
+    Unauthenticated:
+      description: Falta una sesion valida
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    Forbidden:
+      description: Capability insuficiente
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    NotFound:
+      description: Recurso inexistente
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    Conflict:
+      description: Conflicto de estado (numero, habitacion o cama duplicados)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    ValidationError:
+      description: Argumentos invalidos
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'

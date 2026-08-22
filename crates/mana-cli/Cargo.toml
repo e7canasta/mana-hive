@@ -1,0 +1,17 @@
+[package]
+name = "mana-cli"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+
+[[bin]]
+name = "mana-cli"
+path = "src/main.rs"
+
+[dependencies]
+mana-sdk.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+tabled = "0.19"
+thiserror.workspace = true
+tokio.workspace = true

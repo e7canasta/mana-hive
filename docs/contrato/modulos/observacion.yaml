@@ -1,0 +1,629 @@
+openapi: 3.1.0
+info:
+  title: Observacion
+  version: "1.0"
+  description: >
+    Evidencia del detector, proyeccion de estado por cama y resumenes diarios.
+    Las rutas `/internal/` no usan sesion: autentican al bridge con el header
+    `x-clinical-secret`.
+tags:
+  - name: observacion
+    description: Evidencia, estado actual y resumenes
+
+paths:
+  /internal/v1/events:
+    post:
+      operationId: eventsIngest
+      tags: [observacion]
+      summary: Ingerir un evento del detector
+      description: >
+        Idempotente por `source_event_id`: un reintento devuelve `200` con
+        `duplicate: true` y no vuelve a proyectar. Una `monitor_key` sin
+        vincular **no** rechaza el evento: se guarda con `resolved: false` y el
+        bridge no debe reintentar.
+      parameters:
+        - $ref: "#/components/parameters/IngestSecret"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IngestEventRequest"
+      responses:
+        "201":
+          description: Evento nuevo
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IngestEventResponse"
+        "200":
+          description: Reintento del bridge, ya estaba guardado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IngestEventResponse"
+
+  /internal/v1/clinical/sleep-summaries:
+    post:
+      operationId: sleepSummaryIngest
+      tags: [observacion]
+      summary: Ingerir el resumen diario de sueno
+      description: >
+        Un residente tiene un resumen por dia. Reingerir el mismo dia reemplaza
+        y devuelve `200` con `replaced: true`.
+      parameters:
+        - $ref: "#/components/parameters/IngestSecret"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SleepSummaryRequest"
+      responses:
+        "201": { $ref: "#/components/responses/SummaryCreated" }
+        "200": { $ref: "#/components/responses/SummaryReplaced" }
+
+  /internal/v1/clinical/mobility-summaries:
+    post:
+      operationId: mobilitySummaryIngest
+      tags: [observacion]
+      summary: Ingerir el resumen diario de movilidad
+      parameters:
+        - $ref: "#/components/parameters/IngestSecret"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MobilitySummaryRequest"
+      responses:
+        "201": { $ref: "#/components/responses/SummaryCreated" }
+        "200": { $ref: "#/components/responses/SummaryReplaced" }
+
+  /internal/v1/clinical/bathroom-summaries:
+    post:
+      operationId: bathroomSummaryIngest
+      tags: [observacion]
+      summary: Ingerir el resumen diario de bano
+      parameters:
+        - $ref: "#/components/parameters/IngestSecret"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BathroomSummaryRequest"
+      responses:
+        "201": { $ref: "#/components/responses/SummaryCreated" }
+        "200": { $ref: "#/components/responses/SummaryReplaced" }
+
+  /api/v1/wings/{wingId}/board:
+    get:
+      operationId: wingBoard
+      tags: [observacion]
+      summary: Board del ala
+      description: >
+        Compone Residencia, Poblacion y Observacion. `unresolved_events` cuenta
+        la evidencia que llego de una `monitor_key` sin vincular.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: wingId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Board del ala
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BoardView"
+
+  /api/v1/companion/rooms:
+    get:
+      operationId: companionRooms
+      tags: [observacion]
+      summary: Habitaciones con stream y ocupantes
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: Habitaciones
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  rooms:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/CompanionRoom"
+
+  /api/v1/rooms/{roomId}/peek:
+    post:
+      operationId: roomPeek
+      tags: [observacion]
+      summary: Autorizar mirada al stream de una habitacion
+      description: >
+        No devuelve video: el stream va directo de las IA cells a los paneles.
+        El hub autoriza y deja la traza de auditoria.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: roomId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Autorizacion concedida
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PeekView"
+
+  /api/v1/residents/{residentId}/current-state:
+    get:
+      operationId: residentCurrentState
+      tags: [observacion]
+      summary: Estado proyectado del residente
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/ResidentId"
+      responses:
+        "200":
+          description: Estado actual
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CurrentStateView"
+
+  /api/v1/residents/{residentId}/events:
+    get:
+      operationId: residentEvents
+      tags: [observacion]
+      summary: Ultimos eventos del detector para el residente
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/ResidentId"
+      responses:
+        "200":
+          description: Eventos
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EventsView"
+
+  /api/v1/residents/{residentId}/sleep:
+    get:
+      operationId: residentSleep
+      tags: [observacion]
+      summary: Resumenes diarios de sueno
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/ResidentId"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: Resumenes de sueno
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  resident_id: { type: string }
+                  summaries:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/SleepSummaryView"
+
+  /api/v1/residents/{residentId}/mobility:
+    get:
+      operationId: residentMobility
+      tags: [observacion]
+      summary: Resumenes diarios de movilidad
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/ResidentId"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: Resumenes de movilidad
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  resident_id: { type: string }
+                  summaries:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/MobilitySummaryView"
+
+  /api/v1/residents/{residentId}/bathroom:
+    get:
+      operationId: residentBathroom
+      tags: [observacion]
+      summary: Resumenes diarios de bano
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/ResidentId"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: Resumenes de bano
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  resident_id: { type: string }
+                  summaries:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/BathroomSummaryView"
+
+  /api/v1/residents/{residentId}/timeline:
+    get:
+      operationId: residentTimeline
+      tags: [observacion]
+      summary: Sueno, movilidad y bano del residente
+      description: Requiere las tres capabilities de lectura clinica.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/ResidentId"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: Linea de tiempo
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TimelineView"
+
+  /api/v1/reports/summary:
+    get:
+      operationId: reportsSummary
+      tags: [observacion]
+      summary: Resumen de residencia
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: Conteos de residencia
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReportsSummaryView"
+
+components:
+  parameters:
+    IngestSecret:
+      name: x-clinical-secret
+      in: header
+      required: true
+      description: Secreto compartido del bridge. Estas rutas no usan sesion.
+      schema: { type: string }
+    ResidentId:
+      name: residentId
+      in: path
+      required: true
+      schema: { type: string }
+    Limit:
+      name: limit
+      in: query
+      required: false
+      description: Dias a devolver. Se recorta a [1, 365]; por defecto 30.
+      schema: { type: integer, minimum: 1, maximum: 365 }
+
+  responses:
+    SummaryCreated:
+      description: Resumen nuevo
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/SummaryIngestView"
+    SummaryReplaced:
+      description: La fuente recalculo un dia ya cargado
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/SummaryIngestView"
+
+  schemas:
+    IngestEventRequest:
+      type: object
+      required: [source_event_id, monitor_key, kind, occurred_at]
+      properties:
+        source_event_id:
+          type: string
+          description: Clave de idempotencia de la fuente.
+        monitor_key: { type: string }
+        kind: { type: string }
+        room_state: { type: string, nullable: true }
+        substate: { type: string, nullable: true }
+        zone: { type: string, nullable: true }
+        state: { type: string, nullable: true }
+        sleeping:
+          type: boolean
+          nullable: true
+          description: >
+            Ausente o `null` es "el detector no informo", nunca "no esta
+            durmiendo".
+        occurred_at: { type: string, format: date-time }
+        payload_json:
+          type: string
+          description: Copia de borde para campos nuevos del detector.
+
+    IngestEventResponse:
+      type: object
+      properties:
+        id: { type: string }
+        duplicate: { type: boolean }
+        resolved:
+          type: boolean
+          description: >
+            `false` cuando la `monitor_key` no corresponde a ninguna cama
+            activa. El evento quedo guardado igual.
+        monitor_key: { type: string }
+        bed_id: { type: string, nullable: true }
+        resident_id: { type: string, nullable: true }
+
+    BedStateView:
+      type: object
+      properties:
+        bed_id: { type: string }
+        resident_id: { type: string, nullable: true }
+        room_state: { type: string, nullable: true }
+        state: { type: string }
+        substate: { type: string, nullable: true }
+        sleeping: { type: boolean, nullable: true }
+        state_since:
+          type: string
+          nullable: true
+          description: Solo se mueve cuando el estado cambia.
+        updated_at: { type: string, format: date-time }
+        freshness:
+          type: string
+          enum: [not_observed, live, stale, offline]
+          description: Derivada de `updated_at` en cada lectura, nunca persistida.
+
+    CurrentStateView:
+      type: object
+      properties:
+        resident_id: { type: string }
+        bed_id: { type: string, nullable: true }
+        state:
+          oneOf:
+            - $ref: "#/components/schemas/BedStateView"
+            - type: "null"
+
+    SensorEventView:
+      type: object
+      properties:
+        id: { type: string }
+        monitor_key: { type: string }
+        bed_id: { type: string, nullable: true }
+        kind: { type: string }
+        room_state: { type: string, nullable: true }
+        substate: { type: string, nullable: true }
+        zone: { type: string, nullable: true }
+        state: { type: string, nullable: true }
+        sleeping: { type: boolean, nullable: true }
+        occurred_at: { type: string, format: date-time }
+        received_at:
+          type: string
+          format: date-time
+          description: Lo pone el hub, no la fuente.
+
+    EventsView:
+      type: object
+      properties:
+        resident_id: { type: string }
+        bed_id: { type: string, nullable: true }
+        events:
+          type: array
+          items:
+            $ref: "#/components/schemas/SensorEventView"
+
+    BoardBedView:
+      type: object
+      properties:
+        bed_id: { type: string }
+        bed_label: { type: string }
+        room_id: { type: string }
+        room_number: { type: string }
+        monitor_key:
+          type: string
+          nullable: true
+          description: Sin esto la cama no genera un solo aviso.
+        resident_id: { type: string, nullable: true }
+        resident_name: { type: string, nullable: true }
+        state:
+          oneOf:
+            - $ref: "#/components/schemas/BedStateView"
+            - type: "null"
+        freshness:
+          type: string
+          enum: [not_observed, live, stale, offline]
+
+    BoardView:
+      type: object
+      properties:
+        wing_id: { type: string }
+        wing_name: { type: string }
+        beds:
+          type: array
+          items:
+            $ref: "#/components/schemas/BoardBedView"
+        unresolved_events:
+          type: integer
+          format: int64
+          description: Evidencia de una `monitor_key` sin vincular.
+
+    CompanionRoom:
+      type: object
+      properties:
+        room_id: { type: string }
+        room_number: { type: string }
+        wing_id: { type: string }
+        stream_key: { type: string, nullable: true }
+        occupants:
+          type: array
+          items: { type: string }
+
+    PeekView:
+      type: object
+      properties:
+        room_id: { type: string }
+        stream_key: { type: string, nullable: true }
+        privacy_regions: { type: integer }
+        granted_to: { type: string }
+        granted_at: { type: string, format: date-time }
+
+    SummaryEnvelope:
+      type: object
+      required: [source_record_id, resident_id, observed_on, source, model_version]
+      properties:
+        source_record_id: { type: string }
+        resident_id: { type: string }
+        observed_on: { type: string, format: date }
+        source: { type: string }
+        model_version: { type: string }
+        confidence: { type: number, nullable: true, minimum: 0, maximum: 1 }
+        provenance_json: { type: string }
+
+    SleepSummaryRequest:
+      allOf:
+        - $ref: "#/components/schemas/SummaryEnvelope"
+        - type: object
+          required: [calm_minutes, restless_minutes, awake_minutes, out_of_bed_minutes, bed_exit_count, wake_count]
+          properties:
+            calm_minutes: { type: integer, minimum: 0 }
+            restless_minutes: { type: integer, minimum: 0 }
+            awake_minutes: { type: integer, minimum: 0 }
+            out_of_bed_minutes: { type: integer, minimum: 0 }
+            bed_exit_count: { type: integer, minimum: 0 }
+            wake_count:
+              type: integer
+              minimum: 0
+              description: No puede ser menor que `bed_exit_count`.
+
+    MobilitySummaryRequest:
+      allOf:
+        - $ref: "#/components/schemas/SummaryEnvelope"
+        - type: object
+          required: [in_bed_minutes, out_of_bed_minutes, out_of_sight_minutes, walking_minutes, transfer_count]
+          properties:
+            in_bed_minutes: { type: integer, minimum: 0 }
+            out_of_bed_minutes: { type: integer, minimum: 0 }
+            out_of_sight_minutes: { type: integer, minimum: 0 }
+            walking_minutes:
+              type: integer
+              minimum: 0
+              description: Subconjunto de `out_of_bed_minutes`, no un sumando aparte.
+            distance_meters: { type: number, nullable: true, minimum: 0 }
+            transfer_count: { type: integer, minimum: 0 }
+
+    BathroomSummaryRequest:
+      allOf:
+        - $ref: "#/components/schemas/SummaryEnvelope"
+        - type: object
+          required: [visit_count, night_visit_count, assisted_count, total_minutes, longest_visit_minutes]
+          properties:
+            visit_count: { type: integer, minimum: 0 }
+            night_visit_count:
+              type: integer
+              minimum: 0
+              description: No puede superar `visit_count`.
+            assisted_count:
+              type: integer
+              minimum: 0
+              description: No puede superar `visit_count`.
+            total_minutes: { type: integer, minimum: 0 }
+            longest_visit_minutes:
+              type: integer
+              minimum: 0
+              description: No puede superar `total_minutes`.
+
+    SummaryIngestView:
+      type: object
+      properties:
+        id: { type: string }
+        resident_id: { type: string }
+        observed_on: { type: string, format: date }
+        replaced:
+          type: boolean
+          description: La fuente recalculo un dia ya cargado.
+
+    SleepSummaryView:
+      type: object
+      properties:
+        observed_on: { type: string, format: date }
+        calm_minutes: { type: integer }
+        restless_minutes: { type: integer }
+        awake_minutes: { type: integer }
+        out_of_bed_minutes: { type: integer }
+        bed_exit_count: { type: integer }
+        wake_count: { type: integer }
+        in_bed_minutes:
+          type: integer
+          description: Calculado por la API; el cliente no lo recalcula.
+        efficiency:
+          type: number
+          nullable: true
+          description: "`null` sin tiempo en cama: dividir por cero no es cero."
+        source: { type: string }
+        model_version: { type: string }
+        confidence: { type: number, nullable: true }
+
+    MobilitySummaryView:
+      type: object
+      properties:
+        observed_on: { type: string, format: date }
+        in_bed_minutes: { type: integer }
+        out_of_bed_minutes: { type: integer }
+        out_of_sight_minutes: { type: integer }
+        walking_minutes: { type: integer }
+        distance_meters: { type: number, nullable: true }
+        transfer_count: { type: integer }
+        source: { type: string }
+        model_version: { type: string }
+        confidence: { type: number, nullable: true }
+
+    BathroomSummaryView:
+      type: object
+      properties:
+        observed_on: { type: string, format: date }
+        visit_count: { type: integer }
+        night_visit_count: { type: integer }
+        assisted_count: { type: integer }
+        total_minutes: { type: integer }
+        longest_visit_minutes: { type: integer }
+        average_visit_minutes: { type: number, nullable: true }
+        source: { type: string }
+        model_version: { type: string }
+        confidence: { type: number, nullable: true }
+
+    TimelineView:
+      type: object
+      properties:
+        resident_id: { type: string }
+        sleep:
+          type: array
+          items:
+            $ref: "#/components/schemas/SleepSummaryView"
+        mobility:
+          type: array
+          items:
+            $ref: "#/components/schemas/MobilitySummaryView"
+        bathroom:
+          type: array
+          items:
+            $ref: "#/components/schemas/BathroomSummaryView"
+
+    ReportsSummaryView:
+      type: object
+      properties:
+        residents: { type: integer, format: int64 }
+        beds: { type: integer, format: int64 }
+        occupied_beds: { type: integer, format: int64 }
+        observed_beds: { type: integer, format: int64 }
+        unresolved_events: { type: integer, format: int64 }

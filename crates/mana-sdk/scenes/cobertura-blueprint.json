@@ -1,0 +1,168 @@
+{
+  "meta": {
+    "id": "cobertura-blueprint",
+    "title": "Blueprint de cobertura",
+    "description": "Shifts, groups, membership and coverage end-to-end",
+    "requires_demo_seed": true
+  },
+  "context": "cobertura",
+  "commands": [
+    {
+      "name": "login",
+      "action": "login",
+      "args": { "username": "admin", "password_default": "mana123" },
+      "capture": "login"
+    },
+    {
+      "name": "me",
+      "action": "me",
+      "args": {},
+      "capture": "me",
+      "assert": { "user.username": "admin" }
+    },
+    {
+      "name": "crear facility",
+      "action": "facilities.create",
+      "args": { "name": "Hogar Demo", "timezone": "America/Argentina/Buenos_Aires" },
+      "capture": "facility",
+      "status": 201
+    },
+    {
+      "name": "crear wing",
+      "action": "wings.create",
+      "args": { "facility_id": "{{facility.id}}", "name": "Ala Norte", "floor": "1" },
+      "capture": "wing",
+      "status": 201
+    },
+    {
+      "name": "crear room",
+      "action": "rooms.create",
+      "args": { "wing_id": "{{wing.id}}", "number": "101", "type": "standard" },
+      "capture": "room",
+      "status": 201
+    },
+    {
+      "name": "crear bed",
+      "action": "beds.create",
+      "args": { "room_id": "{{room.id}}", "label": "101-A" },
+      "capture": "bed",
+      "status": 201
+    },
+    {
+      "name": "COB-01 reemplazar grilla",
+      "action": "custom",
+      "args": {
+        "method": "PUT",
+        "path": "/api/v1/facilities/{{facility.id}}/shifts",
+        "body": {
+          "shifts": [
+            { "key": "morning", "label": "Morning", "start_minute": 480 },
+            { "key": "afternoon", "label": "Afternoon", "start_minute": 840 },
+            { "key": "night", "label": "Night", "start_minute": 0 }
+          ]
+        }
+      },
+      "capture": "grid",
+      "assert": { "shifts.length": 3 }
+    },
+    {
+      "name": "COB-01 get grilla",
+      "action": "custom",
+      "args": {
+        "method": "GET",
+        "path": "/api/v1/facilities/{{facility.id}}/shifts"
+      },
+      "assert": { "shifts.length": 3 }
+    },
+    {
+      "name": "COB-02 crear grupo",
+      "action": "custom",
+      "args": {
+        "method": "POST",
+        "path": "/api/v1/staff-groups",
+        "body": { "facility_id": "{{facility.id}}", "name": "Enfermeria A" }
+      },
+      "capture": "group",
+      "status": 201,
+      "assert": { "staff_group.name": "Enfermeria A" }
+    },
+    {
+      "name": "COB-02 agregar miembros",
+      "action": "custom",
+      "args": {
+        "method": "PUT",
+        "path": "/api/v1/staff-groups/{{group.staff_group.id}}/members",
+        "body": { "members": [{ "user_id": "{{me.user.id}}" }] }
+      },
+      "capture": "members",
+      "assert": { "staff_group.members.length": 1 }
+    },
+    {
+      "name": "COB-02 detalle grupo",
+      "action": "custom",
+      "args": {
+        "method": "GET",
+        "path": "/api/v1/staff-groups/{{group.staff_group.id}}"
+      },
+      "assert": { "staff_group.members.length": 1 }
+    },
+    {
+      "name": "COB-03 asignar cobertura",
+      "action": "custom",
+      "args": {
+        "method": "PUT",
+        "path": "/api/v1/wings/{{wing.id}}/coverage",
+        "body": { "staff_group_id": "{{group.staff_group.id}}", "shift_key": "morning" }
+      },
+      "capture": "coverage",
+      "assert": { "wing.id": "{{wing.id}}", "coverages.0.shift_key": "morning" }
+    },
+    {
+      "name": "COB-03 get cobertura",
+      "action": "custom",
+      "args": {
+        "method": "GET",
+        "path": "/api/v1/wings/{{wing.id}}/coverage"
+      },
+      "assert": { "coverages.length": 1 }
+    },
+    {
+      "name": "COB-04 asignar segunda cobertura",
+      "action": "custom",
+      "args": {
+        "method": "PUT",
+        "path": "/api/v1/wings/{{wing.id}}/coverage",
+        "body": { "staff_group_id": "{{group.staff_group.id}}", "shift_key": "afternoon" }
+      }
+    },
+    {
+      "name": "COB-04 get todas las coberturas",
+      "action": "custom",
+      "args": {
+        "method": "GET",
+        "path": "/api/v1/wings/{{wing.id}}/coverage"
+      },
+      "assert": { "coverages.length": 2 }
+    },
+    {
+      "name": "COB-05 reemplazar grilla (remueve afternoon)",
+      "action": "custom",
+      "args": {
+        "method": "PUT",
+        "path": "/api/v1/facilities/{{facility.id}}/shifts",
+        "body": {
+          "shifts": [
+            { "key": "morning", "label": "Morning", "start_minute": 480 },
+            { "key": "night", "label": "Night", "start_minute": 0 }
+          ]
+        }
+      },
+      "assert": { "shifts.length": 2, "coverages_cleared": 1 }
+    },
+    {
+      "name": "logout",
+      "action": "logout",
+      "args": {}
+    }
+  ]
+}

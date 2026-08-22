@@ -1,0 +1,40 @@
+{
+  "meta": {
+    "id": "identidad-smoke",
+    "nombre": "Smoke de identidad y auditoria"
+  },
+  "contexto": "identidad",
+  "commands": [
+    {
+      "name": "login demo",
+      "action": "login",
+      "args": {
+        "username": "admin",
+        "password_env": "DEMO_ADMIN_PASSWORD",
+        "password_default": "mana123"
+      },
+      "assert": {
+        "user.username": "admin"
+      }
+    },
+    {
+      "name": "perfil actual",
+      "action": "me",
+      "assert": {
+        "user.role": "owner"
+      }
+    },
+    {
+      "name": "listado de usuarios",
+      "action": "users.list",
+      "assert": {
+        "users.length": 3
+      }
+    },
+    {
+      "name": "logout",
+      "action": "logout",
+      "status": 204
+    }
+  ]
+}

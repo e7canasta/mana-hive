@@ -31,6 +31,8 @@ include(":hub:hub-service")
 // ── engines: one deployable per responsibility, pure core + thin shell ───────
 include(":engines:scene-engine:scene-domain")
 include(":engines:scene-engine:scene-service")
+include(":engines:politica-engine:politica-domain")
+include(":engines:politica-engine:politica-service")
 include(":engines:sentinel:sentinel-domain")
 include(":engines:sentinel:sentinel-service")
 include(":engines:vigia:vigia-domain")

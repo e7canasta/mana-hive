@@ -22,7 +22,17 @@ public data class Observation(
 }
 
 public enum class ObservationKind {
-    IN_BED, BED_EDGE, STANDING, OUT_OF_ROOM,
+    // ── In bed ────────────────────────────────────────────────
+    IN_BED, SITTING_IN_BED, ATTEMPTING_EXIT, BED_EDGE,
+
+    // ── Out of bed ────────────────────────────────────────────
+    STANDING, IN_BATHROOM, IN_ROOM, IN_HALLWAY, OUTDOOR,
+
+    // ── Furniture ─────────────────────────────────────────────
+    IN_CHAIR, IN_WHEELCHAIR,
+
+    // ── Meta ──────────────────────────────────────────────────
+    OUT_OF_ROOM,
     STAFF_IN_ROOM,
     /** The monitor saying "I am alive". Its silence is a first-class fact. */
     HEARTBEAT,

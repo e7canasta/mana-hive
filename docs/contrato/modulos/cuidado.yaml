@@ -1,0 +1,483 @@
+openapi: 3.1.0
+info:
+  title: Virtual Rounds Hub API - Cuidado
+  version: 0.1.0
+  description: >-
+    Contrato HTTP del contexto de cuidado F4: rondas operativas, tareas de ronda
+    y notas de continuidad. Sirve desde Rust.
+servers:
+  - url: http://localhost:8780
+    description: Desarrollo local
+tags:
+  - name: cuidado
+paths:
+  /api/v1/rounds/current:
+    get:
+      operationId: getCurrentRound
+      tags: [cuidado]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: wing_id
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Ronda en progreso del ala o null
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoundNullableResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/v1/rounds:
+    get:
+      operationId: listRounds
+      tags: [cuidado]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: wing_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Historial de rondas del ala
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoundsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      operationId: createRound
+      tags: [cuidado]
+      security:
+        - bearerAuth: []
+      description: >-
+        Crea una ronda para el ala. Snapshot de asignaciones actuales como tareas.
+        Rechaza si ya hay una ronda in_progress o si no hay residentes asignados.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRoundRequest'
+      responses:
+        '201':
+          description: Ronda creada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoundResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /api/v1/rounds/{roundId}:
+    parameters:
+      - name: roundId
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      operationId: getRound
+      tags: [cuidado]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Detalle de la ronda con tareas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoundDetailResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      operationId: updateRound
+      tags: [cuidado]
+      security:
+        - bearerAuth: []
+      description: >-
+        Completa o cancela una ronda. Rechaza si hay tareas pendientes
+        (para completar) o si la ronda ya esta cerrada.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateRoundRequest'
+      responses:
+        '200':
+          description: Ronda actualizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoundResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /api/v1/round-tasks/{taskId}:
+    parameters:
+      - name: taskId
+        in: path
+        required: true
+        schema:
+          type: string
+    patch:
+      operationId: updateTask
+      tags: [cuidado]
+      security:
+        - bearerAuth: []
+      description: >-
+        Actualiza estado y nota de una tarea. Rechaza si la ronda esta cerrada.
+        Volver a pending limpia completado y nota.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTaskRequest'
+      responses:
+        '200':
+          description: Tarea actualizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /api/v1/residents/{residentId}/care:
+    parameters:
+      - name: residentId
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      operationId: getResidentCare
+      tags: [cuidado]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: days
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 7
+          description: Numero de dias hacia atras para buscar notas
+      responses:
+        '200':
+          description: Notas de cuidado del residente en el periodo indicado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotesResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/v1/residents/{residentId}/notes:
+    parameters:
+      - name: residentId
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      operationId: listNotes
+      tags: [cuidado]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Notas de cuidado del residente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotesResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      operationId: createNote
+      tags: [cuidado]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateNoteRequest'
+      responses:
+        '201':
+          description: Nota creada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NoteResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: opaque token
+  schemas:
+    Round:
+      type: object
+      required: [id, wing_id, status, started_at, started_by]
+      properties:
+        id:
+          type: string
+        wing_id:
+          type: string
+        status:
+          type: string
+          enum: [in_progress, completed, cancelled]
+        scheduled_for:
+          type: string
+          nullable: true
+        started_at:
+          type: string
+          format: date-time
+        completed_at:
+          type: string
+          format: date-time
+          nullable: true
+        started_by:
+          type: string
+        completed_by:
+          type: string
+          nullable: true
+    RoundTask:
+      type: object
+      required: [id, round_id, resident_id, bed_id, status]
+      properties:
+        id:
+          type: string
+        round_id:
+          type: string
+        resident_id:
+          type: string
+        bed_id:
+          type: string
+        status:
+          type: string
+          enum: [pending, completed]
+        note:
+          type: string
+          nullable: true
+        completed_at:
+          type: string
+          format: date-time
+          nullable: true
+        completed_by:
+          type: string
+          nullable: true
+    CareNote:
+      type: object
+      required: [id, resident_id, author_id, kind, body, created_at]
+      properties:
+        id:
+          type: string
+        resident_id:
+          type: string
+        author_id:
+          type: string
+        kind:
+          type: string
+        body:
+          type: string
+        duration_min:
+          type: integer
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+    RoundNullableResponse:
+      type: object
+      required: [round]
+      properties:
+        round:
+          $ref: '#/components/schemas/Round'
+          nullable: true
+    RoundResponse:
+      type: object
+      required: [round]
+      properties:
+        round:
+          $ref: '#/components/schemas/Round'
+    RoundDetailResponse:
+      type: object
+      required: [round, tasks]
+      properties:
+        round:
+          $ref: '#/components/schemas/Round'
+        tasks:
+          type: array
+          items:
+            $ref: '#/components/schemas/RoundTask'
+    RoundsResponse:
+      type: object
+      required: [rounds]
+      properties:
+        rounds:
+          type: array
+          items:
+            $ref: '#/components/schemas/Round'
+    TaskResponse:
+      type: object
+      required: [task]
+      properties:
+        task:
+          $ref: '#/components/schemas/RoundTask'
+    NotesResponse:
+      type: object
+      required: [notes]
+      properties:
+        notes:
+          type: array
+          items:
+            $ref: '#/components/schemas/CareNote'
+    NoteResponse:
+      type: object
+      required: [note]
+      properties:
+        note:
+          $ref: '#/components/schemas/CareNote'
+    CreateRoundRequest:
+      type: object
+      required: [wing_id]
+      properties:
+        wing_id:
+          type: string
+    UpdateRoundRequest:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [completed, cancelled]
+    UpdateTaskRequest:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [completed, pending]
+        note:
+          type: string
+          nullable: true
+    CreateNoteRequest:
+      type: object
+      required: [body]
+      properties:
+        body:
+          type: string
+        kind:
+          type: string
+          default: general
+        duration_min:
+          type: integer
+          nullable: true
+  responses:
+    Unauthenticated:
+      description: Token ausente o invalido
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    Forbidden:
+      description: Capability insuficiente
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    NotFound:
+      description: Recurso no encontrado
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    Conflict:
+      description: Recurso duplicado o conflicto de estado
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    ValidationError:
+      description: Datos de entrada invalidos
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    ErrorEnvelope:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            fields:
+              type: object
+              additionalProperties:
+                type: string

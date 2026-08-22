@@ -1,0 +1,2 @@
+DROP INDEX beds_open_assignment_idx;
+DROP INDEX residents_open_assignment_idx;

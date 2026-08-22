@@ -5,6 +5,13 @@ plugins {
 // every public type in a pure module is API — and therefore a design decision
 kotlin { explicitApi() }
 
+val kotestVersion = "5.9.1"
+
+dependencies {
+    testImplementation("io.kotest:kotest-assertions-core:$kotestVersion")
+    testImplementation("io.kotest:kotest-runner-junit5:$kotestVersion")
+}
+
 /**
  * Purity guard: a pure-domain module may depend only on the Kotlin stdlib and
  * other pure modules of this build. Spring, JDBC, NATS, HTTP: impossible, not

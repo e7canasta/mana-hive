@@ -1,0 +1,3 @@
+DROP TABLE IF EXISTS clip_windows;
+DROP TABLE IF EXISTS timelines;
+DROP TABLE IF EXISTS evidence;

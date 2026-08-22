@@ -1,5 +1,6 @@
 package com.manahive.scene
 
+import com.manahive.contracts.policy.DwellThreshold
 import com.manahive.contracts.scene.SceneFact
 import com.manahive.contracts.scene.StateKind
 import com.manahive.kernel.BedId
@@ -13,9 +14,9 @@ import java.time.Instant
  * reveals. Dwells are DERIVED state (now - stateSince >= threshold), never
  * persisted timers — a process restart can neither shorten nor extend one.
  *
- * Responsible for: dwell warnings at `warningRatio` of the threshold;
- * post-transition grace; post-presence rearm (a staff visit resets the
- * situation); monitor heartbeat watch (input for SignalLost).
+ * Responsible for: dwell warnings; post-transition grace;
+ * post-presence rearm (a staff visit resets the situation);
+ * monitor heartbeat watch (input for SignalLost).
  *
  * Invariant: sweep idempotency — two consecutive ticks without state change
  * emit nothing new; one DwellExceeded per (bed, state, stateSince).
@@ -32,10 +33,27 @@ public interface ClockSweeper : Engine {
     ): Explained<SweepResult>
 }
 
+/**
+ * Dwell thresholds keyed by state. Each [DwellThreshold] holds both
+ * warning and exceeded durations — no separate maps (Fowler: Data Clumps).
+ */
 public data class DwellCatalog(
-    public val byState: Map<StateKind, Duration>,
-    public val warningRatio: Double = 0.8,
-    public val postTransitionGrace: Duration = Duration.ofSeconds(10),
+    public val byState: Map<StateKind, DwellThreshold>,
+    public val heartbeatTimeout: Duration = Duration.ofSeconds(90),
+)
+
+/**
+ * Derives a [DwellCatalog] from this [SceneCalibration].
+ *
+ * Each resident can have different dwell thresholds; this conversion
+ * makes the calibration consumable by [ClockSweeper].
+ *
+ * Fowler: "Derived Value" — the catalog is computed from the calibration,
+ * never stored independently.
+ */
+public fun SceneCalibration.toDwellCatalog(): DwellCatalog = DwellCatalog(
+    byState = dwellThresholds.toMap(),
+    heartbeatTimeout = heartbeatTimeout,
 )
 
 /** Idempotency marks: what this sweep already emitted, keyed by dwell identity. */

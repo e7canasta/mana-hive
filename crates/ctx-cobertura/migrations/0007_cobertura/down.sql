@@ -1,0 +1,12 @@
+DROP INDEX coverage_wing_idx;
+DROP INDEX coverage_wing_shift_valid_idx;
+DROP INDEX facility_shifts_facility_order_idx;
+DROP INDEX facility_shifts_facility_minute_idx;
+DROP INDEX facility_shifts_facility_key_idx;
+DROP INDEX staff_group_members_group_idx;
+DROP INDEX staff_group_members_user_group_valid_idx;
+DROP INDEX staff_groups_facility_name_idx;
+DROP TABLE unit_shift_coverages;
+DROP TABLE facility_shifts;
+DROP TABLE staff_group_members;
+DROP TABLE staff_groups;

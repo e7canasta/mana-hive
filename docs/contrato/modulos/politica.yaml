@@ -1,0 +1,677 @@
+openapi: 3.1.0
+info:
+  title: Virtual Rounds Hub API - Politica de Alarmas
+  version: 0.1.0
+  description: >-
+    Contrato HTTP del contexto de politica: catalogo de alarmas, presets por
+    residente, historial de versiones y motor de recomendaciones (autopilot).
+servers:
+  - url: http://localhost:8780
+    description: Desarrollo local
+tags:
+  - name: politica
+paths:
+  /api/v1/alarm-presets/catalog:
+    get:
+      operationId: getAlarmCatalog
+      tags: [politica]
+      security:
+        - bearerAuth: []
+      description: >-
+        Catalogo global de alarmas disponibles agrupadas por dominio.
+      responses:
+        '200':
+          description: Catalogo de alarmas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlarmCatalog'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/v1/alarm-presets:
+    get:
+      operationId: listAlarmPresets
+      tags: [politica]
+      security:
+        - bearerAuth: []
+      description: >-
+        Lista todos los presets de alarmas. Si se proporciona query param ?at,
+        devuelve los presets vigentes en esa fecha.
+      parameters:
+        - name: at
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+          description: Fecha de referencia para presets vigentes
+      responses:
+        '200':
+          description: Lista de presets
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PresetsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/v1/alarm-presets/{residentId}:
+    parameters:
+      - name: residentId
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      operationId: getResidentPreset
+      tags: [politica]
+      security:
+        - bearerAuth: []
+      description: >-
+        Obtiene el preset de alarmas vigente de un residente.
+      responses:
+        '200':
+          description: Preset del residente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PresetResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      operationId: updateResidentPreset
+      tags: [politica]
+      security:
+        - bearerAuth: []
+      description: >-
+        Actualiza el preset de alarmas de un residente. Crea una nueva version
+        en el historial.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePresetRequest'
+      responses:
+        '200':
+          description: Preset actualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PresetResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /api/v1/alarm-presets/{residentId}/history:
+    parameters:
+      - name: residentId
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      operationId: getResidentPresetHistory
+      tags: [politica]
+      security:
+        - bearerAuth: []
+      description: >-
+        Historial de versiones del preset de alarmas de un residente.
+      responses:
+        '200':
+          description: Historial de presets
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileHistoryResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/v1/alarm-presets/apply-recommendations:
+    post:
+      operationId: applyBulkRecommendations
+      tags: [politica]
+      security:
+        - bearerAuth: []
+      description: >-
+        Aplica recomendaciones en lote a multiples residentes.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApplyBulkRequest'
+      responses:
+        '200':
+          description: Recomendaciones aplicadas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PresetsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /api/v1/alarm-presets/autopilot:
+    post:
+      operationId: runAutopilot
+      tags: [politica]
+      security:
+        - bearerAuth: []
+      description: >-
+        Ejecuta el motor de autopilot para generar recomendaciones de alarmas.
+      responses:
+        '200':
+          description: Recomendaciones generadas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PresetsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/v1/alarm-presets/{residentId}/apply-recommendation:
+    parameters:
+      - name: residentId
+        in: path
+        required: true
+        schema:
+          type: string
+    post:
+      operationId: applyResidentRecommendation
+      tags: [politica]
+      security:
+        - bearerAuth: []
+      description: >-
+        Aplica la recomendacion pendiente de un residente individual.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApplyRecommendationRequest'
+      responses:
+        '200':
+          description: Recomendacion aplicada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PresetResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+components:
+  schemas:
+    AlarmCatalog:
+      type: object
+      required: [version, levels, groups, transitions, presets]
+      description: >-
+        El catalogo clinico completo. Es dato: vive en
+        `config/alarm-catalog.toml` y cambiar un umbral es un diff de ese
+        archivo, nunca un deploy.
+      properties:
+        version:
+          type: string
+        levels:
+          type: array
+          items:
+            type: string
+            enum: [low, medium, high]
+        mobility_aids:
+          type: array
+          items:
+            type: string
+            enum: [none, walker, wheelchair]
+        actions:
+          type: array
+          items:
+            type: string
+            enum: [off, notify, alarm]
+        shifts:
+          type: array
+          items:
+            type: string
+            enum: [day, night]
+        shift_hours:
+          type: object
+          description: >-
+            Corte operativo del turno, en hora local de la residencia. Lo
+            publica el catalogo para que el motor y la pantalla no discrepen.
+          required: [day_start, night_start]
+          properties:
+            day_start:
+              type: integer
+            night_start:
+              type: integer
+        modes:
+          type: array
+          items:
+            type: string
+            enum: [preset, custom]
+        sensitivities:
+          type: array
+          items:
+            type: string
+            enum: [low, standard, high]
+        groups:
+          type: array
+          items:
+            $ref: '#/components/schemas/AlarmGroup'
+        transitions:
+          type: array
+          description: >-
+            Las reglas del catalogo. Se llaman `transitions` porque asi las
+            nombra el cliente, aunque el conjunto incluya permanencias.
+          items:
+            $ref: '#/components/schemas/AlarmRule'
+        presets:
+          type: object
+          description: 'La matriz de calibracion: nivel -> regla -> que hace.'
+          additionalProperties:
+            type: object
+            additionalProperties:
+              $ref: '#/components/schemas/AlarmPresetRule'
+        templates:
+          type: array
+          items:
+            $ref: '#/components/schemas/AlarmTemplate'
+        risk_factors:
+          type: array
+          items:
+            $ref: '#/components/schemas/AlarmRiskFactor'
+    AlarmGroup:
+      type: object
+      required: [id, label]
+      properties:
+        id:
+          type: string
+        label:
+          type: string
+        detail:
+          type: string
+          nullable: true
+    AlarmRule:
+      type: object
+      required: [id, group, label, locked, class]
+      properties:
+        id:
+          type: string
+        group:
+          type: string
+        label:
+          type: string
+        short_label:
+          type: string
+          nullable: true
+        detail:
+          type: string
+          nullable: true
+        pictogram:
+          type: string
+          nullable: true
+        art:
+          type: string
+          nullable: true
+        locked:
+          type: boolean
+          description: >-
+            Una regla bloqueada no se puede apagar en ninguna capa. `fall` es la
+            unica, y es condicion del dominio y no de la UI.
+        class:
+          type: string
+          enum: [transition, dwell, none]
+          description: >-
+            Que la dispara. `transition` la dispara el cambio de estado y su
+            temporizador es de confirmacion; `dwell` la dispara el paso del
+            tiempo y su temporizador es de tolerancia.
+        requires_aid:
+          type: array
+          nullable: true
+          items:
+            type: string
+            enum: [none, walker, wheelchair]
+        params:
+          type: array
+          items:
+            $ref: '#/components/schemas/AlarmParam'
+    AlarmParam:
+      type: object
+      required: [key, kind, type, label]
+      properties:
+        key:
+          type: string
+        kind:
+          type: string
+          enum: [confirm, dwell, sensitivity, watch]
+        type:
+          type: string
+          enum: [number, enum, multi]
+        label:
+          type: string
+        detail:
+          type: string
+          nullable: true
+        unit:
+          type: string
+        min:
+          type: number
+        max:
+          type: number
+        step:
+          type: number
+        options:
+          type: array
+          items:
+            type: object
+            required: [value, label]
+            properties:
+              value:
+                type: string
+              label:
+                type: string
+              detail:
+                type: string
+                nullable: true
+    AlarmPresetRule:
+      type: object
+      required: [day, night]
+      properties:
+        day:
+          type: string
+          enum: [off, notify, alarm]
+        night:
+          type: string
+          enum: [off, notify, alarm]
+        params:
+          type: object
+          additionalProperties: true
+    AlarmTemplate:
+      type: object
+      required: [id, label]
+      properties:
+        id:
+          type: string
+        label:
+          type: string
+        detail:
+          type: string
+          nullable: true
+        recommended_for:
+          type: array
+          items:
+            type: string
+        rules:
+          type: object
+          additionalProperties: true
+    AlarmRiskFactor:
+      type: object
+      required: [id, label]
+      properties:
+        id:
+          type: string
+        label:
+          type: string
+        icon:
+          type: string
+          nullable: true
+    EffectiveRule:
+      type: object
+      required: [day, night, group, class, locked, source, customized, params]
+      description: >-
+        Una regla ya resuelta para un residente, con la capa que fijo lo que
+        quedo. Es la forma que el panel pinta y la que el motor evalua.
+      properties:
+        day:
+          type: string
+          enum: [off, notify, alarm]
+        night:
+          type: string
+          enum: [off, notify, alarm]
+        group:
+          type: string
+        class:
+          type: string
+          enum: [transition, dwell, none]
+        locked:
+          type: boolean
+        source:
+          type: string
+          enum: [preset, template, custom]
+        customized:
+          type: boolean
+        params:
+          type: object
+          additionalProperties: true
+    EffectiveProfile:
+      type: object
+      required: [level, mobility_aid, mode, template_id, rules]
+      properties:
+        level:
+          type: string
+          enum: [low, medium, high]
+        mobility_aid:
+          type: string
+          enum: [none, walker, wheelchair]
+        mode:
+          type: string
+          enum: [preset, custom]
+        template_id:
+          type: string
+        rules:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/EffectiveRule'
+    ProfileVersion:
+      type: object
+      required:
+        - id
+        - resident_id
+        - valid_from
+        - risk_level
+        - mobility_aid
+        - autopilot
+        - mode
+        - template_id
+        - catalog_version
+        - created_at
+      properties:
+        id:
+          type: string
+        resident_id:
+          type: string
+        valid_from:
+          type: string
+          format: date-time
+        valid_to:
+          type: string
+          format: date-time
+          nullable: true
+        risk_level:
+          type: string
+          enum: [low, medium, high]
+          description: >-
+            Elige el preset base. Es la primera capa del perfil efectivo, y sin
+            el el catalogo se puede servir pero no se puede evaluar.
+        mobility_aid:
+          type: string
+          enum: [none, walker, wheelchair]
+        autopilot:
+          type: boolean
+        mode:
+          type: string
+          enum: [preset, custom]
+          description: >-
+            Si las reglas salen del preset del nivel o del preset mas los
+            ajustes manuales. En modo `preset` los ajustes quedan guardados y no
+            se aplican.
+        template_id:
+          type: string
+        overrides_json:
+          type: string
+        catalog_version:
+          type: string
+        updated_by:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+    AlarmProfile:
+      allOf:
+        - $ref: '#/components/schemas/ProfileVersion'
+        - type: object
+          required: [effective]
+          properties:
+            effective:
+              $ref: '#/components/schemas/EffectiveProfile'
+    PresetResponse:
+      type: object
+      required: [preset]
+      properties:
+        preset:
+          $ref: '#/components/schemas/AlarmProfile'
+    PresetsResponse:
+      type: object
+      required: [presets]
+      properties:
+        presets:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProfileVersion'
+    ProfileHistoryResponse:
+      type: object
+      required: [versions]
+      properties:
+        versions:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProfileVersion'
+    UpdatePresetRequest:
+      type: object
+      properties:
+        risk_level:
+          type: string
+          enum: [low, medium, high]
+        mobility_aid:
+          type: string
+          enum: [none, walker, wheelchair]
+        autopilot:
+          type: boolean
+        mode:
+          type: string
+          enum: [preset, custom]
+        template_id:
+          type: string
+        overrides:
+          type: object
+          description: >-
+            Los ajustes manuales por regla. Cada valor se valida contra la
+            definicion de su parametro: un ajuste invalido se rechaza en vez de
+            descartarse en silencio.
+          additionalProperties:
+            type: object
+            additionalProperties: true
+        overrides_json:
+          type: string
+          description: 'La misma forma como texto. Se acepta por compatibilidad.'
+        catalog_version:
+          type: string
+    ApplyRecommendationRequest:
+      type: object
+      description: >-
+        Aplica una recomendacion a un residente. Lo que no viene se conserva del
+        perfil vigente.
+      properties:
+        risk_level:
+          type: string
+          enum: [low, medium, high]
+        template_id:
+          type: string
+        overrides_json:
+          type: string
+        catalog_version:
+          type: string
+    ApplyBulkRequest:
+      type: object
+      required: [recommendations]
+      properties:
+        recommendations:
+          type: array
+          items:
+            type: object
+            required: [resident_id]
+            properties:
+              resident_id:
+                type: string
+              risk_level:
+                type: string
+                enum: [low, medium, high]
+              template_id:
+                type: string
+              overrides_json:
+                type: string
+              catalog_version:
+                type: string
+  responses:
+    Unauthenticated:
+      description: Token ausente o invalido
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    Forbidden:
+      description: Capability insuficiente
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    NotFound:
+      description: Recurso no encontrado
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    ValidationError:
+      description: Datos de entrada invalidos
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    ErrorEnvelope:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            fields:
+              type: object
+              additionalProperties:
+                type: string

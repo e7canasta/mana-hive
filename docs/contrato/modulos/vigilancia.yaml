@@ -1,0 +1,361 @@
+openapi: 3.1.0
+info:
+  title: Vigilancia
+  version: "1.0"
+  description: Alertas, entregas de notificacion y escalamiento.
+tags:
+  - name: vigilancia
+    description: Alertas y notificaciones
+
+paths:
+  /api/v1/alerts:
+    get:
+      operationId: alertsList
+      tags: [vigilancia]
+      summary: Listar alertas
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Lista de alertas
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  alerts:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/AlertView"
+    post:
+      operationId: alertsCreate
+      tags: [vigilancia]
+      summary: Crear alerta
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAlertRequest"
+      responses:
+        "201":
+          description: Alerta creada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  alert:
+                    $ref: "#/components/schemas/AlertView"
+
+  /api/v1/alerts/{alertId}:
+    patch:
+      operationId: alertsTransition
+      tags: [vigilancia]
+      summary: Transicionar alerta
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/alertId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TransitionAlertRequest"
+      responses:
+        "200":
+          description: Alerta actualizada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  alert:
+                    $ref: "#/components/schemas/AlertView"
+
+  /api/v1/alerts/{alertId}/view:
+    post:
+      operationId: alertsView
+      tags: [vigilancia]
+      summary: Auditar acceso a alerta
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/alertId"
+      responses:
+        "200":
+          description: Detalle de alerta
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  alert:
+                    $ref: "#/components/schemas/AlertView"
+
+  /api/v1/alerts/{alertId}/deliveries:
+    get:
+      operationId: alertsDeliveriesList
+      tags: [vigilancia]
+      summary: Listar entregas de notificacion
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/alertId"
+      responses:
+        "200":
+          description: Lista de entregas
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  deliveries:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/DeliveryView"
+    post:
+      operationId: alertsDeliveriesCreate
+      tags: [vigilancia]
+      summary: Crear entrega de notificacion
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/alertId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateDeliveryRequest"
+      responses:
+        "201":
+          description: Entrega creada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  delivery:
+                    $ref: "#/components/schemas/DeliveryView"
+
+  /api/v1/deliveries/{deliveryId}/events:
+    post:
+      operationId: deliveryEventsCreate
+      tags: [vigilancia]
+      summary: Agregar evento a entrega
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: deliveryId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddDeliveryEventRequest"
+      responses:
+        "200":
+          description: Entrega actualizada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  delivery:
+                    $ref: "#/components/schemas/DeliveryView"
+
+components:
+  parameters:
+    alertId:
+      name: alertId
+      in: path
+      required: true
+      schema:
+        type: string
+
+  schemas:
+    CreateAlertRequest:
+      type: object
+      required: [bed_id, evidence_kind, rule_id, level, title, occurred_at]
+      properties:
+        resident_id:
+          type: string
+          nullable: true
+        bed_id:
+          type: string
+        evidence_kind:
+          type: string
+          enum: [sensor_event, dwell_window, manual]
+        evidence_ref:
+          type: string
+          nullable: true
+        rule_id:
+          type: string
+        level:
+          type: string
+          enum: [low, medium, high, critical]
+        title:
+          type: string
+        detail:
+          type: string
+          nullable: true
+        occurred_at:
+          type: string
+          format: date-time
+
+    TransitionAlertRequest:
+      type: object
+      required: [to_status]
+      properties:
+        to_status:
+          type: string
+          enum: [acknowledged, attending, resolved]
+        actor_id:
+          type: string
+          nullable: true
+
+    CreateDeliveryRequest:
+      type: object
+      required: [recipient_kind, recipient_id, channel]
+      properties:
+        recipient_kind:
+          type: string
+          enum: [user, staff_group, service]
+        recipient_id:
+          type: string
+        channel:
+          type: string
+          enum: [push, tablet, sms, other]
+        escalation_level:
+          type: integer
+          default: 0
+
+    AddDeliveryEventRequest:
+      type: object
+      required: [kind]
+      properties:
+        kind:
+          type: string
+          enum: [sent, acknowledged, failed]
+        reason:
+          type: string
+          nullable: true
+
+    AlertView:
+      type: object
+      properties:
+        id:
+          type: string
+        resident_id:
+          type: string
+          nullable: true
+        bed_id:
+          type: string
+        evidence_kind:
+          type: string
+        evidence_ref:
+          type: string
+          nullable: true
+        rule_id:
+          type: string
+        level:
+          type: string
+        status:
+          type: string
+        status_actor_id:
+          type: string
+          nullable: true
+        status_at:
+          type: string
+          nullable: true
+        title:
+          type: string
+        detail:
+          type: string
+          nullable: true
+        occurred_at:
+          type: string
+        escalation:
+          $ref: "#/components/schemas/EscalationView"
+        delivery_summary:
+          $ref: "#/components/schemas/DeliverySummaryView"
+        created_at:
+          type: string
+        updated_at:
+          type: string
+
+    EscalationView:
+      type: object
+      properties:
+        level:
+          type: integer
+        escalated_at:
+          type: string
+          nullable: true
+        escalated_to:
+          type: string
+          nullable: true
+
+    DeliverySummaryView:
+      type: object
+      properties:
+        sent:
+          type: integer
+        acked:
+          type: integer
+        failed:
+          type: integer
+
+    DeliveryView:
+      type: object
+      properties:
+        id:
+          type: string
+        alert_id:
+          type: string
+        recipient_kind:
+          type: string
+        recipient_id:
+          type: string
+        channel:
+          type: string
+        escalation_level:
+          type: integer
+        created_at:
+          type: string
+        events:
+          type: array
+          items:
+            $ref: "#/components/schemas/DeliveryEventView"
+        sent_at:
+          type: string
+          nullable: true
+        acked_at:
+          type: string
+          nullable: true
+        failed_reason:
+          type: string
+          nullable: true
+
+    DeliveryEventView:
+      type: object
+      properties:
+        id:
+          type: string
+        delivery_id:
+          type: string
+        kind:
+          type: string
+        reason:
+          type: string
+          nullable: true
+        occurred_at:
+          type: string

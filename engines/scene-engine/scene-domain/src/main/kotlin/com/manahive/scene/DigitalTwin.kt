@@ -21,6 +21,7 @@ public data class DigitalTwin(
     public val state: PersonState,
     public val stateSince: Instant,
     public val signal: SignalHealth,
+    public val calibration: SceneCalibration? = null,
 )
 
 public data class SignalHealth(

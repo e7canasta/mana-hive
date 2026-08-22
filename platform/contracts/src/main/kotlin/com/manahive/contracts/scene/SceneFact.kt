@@ -75,4 +75,10 @@ public data class NightSummary(
     public val transitions: Int,
     public val minutesUnknown: Long,
     public val episodes: Int,
-)
+) {
+    init {
+        require(transitions >= 0) { "transitions must be non-negative" }
+        require(minutesUnknown >= 0) { "minutesUnknown must be non-negative" }
+        require(episodes >= 0) { "episodes must be non-negative" }
+    }
+}
