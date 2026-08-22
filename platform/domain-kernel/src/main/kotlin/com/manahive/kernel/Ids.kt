@@ -11,6 +11,13 @@ package com.manahive.kernel
 @JvmInline public value class AlertId(public val value: String)
 @JvmInline public value class RuleId(public val value: String)
 @JvmInline public value class EpisodeId(public val value: String)
+@JvmInline public value class NoticeId(public val value: String) {
+    public companion object {
+        /** Create a NoticeId from an EpisodeId. One notice per episode. */
+        public fun fromEpisode(episodeId: EpisodeId): NoticeId =
+            NoticeId("${episodeId.value}-notice")
+    }
+}
 
 /** The accounting period of the scene stream: one night per bed (closing-the-books). */
 @JvmInline public value class NightId(public val value: String)

@@ -1,0 +1,10 @@
+# Scenario: Fall at 03:00
+# María se levanta de la cama a las 03:00, cae en el pasillo.
+# El monitor detecta la secuencia: Lying → BedEdge → Standing → InHallway → Absent
+
+t=0s    OBS IN_BED confidence=0.95
+t=2s    OBS BED_EDGE confidence=0.92
+t=4s    OBS STANDING confidence=0.90
+t=4m0s  OBS STANDING confidence=0.95
+t=6s    OBS IN_HALLWAY confidence=0.88
+t=8s    OBS OUTDOOR confidence=0.85

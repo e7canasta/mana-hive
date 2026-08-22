@@ -31,6 +31,17 @@ public enum class ObservationKind {
     // ── Furniture ─────────────────────────────────────────────
     IN_CHAIR, IN_WHEELCHAIR,
 
+    // ── Scene state (personnel) ───────────────────────────────
+    STAFF_ENTERED, STAFF_LEFT, STAFF_IN_REACH,
+
+    // ── Scene state (mobility aids) ───────────────────────────
+    WHEELCHAIR_PRESENT, WHEELCHAIR_ABSENT,
+    WALKER_PRESENT, WALKER_ABSENT,
+
+    // ── Scene state (bed) ─────────────────────────────────────
+    BED_RAILS_UP, BED_RAILS_DOWN,
+    COVER_ON, COVER_OFF,
+
     // ── Meta ──────────────────────────────────────────────────
     OUT_OF_ROOM,
     STAFF_IN_ROOM,

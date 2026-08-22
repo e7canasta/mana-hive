@@ -30,13 +30,17 @@ include(":hub:hub-service")
 
 // ── engines: one deployable per responsibility, pure core + thin shell ───────
 include(":engines:scene-engine:scene-domain")
+include(":engines:scene-engine:scene-batch")
 include(":engines:scene-engine:scene-service")
 include(":engines:politica-engine:politica-domain")
+include(":engines:politica-engine:politica-batch")
 include(":engines:politica-engine:politica-service")
 include(":engines:sentinel:sentinel-domain")
+include(":engines:sentinel:sentinel-batch")
 include(":engines:sentinel:sentinel-service")
-include(":engines:vigia:vigia-domain")
-include(":engines:vigia:vigia-service")
+include(":engines:harbor:harbor-domain")
+include(":engines:harbor:harbor-batch")
+include(":engines:harbor:harbor-service")
 
 // ── tooling ───────────────────────────────────────────────────────────────────
 include(":simulator")

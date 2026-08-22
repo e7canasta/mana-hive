@@ -89,3 +89,23 @@ public val PersonState.riskGroup: RiskGroup
         is PersonState.Unknown -> RiskGroup.UNKNOWN
         else -> RiskGroup.AT_RISK
     }
+
+/**
+ * Reverse mapping from [StateKind] to [PersonState].
+ * Useful for reconstructing PersonState from wire format or batch input.
+ */
+public fun personStateFromKind(kind: StateKind): PersonState = when (kind) {
+    StateKind.LYING -> PersonState.Lying
+    StateKind.SITTING_IN_BED -> PersonState.SittingInBed
+    StateKind.ATTEMPTING_EXIT -> PersonState.AttemptingExit
+    StateKind.BED_EDGE -> PersonState.BedEdge
+    StateKind.STANDING -> PersonState.Standing
+    StateKind.IN_BATHROOM -> PersonState.InBathroom
+    StateKind.IN_ROOM -> PersonState.InRoom
+    StateKind.IN_HALLWAY -> PersonState.InHallway
+    StateKind.OUTDOOR -> PersonState.Outdoor
+    StateKind.ABSENT -> PersonState.Absent
+    StateKind.IN_CHAIR -> PersonState.InChair
+    StateKind.IN_WHEELCHAIR -> PersonState.InWheelchair
+    StateKind.UNKNOWN -> PersonState.Unknown(UnknownCause.SIGNAL_LOST)
+}

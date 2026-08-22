@@ -1,0 +1,20 @@
+t=2s      TRANSITION LYING → BED_EDGE                       # ← evento 6
+t=4s      TRANSITION BED_EDGE → STANDING                    # ← evento 7
+t=4m      SIGNAL_LOST monitor=m1                            # ← evento 8
+t=6s      TRANSITION STANDING → IN_HALLWAY                  # ← evento 9
+t=8s      TRANSITION IN_HALLWAY → OUTDOOR                   # ← evento 10
+t=2s      TRANSITION LYING → BED_EDGE                       # ← evento 6
+t=4s      TRANSITION BED_EDGE → STANDING                    # ← evento 7
+t=4m      SIGNAL_LOST monitor=m1                            # ← evento 8
+t=6s      TRANSITION STANDING → IN_HALLWAY                  # ← evento 9
+t=8s      TRANSITION IN_HALLWAY → OUTDOOR                   # ← evento 10
+t=2s      TRANSITION LYING → BED_EDGE                       # ← evento 6
+t=4s      TRANSITION BED_EDGE → STANDING                    # ← evento 7
+t=4m      SIGNAL_LOST monitor=m1                            # ← evento 8
+t=6s      TRANSITION STANDING → IN_HALLWAY                  # ← evento 9
+t=8s      TRANSITION IN_HALLWAY → OUTDOOR                   # ← evento 10
+t=2s      TRANSITION LYING → BED_EDGE                       # ← evento 6
+t=4s      TRANSITION BED_EDGE → STANDING                    # ← evento 7
+t=4m      SIGNAL_LOST monitor=m1                            # ← evento 8
+t=6s      TRANSITION STANDING → IN_HALLWAY                  # ← evento 9
+t=8s      TRANSITION IN_HALLWAY → OUTDOOR                   # ← evento 10

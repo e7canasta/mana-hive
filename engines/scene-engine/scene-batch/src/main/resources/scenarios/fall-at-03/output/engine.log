@@ -1,0 +1,288 @@
+{
+  "ts" : "2026-08-22T08:53:43.198119667Z",
+  "level" : "INFO",
+  "msg" : "batch run started",
+  "config" : "/home/visiona/workspace/mana-hive/engines/scene-engine/scene-batch/src/main/resources/scenarios/fall-at-03/run.yaml",
+  "events" : 6,
+  "start" : "2024-01-01T03:00:00Z",
+  "clock" : "event-time"
+}
+{
+  "ts" : "2026-08-22T08:53:43.212060613Z",
+  "level" : "WARN",
+  "msg" : "observation discarded",
+  "event" : 5,
+  "offset" : "PT0S",
+  "kind" : "IN_BED",
+  "cause" : "DUPLICATE",
+  "subject" : "duplicate state LYING"
+}
+{
+  "ts" : "2026-08-22T08:53:43.235368199Z",
+  "level" : "INFO",
+  "msg" : "interpreter fact",
+  "event" : 6,
+  "type" : "TransitionDetected"
+}
+{
+  "ts" : "2026-08-22T08:53:43.237890968Z",
+  "level" : "INFO",
+  "msg" : "interpreter fact",
+  "event" : 7,
+  "type" : "TransitionDetected"
+}
+{
+  "ts" : "2026-08-22T08:53:43.238594568Z",
+  "level" : "INFO",
+  "msg" : "sweeper fact",
+  "event" : 8,
+  "type" : "SignalLost"
+}
+{
+  "ts" : "2026-08-22T08:53:43.238809744Z",
+  "level" : "WARN",
+  "msg" : "observation discarded",
+  "event" : 8,
+  "offset" : "PT4M",
+  "kind" : "STANDING",
+  "cause" : "DUPLICATE",
+  "subject" : "duplicate state STANDING"
+}
+{
+  "ts" : "2026-08-22T08:53:43.239561280Z",
+  "level" : "INFO",
+  "msg" : "interpreter fact",
+  "event" : 9,
+  "type" : "TransitionDetected"
+}
+{
+  "ts" : "2026-08-22T08:53:43.239983543Z",
+  "level" : "INFO",
+  "msg" : "interpreter fact",
+  "event" : 10,
+  "type" : "TransitionDetected"
+}
+{
+  "ts" : "2026-08-22T08:53:43.242436226Z",
+  "level" : "INFO",
+  "msg" : "batch run completed",
+  "passed" : 4,
+  "discarded" : 2,
+  "total" : 6
+}
+{
+  "ts" : "2026-08-22T09:02:21.264470241Z",
+  "level" : "INFO",
+  "msg" : "batch run started",
+  "config" : "/home/visiona/workspace/mana-hive/engines/scene-engine/scene-batch/src/main/resources/scenarios/fall-at-03/run.yaml",
+  "events" : 6,
+  "start" : "2024-01-01T03:00:00Z",
+  "clock" : "event-time"
+}
+{
+  "ts" : "2026-08-22T09:02:21.278885886Z",
+  "level" : "WARN",
+  "msg" : "observation discarded",
+  "event" : 5,
+  "offset" : "PT0S",
+  "kind" : "IN_BED",
+  "cause" : "DUPLICATE",
+  "subject" : "duplicate state LYING"
+}
+{
+  "ts" : "2026-08-22T09:02:21.305171080Z",
+  "level" : "INFO",
+  "msg" : "interpreter fact",
+  "event" : 6,
+  "type" : "TransitionDetected"
+}
+{
+  "ts" : "2026-08-22T09:02:21.306155999Z",
+  "level" : "INFO",
+  "msg" : "interpreter fact",
+  "event" : 7,
+  "type" : "TransitionDetected"
+}
+{
+  "ts" : "2026-08-22T09:02:21.306809788Z",
+  "level" : "INFO",
+  "msg" : "sweeper fact",
+  "event" : 8,
+  "type" : "SignalLost"
+}
+{
+  "ts" : "2026-08-22T09:02:21.307145785Z",
+  "level" : "WARN",
+  "msg" : "observation discarded",
+  "event" : 8,
+  "offset" : "PT4M",
+  "kind" : "STANDING",
+  "cause" : "DUPLICATE",
+  "subject" : "duplicate state STANDING"
+}
+{
+  "ts" : "2026-08-22T09:02:21.307959737Z",
+  "level" : "INFO",
+  "msg" : "interpreter fact",
+  "event" : 9,
+  "type" : "TransitionDetected"
+}
+{
+  "ts" : "2026-08-22T09:02:21.308344190Z",
+  "level" : "INFO",
+  "msg" : "interpreter fact",
+  "event" : 10,
+  "type" : "TransitionDetected"
+}
+{
+  "ts" : "2026-08-22T09:02:21.310657926Z",
+  "level" : "INFO",
+  "msg" : "batch run completed",
+  "passed" : 4,
+  "discarded" : 2,
+  "total" : 6
+}
+{
+  "ts" : "2026-08-22T09:13:27.963071163Z",
+  "level" : "INFO",
+  "msg" : "batch run started",
+  "config" : "/home/visiona/workspace/mana-hive/engines/scene-engine/scene-batch/src/main/resources/scenarios/fall-at-03/run.yaml",
+  "events" : 6,
+  "start" : "2024-01-01T03:00:00Z",
+  "clock" : "event-time"
+}
+{
+  "ts" : "2026-08-22T09:13:27.982237777Z",
+  "level" : "WARN",
+  "msg" : "observation discarded",
+  "event" : 5,
+  "offset" : "0s",
+  "kind" : "IN_BED",
+  "cause" : "DUPLICATE",
+  "subject" : "duplicate state LYING"
+}
+{
+  "ts" : "2026-08-22T09:13:28.014548891Z",
+  "level" : "INFO",
+  "msg" : "interpreter fact",
+  "event" : 6,
+  "type" : "TransitionDetected"
+}
+{
+  "ts" : "2026-08-22T09:13:28.015714336Z",
+  "level" : "INFO",
+  "msg" : "interpreter fact",
+  "event" : 7,
+  "type" : "TransitionDetected"
+}
+{
+  "ts" : "2026-08-22T09:13:28.016248080Z",
+  "level" : "INFO",
+  "msg" : "sweeper fact",
+  "event" : 8,
+  "type" : "SignalLost"
+}
+{
+  "ts" : "2026-08-22T09:13:28.016464179Z",
+  "level" : "WARN",
+  "msg" : "observation discarded",
+  "event" : 8,
+  "offset" : "4m",
+  "kind" : "STANDING",
+  "cause" : "DUPLICATE",
+  "subject" : "duplicate state STANDING"
+}
+{
+  "ts" : "2026-08-22T09:13:28.017010745Z",
+  "level" : "INFO",
+  "msg" : "interpreter fact",
+  "event" : 9,
+  "type" : "TransitionDetected"
+}
+{
+  "ts" : "2026-08-22T09:13:28.017396737Z",
+  "level" : "INFO",
+  "msg" : "interpreter fact",
+  "event" : 10,
+  "type" : "TransitionDetected"
+}
+{
+  "ts" : "2026-08-22T09:13:28.020263248Z",
+  "level" : "INFO",
+  "msg" : "batch run completed",
+  "passed" : 4,
+  "discarded" : 2,
+  "total" : 6
+}
+{
+  "ts" : "2026-08-22T09:18:47.599710560Z",
+  "level" : "INFO",
+  "msg" : "batch run started",
+  "config" : "/home/visiona/workspace/mana-hive/engines/scene-engine/scene-batch/src/main/resources/scenarios/fall-at-03/run.yaml",
+  "events" : 6,
+  "start" : "2024-01-01T03:00:00Z",
+  "clock" : "event-time"
+}
+{
+  "ts" : "2026-08-22T09:18:47.611500647Z",
+  "level" : "WARN",
+  "msg" : "observation discarded",
+  "event" : 5,
+  "offset" : "0s",
+  "kind" : "IN_BED",
+  "cause" : "DUPLICATE",
+  "subject" : "duplicate state LYING"
+}
+{
+  "ts" : "2026-08-22T09:18:47.639444398Z",
+  "level" : "INFO",
+  "msg" : "interpreter fact",
+  "event" : 6,
+  "type" : "TransitionDetected"
+}
+{
+  "ts" : "2026-08-22T09:18:47.640423130Z",
+  "level" : "INFO",
+  "msg" : "interpreter fact",
+  "event" : 7,
+  "type" : "TransitionDetected"
+}
+{
+  "ts" : "2026-08-22T09:18:47.641187591Z",
+  "level" : "INFO",
+  "msg" : "sweeper fact",
+  "event" : 8,
+  "type" : "SignalLost"
+}
+{
+  "ts" : "2026-08-22T09:18:47.641570486Z",
+  "level" : "WARN",
+  "msg" : "observation discarded",
+  "event" : 8,
+  "offset" : "4m",
+  "kind" : "STANDING",
+  "cause" : "DUPLICATE",
+  "subject" : "duplicate state STANDING"
+}
+{
+  "ts" : "2026-08-22T09:18:47.642330346Z",
+  "level" : "INFO",
+  "msg" : "interpreter fact",
+  "event" : 9,
+  "type" : "TransitionDetected"
+}
+{
+  "ts" : "2026-08-22T09:18:47.642863328Z",
+  "level" : "INFO",
+  "msg" : "interpreter fact",
+  "event" : 10,
+  "type" : "TransitionDetected"
+}
+{
+  "ts" : "2026-08-22T09:18:47.645126498Z",
+  "level" : "INFO",
+  "msg" : "batch run completed",
+  "passed" : 4,
+  "discarded" : 2,
+  "total" : 6
+}

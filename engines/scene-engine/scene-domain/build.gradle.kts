@@ -1,4 +1,11 @@
-plugins { id("manahive.pure-domain") }
+plugins {
+    id("manahive.pure-domain")
+    application
+}
+
+application {
+    mainClass.set("com.manahive.scene.MainKt")
+}
 
 dependencies {
     api(projects.platform.domainKernel)

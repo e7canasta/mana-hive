@@ -1,0 +1,4 @@
+# Test scenario: simple transition
+t=0s    OBS IN_BED confidence=0.95
+t=2s    OBS BED_EDGE confidence=0.92
+t=4s    OBS STANDING confidence=0.90

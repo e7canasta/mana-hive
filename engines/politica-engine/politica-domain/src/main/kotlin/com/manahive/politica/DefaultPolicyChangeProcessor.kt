@@ -48,7 +48,7 @@ public class DefaultPolicyChangeProcessor(
     }
 
     private companion object {
-        fun defaultCatalog(): AlarmCatalog = AlarmCatalog(
+        private fun defaultCatalog(): AlarmCatalog = AlarmCatalog(
             transitions = emptyMap(),
             dwellThresholds = mapOf(
                 StateKind.STANDING to DwellThreshold(

@@ -18,6 +18,8 @@ public sealed interface SceneFact {
     public val night: NightId
     public val at: Instant
 
+    // ── Person State Facts ────────────────────────────────────────
+
     /** Closing-the-books: the opening entry. Rehydration never reads past it. */
     public data class NightOpened(
         override val bed: BedId, override val night: NightId, override val at: Instant,
@@ -47,6 +49,34 @@ public sealed interface SceneFact {
         public val since: Instant,
     ) : SceneFact
 
+    // ── Scene State Facts ─────────────────────────────────────────
+
+    /** A scene field changed value (staff, wheelchair, bed rails, etc.) */
+    public data class SceneStateChanged(
+        override val bed: BedId, override val night: NightId, override val at: Instant,
+        public val field: String,
+        public val from: String,
+        public val to: String,
+    ) : SceneFact
+
+    /** Early warning for scene dwell (e.g., staff present for 10 min). */
+    public data class SceneDwellWarning(
+        override val bed: BedId, override val night: NightId, override val at: Instant,
+        public val field: String,
+        public val threshold: Duration,
+        public val since: Instant,
+    ) : SceneFact
+
+    /** Scene dwell exceeded (e.g., staff present for 30 min). */
+    public data class SceneDwellExceeded(
+        override val bed: BedId, override val night: NightId, override val at: Instant,
+        public val field: String,
+        public val threshold: Duration,
+        public val since: Instant,
+    ) : SceneFact
+
+    // ── Signal Facts ──────────────────────────────────────────────
+
     /** A fact, never a suppression: suppressing alarms is the sentinel's call. */
     public data class StaffPresenceDetected(
         override val bed: BedId, override val night: NightId, override val at: Instant,
@@ -64,6 +94,8 @@ public sealed interface SceneFact {
         override val bed: BedId, override val night: NightId, override val at: Instant,
         public val monitor: MonitorId,
     ) : SceneFact
+
+    // ── Lifecycle Facts ───────────────────────────────────────────
 
     public data class NightClosed(
         override val bed: BedId, override val night: NightId, override val at: Instant,

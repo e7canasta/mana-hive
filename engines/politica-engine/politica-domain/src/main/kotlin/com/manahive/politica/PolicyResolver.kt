@@ -55,7 +55,7 @@ internal object PolicyResolver {
         val base = resolveBase(profile.templateId, catalog)
             ?.hysteresis
             ?: catalog.transitions
-        return applyHysteresisOverrides(base, profile.overrides)
+        return applyOverrides<PolicyOverride.HysteresisOverride, TransitionKey, Duration>(base, profile.overrides) { it.key to it.value }
     }
 
     private fun resolveDwellThresholds(
@@ -65,7 +65,7 @@ internal object PolicyResolver {
         val base = resolveBase(profile.templateId, catalog)
             ?.dwellThresholds
             ?: catalog.dwellThresholds
-        return applyDwellOverrides(base, profile.overrides)
+        return applyOverrides<PolicyOverride.DwellOverride, StateKind, DwellThreshold>(base, profile.overrides) { it.state to it.value }
     }
 
     private fun resolveBase(templateId: TemplateId?, catalog: AlarmCatalog): Template? =
@@ -76,26 +76,16 @@ internal object PolicyResolver {
                 )
         }
 
-    private fun applyHysteresisOverrides(
-        base: Map<TransitionKey, Duration>,
+    private inline fun <reified O : PolicyOverride, K, V> applyOverrides(
+        base: Map<K, V>,
         overrides: Map<RuleId, PolicyOverride>,
-    ): Map<TransitionKey, Duration> {
+        extract: (O) -> Pair<K, V>,
+    ): Map<K, V> {
         if (overrides.isEmpty()) return base
         val result = base.toMutableMap()
-        overrides.values.filterIsInstance<PolicyOverride.HysteresisOverride>().forEach { override ->
-            result[override.key] = override.value
-        }
-        return result
-    }
-
-    private fun applyDwellOverrides(
-        base: Map<StateKind, DwellThreshold>,
-        overrides: Map<RuleId, PolicyOverride>,
-    ): Map<StateKind, DwellThreshold> {
-        if (overrides.isEmpty()) return base
-        val result = base.toMutableMap()
-        overrides.values.filterIsInstance<PolicyOverride.DwellOverride>().forEach { override ->
-            result[override.state] = override.value
+        overrides.values.filterIsInstance<O>().forEach { override ->
+            val (key, value) = extract(override)
+            result[key] = value
         }
         return result
     }

@@ -1,0 +1,180 @@
+{
+  "t" : "2s",
+  "event" : 6,
+  "type" : "TransitionDetected",
+  "bed" : "bed-3",
+  "night" : "night-1",
+  "from" : "LYING",
+  "to" : "BED_EDGE"
+}
+{
+  "t" : "4s",
+  "event" : 7,
+  "type" : "TransitionDetected",
+  "bed" : "bed-3",
+  "night" : "night-1",
+  "from" : "BED_EDGE",
+  "to" : "STANDING"
+}
+{
+  "t" : "4m",
+  "event" : 8,
+  "type" : "SignalLost",
+  "bed" : "bed-3",
+  "night" : "night-1",
+  "monitor" : "m1",
+  "lastHeartbeat" : "2024-01-01T02:59:00Z"
+}
+{
+  "t" : "6s",
+  "event" : 9,
+  "type" : "TransitionDetected",
+  "bed" : "bed-3",
+  "night" : "night-1",
+  "from" : "STANDING",
+  "to" : "IN_HALLWAY"
+}
+{
+  "t" : "8s",
+  "event" : 10,
+  "type" : "TransitionDetected",
+  "bed" : "bed-3",
+  "night" : "night-1",
+  "from" : "IN_HALLWAY",
+  "to" : "OUTDOOR"
+}
+{
+  "t" : "2s",
+  "event" : 6,
+  "type" : "TransitionDetected",
+  "bed" : "bed-3",
+  "night" : "night-1",
+  "from" : "LYING",
+  "to" : "BED_EDGE"
+}
+{
+  "t" : "4s",
+  "event" : 7,
+  "type" : "TransitionDetected",
+  "bed" : "bed-3",
+  "night" : "night-1",
+  "from" : "BED_EDGE",
+  "to" : "STANDING"
+}
+{
+  "t" : "4m",
+  "event" : 8,
+  "type" : "SignalLost",
+  "bed" : "bed-3",
+  "night" : "night-1",
+  "monitor" : "m1",
+  "lastHeartbeat" : "2024-01-01T02:59:00Z"
+}
+{
+  "t" : "6s",
+  "event" : 9,
+  "type" : "TransitionDetected",
+  "bed" : "bed-3",
+  "night" : "night-1",
+  "from" : "STANDING",
+  "to" : "IN_HALLWAY"
+}
+{
+  "t" : "8s",
+  "event" : 10,
+  "type" : "TransitionDetected",
+  "bed" : "bed-3",
+  "night" : "night-1",
+  "from" : "IN_HALLWAY",
+  "to" : "OUTDOOR"
+}
+{
+  "t" : "2s",
+  "event" : 6,
+  "type" : "TransitionDetected",
+  "bed" : "bed-3",
+  "night" : "night-1",
+  "from" : "LYING",
+  "to" : "BED_EDGE"
+}
+{
+  "t" : "4s",
+  "event" : 7,
+  "type" : "TransitionDetected",
+  "bed" : "bed-3",
+  "night" : "night-1",
+  "from" : "BED_EDGE",
+  "to" : "STANDING"
+}
+{
+  "t" : "4m",
+  "event" : 8,
+  "type" : "SignalLost",
+  "bed" : "bed-3",
+  "night" : "night-1",
+  "monitor" : "m1",
+  "lastHeartbeat" : "2024-01-01T02:59:00Z"
+}
+{
+  "t" : "6s",
+  "event" : 9,
+  "type" : "TransitionDetected",
+  "bed" : "bed-3",
+  "night" : "night-1",
+  "from" : "STANDING",
+  "to" : "IN_HALLWAY"
+}
+{
+  "t" : "8s",
+  "event" : 10,
+  "type" : "TransitionDetected",
+  "bed" : "bed-3",
+  "night" : "night-1",
+  "from" : "IN_HALLWAY",
+  "to" : "OUTDOOR"
+}
+{
+  "t" : "2s",
+  "event" : 6,
+  "type" : "TransitionDetected",
+  "bed" : "bed-3",
+  "night" : "night-1",
+  "from" : "LYING",
+  "to" : "BED_EDGE"
+}
+{
+  "t" : "4s",
+  "event" : 7,
+  "type" : "TransitionDetected",
+  "bed" : "bed-3",
+  "night" : "night-1",
+  "from" : "BED_EDGE",
+  "to" : "STANDING"
+}
+{
+  "t" : "4m",
+  "event" : 8,
+  "type" : "SignalLost",
+  "bed" : "bed-3",
+  "night" : "night-1",
+  "monitor" : "m1",
+  "lastHeartbeat" : "2024-01-01T02:59:00Z"
+}
+{
+  "t" : "6s",
+  "event" : 9,
+  "type" : "TransitionDetected",
+  "bed" : "bed-3",
+  "night" : "night-1",
+  "from" : "STANDING",
+  "to" : "IN_HALLWAY"
+}
+{
+  "t" : "8s",
+  "event" : 10,
+  "type" : "TransitionDetected",
+  "bed" : "bed-3",
+  "night" : "night-1",
+  "from" : "IN_HALLWAY",
+  "to" : "OUTDOOR"
+}

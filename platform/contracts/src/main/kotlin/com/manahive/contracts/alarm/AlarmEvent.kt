@@ -1,6 +1,6 @@
 package com.manahive.contracts.alarm
 
-import com.manahive.contracts.sentinel.Severity
+import com.manahive.contracts.policy.Severity
 import com.manahive.kernel.AlertId
 import com.manahive.kernel.BedId
 import com.manahive.kernel.EpisodeId

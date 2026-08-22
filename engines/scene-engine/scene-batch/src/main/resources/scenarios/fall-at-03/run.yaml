@@ -1,0 +1,28 @@
+# Scenario: Fall at 03:00
+# María se levanta de la cama a las 03:00, cae en el pasillo.
+# El monitor detecta la secuencia: Lying → BedEdge → Standing → InHallway → Absent
+
+scene:
+  bed: "bed-3"
+  night: "night-1"
+  resident: "maria"
+  monitor: "m1"
+
+calibration:
+  transitions: RELEASE_2
+  confidence:
+    BED_EDGE: 0.8
+    STANDING: 0.7
+    ATTEMPTING_EXIT: 0.85
+    IN_BATHROOM: 0.75
+  dwell:
+    STANDING: { warning: 4m, exceeded: 5m }
+    IN_BATHROOM: { warning: 3m, exceeded: 4m }
+    BED_EDGE: { warning: 1m, exceeded: 2m }
+  heartbeat:
+    timeout: 90s
+
+events:
+  source: "events.dat"
+  output: "output"
+  start: "2024-01-01T03:00:00Z"
