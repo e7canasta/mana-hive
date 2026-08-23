@@ -53,8 +53,8 @@ private fun run(datPath: String, outPath: String) {
     println("  Output:  $outPath")
     println()
     results.forEach { result ->
-        val source = result.emittedEvents.firstOrNull()?.source
-        println("  ${result.residentId.value} → $source")
+        val eventType = result.emittedEvents.firstOrNull()?.let { it::class.simpleName }
+        println("  ${result.residentId.value} → $eventType")
     }
 }
 

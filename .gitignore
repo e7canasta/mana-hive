@@ -4,3 +4,5 @@ build/
 .idea/
 *.iml
 local.properties
+archive/
+crates/

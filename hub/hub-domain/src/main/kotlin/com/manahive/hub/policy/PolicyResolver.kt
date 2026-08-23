@@ -1,8 +1,7 @@
 package com.manahive.hub.policy
 
 import com.manahive.contracts.policy.EffectiveRules
-import com.manahive.contracts.policy.EffectiveRule
-import com.manahive.contracts.policy.WatchLevel
+import com.manahive.contracts.policy.AlertRule
 import com.manahive.kernel.Engine
 import com.manahive.kernel.Explained
 import com.manahive.kernel.ResidentId
@@ -38,12 +37,12 @@ public data class PolicyLayers(
 public data class LevelTemplate(
     public val id: String,
     public val level: WatchLevel,
-    public val rules: List<EffectiveRule>,
+    public val rules: List<AlertRule>,
 )
 
 public data class ManualAdjustment(
     public val id: String,
-    public val rule: EffectiveRule,
+    public val rule: AlertRule,
     public val actor: StaffId,
     public val at: Instant,
 )
@@ -53,5 +52,5 @@ public data class TimeWindow(
     public val id: String,
     public val from: LocalTime,
     public val to: LocalTime,
-    public val rules: List<EffectiveRule>,
+    public val rules: List<AlertRule>,
 )

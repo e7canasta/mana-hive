@@ -1,0 +1,5 @@
+{"type": "NightOpened", "bed": "12A", "night": "night-001", "at": "2026-08-22T02:00:00Z", "occupant": "maria", "initialState": "LYING", "stateSince": "2026-08-22T02:00:00Z"}
+{"type": "TransitionDetected", "bed": "12A", "night": "night-001", "at": "2026-08-22T03:00:00Z", "from": "LYING", "to": "STANDING"}
+{"type": "TransitionDetected", "bed": "12A", "night": "night-001", "at": "2026-08-22T03:00:15Z", "from": "STANDING", "to": "ABSENT"}
+{"type": "TransitionDetected", "bed": "12A", "night": "night-001", "at": "2026-08-22T03:02:00Z", "from": "ABSENT", "to": "IN_ROOM"}
+{"type": "NightClosed", "bed": "12A", "night": "night-001", "at": "2026-08-22T06:00:00Z", "summary": {"transitions": 3, "minutesUnknown": 0, "episodes": 1}}

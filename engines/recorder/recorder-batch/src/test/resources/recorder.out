@@ -1,0 +1,2 @@
+{"type":"RecordingStarted","bed":"12A","monitor":"CAMERA_MAIN","start":"2026-08-22T02:58:00Z","quality":"HD","context":"standalone","episode":null,"at":"2026-08-23T00:57:25.057214796Z"}
+{"type":"RecordingStopped","bed":"12A","monitor":"CAMERA_MAIN","end":"2026-08-22T03:05:00Z","context":"standalone","episode":null,"at":"2026-08-23T00:57:25.057214796Z"}

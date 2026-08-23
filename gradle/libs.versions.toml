@@ -3,6 +3,8 @@ kotlin = "2.4.20-RC"
 spring-boot = "4.0.1"
 jnats = "2.21.4"
 jackson = "2.19.2"
+ktoml = "0.7.0"
+kotlinx-serialization = "1.7.3"
 postgres = "42.7.7"
 kotest = "5.9.1"
 konsist = "0.17.3"
@@ -12,11 +14,14 @@ testcontainers = "1.21.3"
 # build-logic classpath
 kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 kotlin-spring-plugin = { module = "org.jetbrains.kotlin.plugin.spring:org.jetbrains.kotlin.plugin.spring.gradle.plugin", version.ref = "kotlin" }
+kotlin-serialization-plugin = { module = "org.jetbrains.kotlin.plugin.serialization:org.jetbrains.kotlin.plugin.serialization.gradle.plugin", version.ref = "kotlin" }
 spring-boot-plugin = { module = "org.springframework.boot:spring-boot-gradle-plugin", version.ref = "spring-boot" }
 
 # runtime
 jnats = { module = "io.nats:jnats", version.ref = "jnats" }
 jackson-kotlin = { module = "com.fasterxml.jackson.module:jackson-module-kotlin", version.ref = "jackson" }
+ktoml = { module = "com.akuleshov7:ktoml-file-jvm", version.ref = "ktoml" }
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 postgres = { module = "org.postgresql:postgresql", version.ref = "postgres" }
 
 # test

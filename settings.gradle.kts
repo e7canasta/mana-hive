@@ -23,9 +23,11 @@ enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 include(":platform:domain-kernel")
 include(":platform:contracts")
 include(":platform:messaging")
+include(":platform:infrastructure")
 
 // ── hub: the System of Record (multiple bounded contexts inside) ─────────────
 include(":hub:hub-domain")
+include(":hub:hub-batch")
 include(":hub:hub-service")
 
 // ── engines: one deployable per responsibility, pure core + thin shell ───────
@@ -41,6 +43,8 @@ include(":engines:sentinel:sentinel-service")
 include(":engines:harbor:harbor-domain")
 include(":engines:harbor:harbor-batch")
 include(":engines:harbor:harbor-service")
+include(":engines:recorder:recorder-domain")
+include(":engines:recorder:recorder-batch")
 
 // ── tooling ───────────────────────────────────────────────────────────────────
 include(":simulator")

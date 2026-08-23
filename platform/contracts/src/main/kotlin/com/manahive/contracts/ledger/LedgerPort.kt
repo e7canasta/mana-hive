@@ -11,4 +11,6 @@ public interface LedgerPort {
     public fun append(stream: String, expectedSeq: Long?, events: List<EventEnvelope>): AppendResult
     public fun read(stream: String): List<StoredEvent>
     public fun readFrom(globalSeq: Long, limit: Int): List<StoredEvent>
+    public fun count(stream: String): Long
+    public fun globalSeq(): Long
 }

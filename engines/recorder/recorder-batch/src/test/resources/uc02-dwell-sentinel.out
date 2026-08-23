@@ -1,0 +1,2 @@
+{"type": "EpisodeOpened", "bed": "12A", "resident": "maria", "at": "2026-08-22T00:45:00Z", "rulesFingerprint": "fp-002", "episode": "ep-002", "rule": "r-bathroom-dwell", "trigger": "IN_BATHROOM", "severity": "WARNING", "reversible": true, "nvr": true, "confirmationWindow": "PT5M"}
+{"type": "EpisodeClosed", "bed": "12A", "resident": "maria", "at": "2026-08-22T00:47:00Z", "rulesFingerprint": "fp-002", "episode": "ep-002", "cause": "AUTO_RECOVERY"}

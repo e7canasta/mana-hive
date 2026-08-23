@@ -1,0 +1,2 @@
+{"eventId":"evt-101","type":"SceneFact","version":1,"occurredAt":"2026-08-22T03:00:00Z","source":"scene-engine","payloadJson":"{\"bed\":\"12B\",\"kind\":\"NIGHT_OPENED\"}"}
+{"eventId":"evt-102","type":"SceneFact","version":1,"occurredAt":"2026-08-22T03:01:00Z","source":"scene-engine","payloadJson":"{\"bed\":\"12B\",\"kind\":\"TRANSITION_DETECTED\",\"from\":\"LYING\",\"to\":\"STANDING\"}"}
