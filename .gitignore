@@ -4,5 +4,8 @@ build/
 .idea/
 *.iml
 local.properties
+.obsidian/
 archive/
+build-logic/
 crates/
+gradle/
