@@ -1,11 +1,11 @@
 spring:
   application:
-    name: vigia
+    name: recorder-service
   main:
     banner-mode: off
 
 server:
-  port: 8083
+  port: 8084
 
 management:
   endpoints:
@@ -18,14 +18,9 @@ management:
 
 logging:
   level:
-    com.manahive.harbor: INFO
-    com.manahive.vigia: INFO
+    com.manahive.recorder: INFO
     org.springframework: INFO
 
 nats:
   url: nats://localhost:4222
   cluster: manahive
-  durable: vigia
-
-delivery:
-  adapter: console

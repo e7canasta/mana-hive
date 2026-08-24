@@ -1,7 +1,14 @@
 package com.manahive.sentinel.service
 
+import com.manahive.sentinel.FatigueBudget
+import com.manahive.sentinel.SentinelCalibration
+import com.manahive.sentinel.SentinelEvaluator
+import com.manahive.sentinel.createSentinelEvaluator
+import com.manahive.sentinel.sentinelCalibration
+import com.manahive.kernel.ResidentId
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
+import org.springframework.context.annotation.Bean
 
 /**
  * Imperative shell of the sentinel. Wires:
@@ -12,7 +19,20 @@ import org.springframework.boot.runApplication
  * stream on cold start. Judgment lives in sentinel-domain.
  */
 @SpringBootApplication
-class SentinelApplication
+class SentinelApplication {
+
+    @Bean
+    fun sentinelCalibration(): SentinelCalibration = sentinelCalibration {
+        resident(ResidentId("default"))
+        fatigue {
+            maxPerShift = 12
+        }
+    }
+
+    @Bean
+    fun sentinelEvaluator(calibration: SentinelCalibration): SentinelEvaluator =
+        createSentinelEvaluator(calibration)
+}
 
 fun main(args: Array<String>) {
     runApplication<SentinelApplication>(*args)

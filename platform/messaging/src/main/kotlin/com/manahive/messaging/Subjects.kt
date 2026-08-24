@@ -14,6 +14,8 @@ public object Subjects {
     public fun sentinelSignal(bed: BedId): String = "sentinel.signal.v1.${bed.value}"
     public fun alarmEvent(alert: AlertId): String = "alarm.event.v1.${alert.value}"
     public fun effectiveRules(resident: ResidentId): String = "hub.policy.effective-rules.v1.${resident.value}"
+    public fun recordingCommand(bed: BedId): String = "recorder.command.v1.${bed.value}"
+    public fun evidenceRecord(bed: BedId): String = "evidence.record.v1.${bed.value}"
 
     public const val CENSUS_SNAPSHOT: String = "hub.census.snapshot.v1"
 
@@ -21,4 +23,7 @@ public object Subjects {
     public const val SCENE_WILDCARD: String = "scene.fact.v1.>"
     public const val SENTINEL_WILDCARD: String = "sentinel.signal.v1.>"
     public const val ALARM_WILDCARD: String = "alarm.event.v1.>"
+    public const val POLICY_WILDCARD: String = "hub.policy.>"
+    public const val RECORDER_WILDCARD: String = "recorder.command.v1.>"
+    public const val EVIDENCE_WILDCARD: String = "evidence.record.v1.>"
 }

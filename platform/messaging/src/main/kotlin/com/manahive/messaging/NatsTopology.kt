@@ -22,6 +22,9 @@ public class NatsTopology(private val jsm: JetStreamManagement) {
         ensure("SCENE", Subjects.SCENE_WILDCARD, Duration.ofDays(7))
         ensure("SENTINEL", Subjects.SENTINEL_WILDCARD, Duration.ofDays(7))
         ensure("ALARM", Subjects.ALARM_WILDCARD, Duration.ofDays(7))
+        ensure("POLICY", Subjects.POLICY_WILDCARD, Duration.ofDays(7))
+        ensure("RECORDER", Subjects.RECORDER_WILDCARD, Duration.ofDays(7))
+        ensure("EVIDENCE", Subjects.EVIDENCE_WILDCARD, Duration.ofDays(7))
     }
 
     private fun ensure(name: String, subjects: String, maxAge: Duration) {

@@ -1,10 +1,30 @@
 spring:
   application:
     name: sentinel
+  main:
+    banner-mode: off
 
-manahive:
-  nats:
-    url: nats://localhost:4222
-    durable: sentinel
-  fatigue:
-    max-interruptions-per-shift: 12
+server:
+  port: 8082
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    com.manahive.sentinel: INFO
+    org.springframework: INFO
+
+nats:
+  url: nats://localhost:4222
+  cluster: manahive
+  durable: sentinel
+
+fatigue:
+  max-interruptions-per-shift: 12

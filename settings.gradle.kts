@@ -45,6 +45,7 @@ include(":engines:harbor:harbor-batch")
 include(":engines:harbor:harbor-service")
 include(":engines:recorder:recorder-domain")
 include(":engines:recorder:recorder-batch")
+include(":engines:recorder:recorder-service")
 
 // ── tooling ───────────────────────────────────────────────────────────────────
 include(":simulator")
