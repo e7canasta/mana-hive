@@ -20,7 +20,7 @@ import java.time.Duration
  * - `t=10s   STAFF_PRESENT staff nurse-1`
  * - `t=40s   DWELL_EXCEEDED state STANDING threshold PT5M`
  */
-sealed interface SceneFactEvent {
+sealed interface SceneEventEvent {
     val offset: EventOffset
     val lineNumber: Int
     val typeName: String
@@ -30,7 +30,7 @@ sealed interface SceneFactEvent {
         override val lineNumber: Int,
         val from: StateKind,
         val to: StateKind,
-    ) : SceneFactEvent {
+    ) : SceneEventEvent {
         override val typeName: String get() = "TRANSITION"
     }
 
@@ -38,7 +38,7 @@ sealed interface SceneFactEvent {
         override val offset: EventOffset,
         override val lineNumber: Int,
         val staff: String?,
-    ) : SceneFactEvent {
+    ) : SceneEventEvent {
         override val typeName: String get() = "STAFF_PRESENT"
     }
 
@@ -47,7 +47,7 @@ sealed interface SceneFactEvent {
         override val lineNumber: Int,
         val state: StateKind,
         val threshold: Duration,
-    ) : SceneFactEvent {
+    ) : SceneEventEvent {
         override val typeName: String get() = "DWELL_EXCEEDED"
     }
 
@@ -56,7 +56,7 @@ sealed interface SceneFactEvent {
         override val lineNumber: Int,
         val state: StateKind,
         val threshold: Duration,
-    ) : SceneFactEvent {
+    ) : SceneEventEvent {
         override val typeName: String get() = "DWELL_WARNING"
     }
 
@@ -65,7 +65,7 @@ sealed interface SceneFactEvent {
         override val lineNumber: Int,
         val monitor: String,
         val lastHeartbeat: String?,
-    ) : SceneFactEvent {
+    ) : SceneEventEvent {
         override val typeName: String get() = "SIGNAL_LOST"
     }
 
@@ -73,7 +73,7 @@ sealed interface SceneFactEvent {
         override val offset: EventOffset,
         override val lineNumber: Int,
         val monitor: String,
-    ) : SceneFactEvent {
+    ) : SceneEventEvent {
         override val typeName: String get() = "SIGNAL_RECOVERED"
     }
 }

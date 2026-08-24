@@ -61,10 +61,11 @@ public data class TransitionTable(
         public val RELEASE_2: TransitionTable = TransitionTable(
             mapOf(
                 // ── In bed transitions ──────────────────────────────────
-                // Lying → bed states
+                // Lying → bed states or Standing
                 TransitionKey(StateKind.LYING, StateKind.SITTING_IN_BED) to BED_TRANSITION,
                 TransitionKey(StateKind.LYING, StateKind.ATTEMPTING_EXIT) to BED_TRANSITION,
                 TransitionKey(StateKind.LYING, StateKind.BED_EDGE) to BED_TRANSITION,
+                TransitionKey(StateKind.LYING, StateKind.STANDING) to BED_TRANSITION,
 
                 // SittingInBed → bed states or Standing
                 TransitionKey(StateKind.SITTING_IN_BED, StateKind.LYING) to QUICK,
@@ -84,8 +85,9 @@ public data class TransitionTable(
                 TransitionKey(StateKind.BED_EDGE, StateKind.STANDING) to STANDARD,
 
                 // ── Out of bed transitions ──────────────────────────────
-                // Standing → out-of-bed, furniture, or Absent
+                // Standing → out-of-bed, furniture, bed, or Absent
                 TransitionKey(StateKind.STANDING, StateKind.BED_EDGE) to STANDARD,
+                TransitionKey(StateKind.STANDING, StateKind.LYING) to BED_TRANSITION,
                 TransitionKey(StateKind.STANDING, StateKind.IN_BATHROOM) to ROOM_TRANSITION,
                 TransitionKey(StateKind.STANDING, StateKind.IN_ROOM) to ROOM_TRANSITION,
                 TransitionKey(StateKind.STANDING, StateKind.IN_HALLWAY) to ROOM_TRANSITION,
@@ -100,13 +102,16 @@ public data class TransitionTable(
                 TransitionKey(StateKind.IN_BATHROOM, StateKind.IN_HALLWAY) to ROOM_TRANSITION,
                 TransitionKey(StateKind.IN_BATHROOM, StateKind.OUTDOOR) to ROOM_TRANSITION,
 
-                // InRoom → Standing, bathroom, hallway, outdoor, furniture
+                // InRoom → Standing, bathroom, hallway, outdoor, furniture, bed
                 TransitionKey(StateKind.IN_ROOM, StateKind.STANDING) to ROOM_TRANSITION,
                 TransitionKey(StateKind.IN_ROOM, StateKind.IN_BATHROOM) to ROOM_TRANSITION,
                 TransitionKey(StateKind.IN_ROOM, StateKind.IN_HALLWAY) to ROOM_TRANSITION,
                 TransitionKey(StateKind.IN_ROOM, StateKind.OUTDOOR) to ROOM_TRANSITION,
                 TransitionKey(StateKind.IN_ROOM, StateKind.IN_CHAIR) to BED_TRANSITION,
                 TransitionKey(StateKind.IN_ROOM, StateKind.IN_WHEELCHAIR) to BED_TRANSITION,
+                TransitionKey(StateKind.IN_ROOM, StateKind.LYING) to ROOM_TRANSITION,
+                TransitionKey(StateKind.IN_ROOM, StateKind.SITTING_IN_BED) to ROOM_TRANSITION,
+                TransitionKey(StateKind.IN_ROOM, StateKind.BED_EDGE) to ROOM_TRANSITION,
 
                 // InHallway → Standing, bathroom, room, outdoor
                 TransitionKey(StateKind.IN_HALLWAY, StateKind.STANDING) to ROOM_TRANSITION,

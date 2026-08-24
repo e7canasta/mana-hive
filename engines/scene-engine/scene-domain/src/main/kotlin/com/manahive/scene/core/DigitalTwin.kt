@@ -1,18 +1,21 @@
 package com.manahive.scene.core
 
 import com.manahive.contracts.scene.PersonState
-import com.manahive.contracts.scene.SceneFact
-import com.manahive.contracts.scene.SceneFact.DwellExceeded
-import com.manahive.contracts.scene.SceneFact.DwellWarning
-import com.manahive.contracts.scene.SceneFact.NightClosed
-import com.manahive.contracts.scene.SceneFact.NightOpened
-import com.manahive.contracts.scene.SceneFact.SceneDwellExceeded
-import com.manahive.contracts.scene.SceneFact.SceneDwellWarning
-import com.manahive.contracts.scene.SceneFact.SceneStateChanged
-import com.manahive.contracts.scene.SceneFact.SignalLost
-import com.manahive.contracts.scene.SceneFact.SignalRecovered
-import com.manahive.contracts.scene.SceneFact.StaffPresenceDetected
-import com.manahive.contracts.scene.SceneFact.TransitionDetected
+import com.manahive.contracts.scene.SceneEvent
+import com.manahive.contracts.scene.SceneEvent.DwellExceeded
+import com.manahive.contracts.scene.SceneEvent.DwellWarning
+import com.manahive.contracts.scene.SceneEvent.NightClosed
+import com.manahive.contracts.scene.SceneEvent.NightOpened
+import com.manahive.contracts.scene.SceneEvent.ComeBackExceeded
+import com.manahive.contracts.scene.SceneEvent.ComeBackWarning
+import com.manahive.contracts.scene.SceneEvent.SceneDwellExceeded
+import com.manahive.contracts.scene.SceneEvent.SceneDwellWarning
+import com.manahive.contracts.scene.SceneEvent.SceneStateChanged
+import com.manahive.contracts.scene.SceneEvent.SignalLost
+import com.manahive.contracts.scene.SceneEvent.SignalRecovered
+import com.manahive.contracts.scene.SceneEvent.StaffLeftDetected
+import com.manahive.contracts.scene.SceneEvent.StaffPresenceDetected
+import com.manahive.contracts.scene.SceneEvent.TransitionDetected
 import com.manahive.contracts.scene.SceneState
 import com.manahive.contracts.scene.kind
 import com.manahive.kernel.BedId
@@ -44,33 +47,60 @@ public data class DigitalTwin(
     public val sceneSince: Instant = stateSince,
     public val signal: SignalHealth,
     public val calibration: SceneCalibration? = null,
+    /**
+     * When the person left the tracked state (e.g., LYING).
+     * Null when the person IS in the tracked state.
+     *
+     * The "mine" is planted on departure. It explodes if the person
+     * doesn't return within the return dwell threshold.
+     *
+     * Set once on transition away from baseline, cleared on return.
+     *
+     * Fowler: "Derived Value" — computed from state transitions,
+     * never set directly by callers.
+     */
+    public val leftStateAt: Instant? = null,
+    /**
+     * The baseline state for return dwell calculations.
+     * Default: LYING (most residents start and end in bed).
+     */
+    public val baselineState: PersonState = PersonState.Lying,
 ) {
     /**
-     * Folds a SceneFact into the twin, producing an updated twin.
+     * Folds a SceneEvent into the twin, producing an updated twin.
      *
      * Pure function: no side effects, no mutation. The original twin
      * is unchanged; a new twin is returned.
      *
      * Event Sourcing: the twin is the projection of all facts seen so far.
      */
-    public fun evolve(fact: SceneFact): DigitalTwin = when (fact) {
+    public fun evolve(fact: SceneEvent): DigitalTwin = when (fact) {
         is NightOpened -> copy(
             occupant = fact.occupant,
             state = fact.initialState,
             stateSince = fact.stateSince,
+            leftStateAt = if (fact.initialState == baselineState) null else fact.stateSince,
         )
-        is TransitionDetected -> copy(
-            state = fact.to,
-            stateSince = fact.at,
-        )
+        is TransitionDetected -> {
+            val isReturningToBaseline = fact.to == baselineState
+            copy(
+                state = fact.to,
+                stateSince = fact.at,
+                // Mine planted on departure, disarmed on return
+                leftStateAt = if (isReturningToBaseline) null else leftStateAt ?: fact.at,
+            )
+        }
         is SceneStateChanged -> this  // Scene state is updated via evolveScene()
         is SignalLost -> copy(signal = signal.copy(lost = true))
         is SignalRecovered -> copy(signal = signal.copy(lost = false))
         is DwellWarning -> this  // Does not change state, only reports
         is DwellExceeded -> this
+        is ComeBackWarning -> this  // Does not change state, only reports
+        is ComeBackExceeded -> this
         is SceneDwellWarning -> this  // Does not change state, only reports
         is SceneDwellExceeded -> this
         is StaffPresenceDetected -> this
+        is StaffLeftDetected -> this
         is NightClosed -> this  // Closes the night
     }
 
@@ -78,7 +108,7 @@ public data class DigitalTwin(
      * Folds a scene state change into the twin.
      *
      * This is separate from evolve() because scene state changes
-     * don't produce SceneFacts directly — they're derived.
+     * don't produce SceneEvents directly — they're derived.
      */
     public fun evolveScene(change: (SceneState) -> SceneState, at: Instant): DigitalTwin {
         val newScene = change(scene)
@@ -94,6 +124,18 @@ public data class DigitalTwin(
 
     /** Duration in current scene state. */
     public fun durationInSceneState(now: Instant): Duration = Duration.between(sceneSince, now)
+
+    /**
+     * Duration since leaving the baseline state.
+     * Returns null if the person IS in the baseline state (mine not planted).
+     *
+     * Used by ClockSweeper for return dwell (inverse dwell).
+     */
+    public fun durationSinceLeftBaseline(now: Instant): Duration? {
+        if (state == baselineState) return null  // Mine not planted
+        val since = leftStateAt ?: return null
+        return Duration.between(since, now)
+    }
 
     /** Creates a DwellMarkKey from this twin. */
     public fun toDwellMarkKey(warning: Boolean = false): DwellMarkKey = DwellMarkKey(
@@ -157,6 +199,26 @@ public data class DigitalTwin(
         at = at,
         monitor = signal.monitor,
         lastHeartbeat = signal.lastHeartbeat,
+    )
+
+    /** Emits a ComeBackWarning fact from this twin. */
+    public fun emitComeBackWarning(threshold: Duration, at: Instant): ComeBackWarning = ComeBackWarning(
+        bed = bed,
+        night = night,
+        at = at,
+        baseline = baselineState,
+        threshold = threshold,
+        since = leftStateAt ?: stateSince,
+    )
+
+    /** Emits a ComeBackExceeded fact from this twin. */
+    public fun emitComeBackExceeded(threshold: Duration, at: Instant): ComeBackExceeded = ComeBackExceeded(
+        bed = bed,
+        night = night,
+        at = at,
+        baseline = baselineState,
+        threshold = threshold,
+        since = leftStateAt ?: stateSince,
     )
 }
 

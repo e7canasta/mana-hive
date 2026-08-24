@@ -13,43 +13,59 @@ import java.time.Duration
  * Compiled business rules for one resident's sentinel evaluator.
  * Analogous to [com.manahive.scene.calibration.SceneCalibration] for SceneInterpreter.
  *
- * Created from EffectiveRules (Politica Engine output) + fatigue budget config.
+ * Created from EffectiveRules (Politica Engine output).
  * Injected at construction time — immutable for the evaluator's lifetime.
  *
  * If rules change, create a new evaluator with a new calibration.
+ *
+ * NOTE: Fatigue is NOT a concern of Sentinel (clinical judgment).
+ * Fatigue is a delivery concern handled by Harbor (the watchdog).
+ * Sentinel ALWAYS opens episodes when a rule matches — facts are facts.
  */
 public data class SentinelCalibration(
     public val residentId: ResidentId,
     /** The alert rules, keyed by trigger state for fast lookup. */
     public val rulesByTrigger: Map<StateKind, AlertRule>,
+    /** Rules for transition events (keyed by target state). */
+    public val transitionRules: Map<StateKind, AlertRule>,
+    /** Rules for dwell events (keyed by state). */
+    public val dwellRules: Map<StateKind, AlertRule>,
+    /** Rules for scene state events (keyed by field). */
+    public val sceneStateRules: Map<String, AlertRule>,
     /** All rule IDs for this resident. */
     public val ruleIds: Set<RuleId>,
-    /** Fatigue budget configuration. */
-    public val fatigue: FatigueBudget,
     /** Rules fingerprint for reproducibility. */
     public val fingerprint: String,
 ) {
     public companion object {
         /**
-         * Build a [SentinelCalibration] from effective rules and fatigue config.
+         * Build a [SentinelCalibration] from effective rules.
          */
-        public fun from(
-            rules: EffectiveRules,
-            fatigue: FatigueBudget,
-        ): SentinelCalibration {
+        public fun from(rules: EffectiveRules): SentinelCalibration {
             val byTrigger = rules.rules.associateBy { it.trigger }
             return SentinelCalibration(
                 residentId = rules.residentId,
                 rulesByTrigger = byTrigger,
+                transitionRules = byTrigger,
+                dwellRules = byTrigger,
+                sceneStateRules = emptyMap(),
                 ruleIds = rules.rules.map { it.id }.toSet(),
-                fatigue = fatigue,
                 fingerprint = rules.fingerprint,
             )
         }
     }
 
-    /** Find the rule that matches a trigger state. */
+    /** Find the rule that matches a trigger state (legacy method). */
     public fun ruleFor(trigger: StateKind): AlertRule? = rulesByTrigger[trigger]
+
+    /** Find the rule for a transition event. */
+    public fun transitionRuleFor(targetState: StateKind): AlertRule? = transitionRules[targetState]
+
+    /** Find the rule for a dwell event. */
+    public fun dwellRuleFor(state: StateKind): AlertRule? = dwellRules[state]
+
+    /** Find the rule for a scene state event. */
+    public fun sceneStateRuleFor(field: String): AlertRule? = sceneStateRules[field]
 
     /** Find the notifiable states for a given trigger (umbrella events). */
     public fun notifiableStatesFor(trigger: StateKind): Set<StateKind> {
@@ -67,10 +83,6 @@ public data class SentinelCalibration(
  * ```kotlin
  * val calibration = sentinelCalibration {
  *     resident("maria")
- *
- *     fatigue {
- *         maxPerShift = 5
- *     }
  *
  *     rule("r-fall") {
  *         trigger = StateKind.BED_EDGE
@@ -98,7 +110,6 @@ public fun sentinelCalibration(init: SentinelCalibrationBuilder.() -> Unit): Sen
 @SentinelDsl
 public class SentinelCalibrationBuilder {
     private var residentId: ResidentId? = null
-    private var fatigue = FatigueBudget(interruptionsThisShift = 0, maxPerShift = 5)
     private val rules = mutableMapOf<RuleId, AlertRuleBuilder>()
 
     public fun resident(id: String) {
@@ -107,10 +118,6 @@ public class SentinelCalibrationBuilder {
 
     public fun resident(id: ResidentId) {
         residentId = id
-    }
-
-    public fun fatigue(init: FatigueBudgetBuilder.() -> Unit) {
-        FatigueBudgetBuilder().apply(init).also { fatigue = it.build() }
     }
 
     public fun rule(id: String, init: AlertRuleBuilder.() -> Unit) {
@@ -124,21 +131,13 @@ public class SentinelCalibrationBuilder {
         return SentinelCalibration(
             residentId = id,
             rulesByTrigger = byTrigger,
+            transitionRules = byTrigger,
+            dwellRules = byTrigger,
+            sceneStateRules = emptyMap(),
             ruleIds = builtRules.map { it.id }.toSet(),
-            fatigue = fatigue,
             fingerprint = builtRules.joinToString(",") { it.id.value },
         )
     }
-}
-
-@SentinelDsl
-public class FatigueBudgetBuilder {
-    public var maxPerShift: Int = 5
-
-    internal fun build(): FatigueBudget = FatigueBudget(
-        interruptionsThisShift = 0,
-        maxPerShift = maxPerShift,
-    )
 }
 
 @SentinelDsl

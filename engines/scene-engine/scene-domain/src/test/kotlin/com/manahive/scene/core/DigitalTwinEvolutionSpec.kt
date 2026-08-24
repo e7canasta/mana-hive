@@ -1,10 +1,10 @@
 package com.manahive.scene.core
 
 import com.manahive.contracts.scene.PersonState
-import com.manahive.contracts.scene.SceneFact.DwellWarning
-import com.manahive.contracts.scene.SceneFact.SignalLost
-import com.manahive.contracts.scene.SceneFact.SignalRecovered
-import com.manahive.contracts.scene.SceneFact.TransitionDetected
+import com.manahive.contracts.scene.SceneEvent.DwellWarning
+import com.manahive.contracts.scene.SceneEvent.SignalLost
+import com.manahive.contracts.scene.SceneEvent.SignalRecovered
+import com.manahive.contracts.scene.SceneEvent.TransitionDetected
 import com.manahive.kernel.BedId
 import com.manahive.kernel.MonitorId
 import com.manahive.kernel.NightId

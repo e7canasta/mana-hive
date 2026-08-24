@@ -4,9 +4,9 @@ import com.manahive.contracts.shared.minutes
 import com.manahive.contracts.perception.ObservationKind.BED_EDGE
 import com.manahive.contracts.perception.ObservationKind.STANDING
 import com.manahive.contracts.scene.PersonState
-import com.manahive.contracts.scene.SceneFact
-import com.manahive.contracts.scene.SceneFact.DwellExceeded
-import com.manahive.contracts.scene.SceneFact.TransitionDetected
+import com.manahive.contracts.scene.SceneEvent
+import com.manahive.contracts.scene.SceneEvent.DwellExceeded
+import com.manahive.contracts.scene.SceneEvent.TransitionDetected
 import com.manahive.contracts.scene.StateKind
 import com.manahive.scene.support.SceneTestDsl.bed
 import com.manahive.scene.support.SceneTestDsl.bed3
@@ -51,7 +51,7 @@ class LaCaidaDeLas03Spec : BehaviorSpec({
 
         When("sensor ve borde de cama y luego de pie, y el reloj corre 5 minutos") {
             var twin: DigitalTwin = bed(3) occupiedBy maria at StateKind.LYING since time02_59_58
-            val allFacts = mutableListOf<SceneFact>()
+            val allFacts = mutableListOf<SceneEvent>()
             var marks = DwellMarks(emptySet())
 
             // Paso 1: BED_EDGE a las 03:00:00

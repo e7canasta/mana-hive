@@ -2,11 +2,12 @@ package com.manahive.recorder
 
 import com.manahive.contracts.policy.Severity
 import com.manahive.contracts.scene.PersonState
-import com.manahive.contracts.scene.SceneFact
+import com.manahive.contracts.scene.SceneEvent
 import com.manahive.contracts.sentinel.SentinelSignal
 import com.manahive.kernel.BedId
 import com.manahive.kernel.MonitorId
 import com.manahive.kernel.ResidentId
+import com.manahive.kernel.Specification
 import java.time.Duration
 import java.time.Instant
 
@@ -19,7 +20,7 @@ import java.time.Instant
  * - If rules change, create a new engine with new calibration
  *
  * Defines:
- * - What triggers recording (SceneFact or SentinelSignal)
+ * - What triggers recording (SceneEvent or SentinelSignal)
  * - How long to record before/after the trigger
  * - Which monitors to use
  * - Recording quality
@@ -148,12 +149,23 @@ public data class RecordingWindow(
 /**
  * Matcher for recording triggers.
  *
+ * Fowler's "Specification Pattern": each matcher is a predicate that tests
+ * whether a trigger satisfies some criterion. Specifications are composable:
+ * - transition(from = LYING, to = STANDING).and(severity(CRITICAL))
+ * - episodeOpened().or(dwellExceeded())
+ * - any().not()
+ *
  * Can match:
- * - A specific SceneFact type (TransitionDetected, DwellExceeded, etc.)
+ * - A specific SceneEvent type (TransitionDetected, DwellExceeded, etc.)
  * - A specific SentinelSignal type (EpisodeOpened, EpisodeClosed, etc.)
- * - A combination of conditions
+ * - A combination of conditions via and/or/not composition
  */
-public sealed interface RecordingTriggerMatcher {
+public sealed interface RecordingTriggerMatcher : Specification<RecordingTrigger> {
+    /**
+     * Alias for Specification.isSatisfiedBy — maps to the matcher's matches().
+     */
+    override fun isSatisfiedBy(candidate: RecordingTrigger): Boolean = matches(candidate)
+
     /**
      * Check if a trigger matches this matcher.
      */
@@ -168,9 +180,9 @@ public data class TransitionMatcher(
     public val to: PersonState? = null,
 ) : RecordingTriggerMatcher {
     override public fun matches(trigger: RecordingTrigger): Boolean {
-        if (trigger !is SceneFactTrigger) return false
+        if (trigger !is SceneEventTrigger) return false
         val fact = trigger.fact
-        if (fact !is SceneFact.TransitionDetected) return false
+        if (fact !is SceneEvent.TransitionDetected) return false
         if (from != null && fact.from != from) return false
         if (to != null && fact.to != to) return false
         return true
@@ -184,9 +196,9 @@ public data class DwellExceededMatcher(
     public val state: PersonState,
 ) : RecordingTriggerMatcher {
     override public fun matches(trigger: RecordingTrigger): Boolean {
-        if (trigger !is SceneFactTrigger) return false
+        if (trigger !is SceneEventTrigger) return false
         val fact = trigger.fact
-        if (fact !is SceneFact.DwellExceeded) return false
+        if (fact !is SceneEvent.DwellExceeded) return false
         return fact.state == state
     }
 }
@@ -198,9 +210,9 @@ public data class DwellWarningMatcher(
     public val state: PersonState,
 ) : RecordingTriggerMatcher {
     override public fun matches(trigger: RecordingTrigger): Boolean {
-        if (trigger !is SceneFactTrigger) return false
+        if (trigger !is SceneEventTrigger) return false
         val fact = trigger.fact
-        if (fact !is SceneFact.DwellWarning) return false
+        if (fact !is SceneEvent.DwellWarning) return false
         return fact.state == state
     }
 }

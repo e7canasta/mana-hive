@@ -1,5 +1,6 @@
 package com.manahive.harbor
 
+import com.manahive.contracts.common.Channel
 import com.manahive.contracts.sentinel.SentinelSignal
 import com.manahive.kernel.EngineVersion
 import com.manahive.kernel.Explained
@@ -11,7 +12,7 @@ import java.time.Instant
  * Pure implementation of [HarborEngine].
  *
  * Created with [HarborCalibration] — immutable for the engine's lifetime.
- * State flows through [NoticeRegistry] — the shell persists it, this engine never does.
+ * State flows through [HarborState] — the shell persists it, this engine never does.
  *
  * Fowler: "Extract Method" — each signal type has its own handler.
  * Vernon: "Domain Service" — coordinates across aggregates without owning them.
@@ -28,19 +29,20 @@ internal class HarborEngineImpl(
 
     override fun evaluate(
         signal: SentinelSignal,
-        registry: NoticeRegistry,
+        state: HarborState,
         now: Instant,
     ): Explained<HarborVerdict> {
         val result = when (signal) {
-            is SentinelSignal.EpisodeOpened -> handleEpisodeOpened(signal, registry, now)
-            is SentinelSignal.EpisodeClosed -> handleEpisodeClosed(signal, registry, now)
-            is SentinelSignal.AutoRecovery -> handleAutoRecovery(signal, registry, now)
-            is SentinelSignal.UmbrellaEvent -> handleUmbrellaEvent(signal, registry)
-            is SentinelSignal.SuppressedWithRecord -> handleSuppressed(signal, registry)
+            is SentinelSignal.EpisodeOpened -> handleEpisodeOpened(signal, state, now)
+            is SentinelSignal.EpisodeClosed -> handleEpisodeClosed(signal, state, now)
+            is SentinelSignal.AutoRecovery -> handleAutoRecovery(signal, state, now)
+            is SentinelSignal.UmbrellaEvent -> handleUmbrellaEvent(signal, state)
+            is SentinelSignal.SuppressedWithRecord -> handleSuppressed(signal, state)
+            is SentinelSignal.DwellPreWarning -> handleDwellPreWarning(signal, state)
         }
 
         return Explained(
-            value = HarborVerdict(commands = result.commands, registry = result.registry),
+            value = HarborVerdict(commands = result.commands, state = result.state),
             explanation = result.explanation,
         )
     }
@@ -49,14 +51,14 @@ internal class HarborEngineImpl(
 
     private fun handleEpisodeOpened(
         signal: SentinelSignal.EpisodeOpened,
-        registry: NoticeRegistry,
+        state: HarborState,
         now: Instant,
     ): EvalResult {
         // Check if notice already exists for this episode
-        val existing = registry.get(signal.episode)
+        val existing = state.registry.get(signal.episode)
         if (existing != null) {
             return EvalResult(
-                registry = registry,
+                state = state,
                 explanation = listOf(ExplanationStep(
                     rule = "duplicate",
                     observed = "notice already exists for episode ${signal.episode.value}",
@@ -65,17 +67,35 @@ internal class HarborEngineImpl(
             )
         }
 
-        // Create new notice
+        // Create new notice (always — facts are facts)
         val notice = Notice.from(signal)
-        val channels = calibration.channelsFor(signal.severity)
 
+        // Check budget before dispatch (CRITICAL is never suppressed)
+        if (!calibration.budget.canDeliver(signal.severity)) {
+            return EvalResult(
+                state = state.copy(
+                    registry = state.registry.add(notice),
+                ).withFatigueTrack(signal.severity),
+                commands = emptyList(),
+                explanation = listOf(ExplanationStep(
+                    rule = "budget",
+                    observed = "severity=${signal.severity}, episode=${signal.episode.value}",
+                    conclusion = "notice created, not dispatched (budget budget exceeded)",
+                )),
+            )
+        }
+
+        // Dispatch normal
+        val channels = calibration.channelsFor(signal.severity)
         val dispatchCommand = NoticeCommand.Dispatch(
             id = notice.id,
             channels = channels,
         )
 
         return EvalResult(
-            registry = registry.add(notice),
+            state = state.copy(
+                registry = state.registry.add(notice),
+            ).withFatigueTrack(signal.severity),
             commands = listOf(dispatchCommand),
             explanation = listOf(ExplanationStep(
                 rule = "episode-opened",
@@ -87,12 +107,12 @@ internal class HarborEngineImpl(
 
     private fun handleEpisodeClosed(
         signal: SentinelSignal.EpisodeClosed,
-        registry: NoticeRegistry,
+        state: HarborState,
         now: Instant,
     ): EvalResult {
-        val notice = registry.get(signal.episode)
+        val notice = state.registry.get(signal.episode)
             ?: return EvalResult(
-                registry = registry,
+                state = state,
                 explanation = listOf(ExplanationStep(
                     rule = "no-notice",
                     observed = "episode ${signal.episode.value} closed",
@@ -109,7 +129,7 @@ internal class HarborEngineImpl(
         )
 
         return EvalResult(
-            registry = registry.remove(signal.episode),
+            state = state.copy(registry = state.registry.remove(signal.episode)),
             commands = listOf(resolveCommand),
             explanation = listOf(ExplanationStep(
                 rule = "episode-closed",
@@ -121,12 +141,12 @@ internal class HarborEngineImpl(
 
     private fun handleAutoRecovery(
         signal: SentinelSignal.AutoRecovery,
-        registry: NoticeRegistry,
+        state: HarborState,
         now: Instant,
     ): EvalResult {
-        val notice = registry.get(signal.episode)
+        val notice = state.registry.get(signal.episode)
             ?: return EvalResult(
-                registry = registry,
+                state = state,
                 explanation = listOf(ExplanationStep(
                     rule = "no-notice",
                     observed = "auto-recovery for episode ${signal.episode.value}",
@@ -143,7 +163,7 @@ internal class HarborEngineImpl(
             )
 
             return EvalResult(
-                registry = registry.remove(signal.episode),
+                state = state.copy(registry = state.registry.remove(signal.episode)),
                 commands = listOf(resolveCommand),
                 explanation = listOf(ExplanationStep(
                     rule = "auto-recovery-reversible",
@@ -161,7 +181,7 @@ internal class HarborEngineImpl(
         )
 
         return EvalResult(
-            registry = registry,
+            state = state,
             commands = listOf(confirmCommand),
             explanation = listOf(ExplanationStep(
                 rule = "auto-recovery-non-reversible",
@@ -173,9 +193,9 @@ internal class HarborEngineImpl(
 
     private fun handleUmbrellaEvent(
         signal: SentinelSignal.UmbrellaEvent,
-        registry: NoticeRegistry,
+        state: HarborState,
     ): EvalResult = EvalResult(
-        registry = registry,
+        state = state,
         explanation = listOf(ExplanationStep(
             rule = "umbrella",
             observed = "umbrella event for ${signal.episode.value}",
@@ -185,9 +205,9 @@ internal class HarborEngineImpl(
 
     private fun handleSuppressed(
         signal: SentinelSignal.SuppressedWithRecord,
-        registry: NoticeRegistry,
+        state: HarborState,
     ): EvalResult = EvalResult(
-        registry = registry,
+        state = state,
         explanation = listOf(ExplanationStep(
             rule = "suppressed",
             observed = "signal suppressed: ${signal.cause}",
@@ -195,10 +215,22 @@ internal class HarborEngineImpl(
         )),
     )
 
+    private fun handleDwellPreWarning(
+        signal: SentinelSignal.DwellPreWarning,
+        state: HarborState,
+    ): EvalResult = EvalResult(
+        state = state,
+        explanation = listOf(ExplanationStep(
+            rule = "dwell-pre-warning",
+            observed = "dwell ${signal.state} for ${signal.elapsed} (threshold: ${signal.threshold})",
+            conclusion = "pre-warning: informational, no notice created",
+        )),
+    )
+
     // ── Internal Types ───────────────────────────────────────────────────────
 
     private data class EvalResult(
-        val registry: NoticeRegistry,
+        val state: HarborState,
         val commands: List<NoticeCommand> = emptyList(),
         val explanation: List<ExplanationStep> = emptyList(),
     )

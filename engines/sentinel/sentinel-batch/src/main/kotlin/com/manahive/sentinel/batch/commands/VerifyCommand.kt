@@ -9,7 +9,7 @@ import com.manahive.sentinel.batch.SentinelBatchProcessor
 import com.manahive.sentinel.batch.config.BatchConfigLoader
 import com.manahive.sentinel.batch.formatOffset
 import com.manahive.sentinel.batch.resolveFile
-import com.manahive.sentinel.batch.events.SceneFactEventParser
+import com.manahive.sentinel.batch.events.SceneEventEventParser
 import com.manahive.sentinel.batch.output.LogWriter
 import com.manahive.sentinel.batch.output.SignalJsonlWriter
 import com.manahive.sentinel.batch.output.SignalOutWriter
@@ -43,7 +43,7 @@ class VerifyCommand {
         if (!expectedFile.exists()) throw SentinelBatchError.ExpectedNotFound(expectedPath)
 
         val eventsFile = resolveFile(configFile, config.events.source)
-        val events = SceneFactEventParser.parse(eventsFile)
+        val events = SceneEventEventParser.parse(eventsFile)
         val expectedSignals = parseExpected(expectedFile)
 
         val outputDir = resolveFile(configFile, config.events.output)
@@ -86,7 +86,6 @@ class VerifyCommand {
         val initialState = BatchState(
             ledger = EpisodeLedger.empty(
                 residentId = config.residentId,
-                budget = calibration.fatigue,
             ),
             lastTime = ctx.startTime,
         )

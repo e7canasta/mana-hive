@@ -1,5 +1,6 @@
 package com.manahive.harbor
 
+import com.manahive.contracts.common.Channel
 import com.manahive.contracts.policy.Severity
 import com.manahive.contracts.sentinel.SentinelSignal
 import com.manahive.kernel.Engine
@@ -32,23 +33,36 @@ import java.time.Instant
 public interface HarborEngine : Engine {
     public fun evaluate(
         signal: SentinelSignal,
-        registry: NoticeRegistry,
+        state: HarborState,
         now: Instant,
     ): Explained<HarborVerdict>
 }
 
 /**
- * Factory function for creating HarborEngine instances.
+ * Factory function for creating [HarborEngine] instances.
  */
 public fun createHarborEngine(calibration: HarborCalibration): HarborEngine =
     HarborEngineImpl(calibration)
 
 /**
- * The output of one evaluation: commands to execute + next registry state.
+ * The state carried through Harbor evaluations.
+ * Bundles notice registry (value class) with delivery budget.
+ */
+public data class HarborState(
+    public val registry: NoticeRegistry = NoticeRegistry(),
+    public val budget: NotificationBudget = NotificationBudget(),
+) {
+    /** Track a dispatched notification for budget purposes. */
+    public fun withFatigueTrack(severity: Severity): HarborState =
+        copy(budget = budget.track(severity))
+}
+
+/**
+ * The output of one evaluation: commands to execute + next state.
  */
 public data class HarborVerdict(
     val commands: List<NoticeCommand>,
-    val registry: NoticeRegistry,
+    val state: HarborState,
 )
 
 /**
@@ -70,6 +84,8 @@ public data class HarborCalibration(
     public val escalationTimeouts: Map<Severity, Duration>,
     /** Channels for confirmation alerts (non-reversible auto-recovery). */
     public val confirmationChannels: Set<Channel>,
+    /** Delivery budget: max notifications per severity per shift. */
+    public val budget: NotificationBudget = NotificationBudget(),
     /** Calibration fingerprint for reproducibility. */
     public val fingerprint: String,
 ) {

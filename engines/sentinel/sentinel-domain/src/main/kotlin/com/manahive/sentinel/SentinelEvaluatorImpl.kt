@@ -2,7 +2,7 @@ package com.manahive.sentinel
 
 import com.manahive.contracts.policy.AlertRule
 import com.manahive.contracts.policy.ClosureCondition
-import com.manahive.contracts.scene.SceneFact
+import com.manahive.contracts.scene.SceneEvent
 import com.manahive.contracts.scene.StateKind
 import com.manahive.contracts.scene.kind
 import com.manahive.contracts.sentinel.SentinelSignal
@@ -30,7 +30,7 @@ internal class SentinelEvaluatorImpl(
     )
 
     override fun evaluate(
-        fact: SceneFact,
+        fact: SceneEvent,
         episodes: EpisodeLedger,
         now: Instant,
     ): Explained<SentinelVerdict> {
@@ -39,23 +39,34 @@ internal class SentinelEvaluatorImpl(
         var state = episodes
 
         when (fact) {
-            is SceneFact.TransitionDetected -> {
+            is SceneEvent.TransitionDetected -> {
                 val result = evaluateTransition(fact, state, now)
                 signals.addAll(result.signals)
                 explanation.addAll(result.explanation)
                 state = result.episodes
             }
-            is SceneFact.StaffPresenceDetected -> {
+            is SceneEvent.StaffPresenceDetected -> {
                 val result = evaluateStaffPresence(fact, state, now)
                 signals.addAll(result.signals)
                 explanation.addAll(result.explanation)
                 state = result.episodes
             }
-            is SceneFact.DwellExceeded -> {
+            is SceneEvent.StaffLeftDetected -> {
+                val result = evaluateStaffLeft(fact, state, now)
+                signals.addAll(result.signals)
+                explanation.addAll(result.explanation)
+                state = result.episodes
+            }
+            is SceneEvent.DwellExceeded -> {
                 val result = evaluateDwellExceeded(fact, state, now)
                 signals.addAll(result.signals)
                 explanation.addAll(result.explanation)
                 state = result.episodes
+            }
+            is SceneEvent.DwellWarning -> {
+                val result = evaluateDwellWarning(fact, state, now)
+                signals.addAll(result.signals)
+                explanation.addAll(result.explanation)
             }
             else -> { /* not triggers for sentinel */ }
         }
@@ -69,7 +80,7 @@ internal class SentinelEvaluatorImpl(
     // ── Transition handling ────────────────────────────────────────────
 
     private fun evaluateTransition(
-        fact: SceneFact.TransitionDetected,
+        fact: SceneEvent.TransitionDetected,
         episodes: EpisodeLedger,
         now: Instant,
     ): EvalResult {
@@ -91,15 +102,12 @@ internal class SentinelEvaluatorImpl(
         val rule = calibration.ruleFor(state)
             ?: return noRuleResult(state, episodes)
 
-        if (episodes.fatigue.exceeded) {
-            return suppressedResult(rule, state, "fatigue budget exceeded", episodes)
-        }
-
+        // Sentinel ALWAYS opens episodes — is notification budget Harbor's concern
         return openEpisode(bed, rule, now, episodes)
     }
 
     private fun evaluateUnderUmbrella(
-        fact: SceneFact.TransitionDetected,
+        fact: SceneEvent.TransitionDetected,
         state: StateKind,
         open: Episode,
         episodes: EpisodeLedger,
@@ -120,16 +128,20 @@ internal class SentinelEvaluatorImpl(
     // ── Staff presence ─────────────────────────────────────────────────
 
     private fun evaluateStaffPresence(
-        fact: SceneFact.StaffPresenceDetected,
+        fact: SceneEvent.StaffPresenceDetected,
         episodes: EpisodeLedger,
         now: Instant,
     ): EvalResult {
         val open = episodes.openForBed(fact.bed) ?: return EvalResult(episodes = episodes)
 
-        val updated = open.withStaffPresent()
+        val updated = open.withStaffPresent(now)
 
         if (updated.canClose()) {
-            return handleClose(updated, episodes, now, ClosureCause.STAFF_AND_SAFE)
+            val cause = when (updated.closureCondition) {
+                ClosureCondition.STAFF_OR_SAFE -> ClosureCause.STAFF_PRESENT
+                else -> ClosureCause.STAFF_AND_SAFE
+            }
+            return handleClose(updated, episodes, now, cause)
         }
 
         return EvalResult(
@@ -144,10 +156,31 @@ internal class SentinelEvaluatorImpl(
         )
     }
 
+    private fun evaluateStaffLeft(
+        fact: SceneEvent.StaffLeftDetected,
+        episodes: EpisodeLedger,
+        now: Instant,
+    ): EvalResult {
+        val open = episodes.openForBed(fact.bed) ?: return EvalResult(episodes = episodes)
+
+        val updated = open.withStaffAbsent(now)
+
+        return EvalResult(
+            episodes = episodes.open(updated),
+            explanation = listOf(
+                ExplanationStep(
+                    rule = "staff-left",
+                    observed = "staff left ${fact.bed.value}",
+                    conclusion = "staff marked absent, episode remains open",
+                ),
+            ),
+        )
+    }
+
     // ── Dwell exceeded ─────────────────────────────────────────────────
 
     private fun evaluateDwellExceeded(
-        fact: SceneFact.DwellExceeded,
+        fact: SceneEvent.DwellExceeded,
         episodes: EpisodeLedger,
         now: Instant,
     ): EvalResult {
@@ -178,6 +211,36 @@ internal class SentinelEvaluatorImpl(
         return EvalResult(episodes = episodes)
     }
 
+    // ── Dwell warning (informational, no episode) ─────────────────────
+
+    private fun evaluateDwellWarning(
+        fact: SceneEvent.DwellWarning,
+        episodes: EpisodeLedger,
+        now: Instant,
+    ): EvalResult {
+        val elapsed = java.time.Duration.between(fact.since, now)
+        val signal = SentinelSignal.DwellPreWarning(
+            bed = fact.bed,
+            resident = calibration.residentId,
+            at = now,
+            rulesFingerprint = calibration.fingerprint,
+            state = fact.state.kind,
+            elapsed = elapsed,
+            threshold = fact.threshold,
+        )
+        return EvalResult(
+            episodes = episodes,
+            signals = listOf(signal),
+            explanation = listOf(
+                ExplanationStep(
+                    rule = "dwell-warning",
+                    observed = "dwell ${fact.state.kind} for $elapsed (threshold: ${fact.threshold})",
+                    conclusion = "pre-warning: resident may be approaching threshold",
+                ),
+            ),
+        )
+    }
+
     // ── Safe state / Close / Recover ───────────────────────────────────
 
     private fun handleSafeState(
@@ -191,6 +254,7 @@ internal class SentinelEvaluatorImpl(
         if (updated.canClose()) {
             val cause = when {
                 updated.closureCondition == ClosureCondition.SAFE_ONLY -> ClosureCause.AUTO_RECOVERY
+                updated.closureCondition == ClosureCondition.STAFF_OR_SAFE -> ClosureCause.AUTO_RECOVERY
                 updated.staffPresent -> ClosureCause.STAFF_AND_SAFE
                 else -> null
             }
@@ -278,13 +342,7 @@ internal class SentinelEvaluatorImpl(
         episodes: EpisodeLedger,
         now: Instant,
     ): EvalResult {
-        val event = EpisodeEvent(
-            state = state,
-            at = now,
-            matchedRule = newRule.id,
-            originalSeverity = newRule.severity,
-        )
-        val updated = open.escalate(newRule).withEvent(event)
+        val updated = open.escalate(newRule, now)
 
         val signal = SentinelSignal.EpisodeOpened(
             bed = bed,
@@ -350,11 +408,12 @@ internal class SentinelEvaluatorImpl(
             originalSeverity = originalSeverity,
         )
 
-        val event = EpisodeEvent(
+        val event = EpisodeEvent.UmbrellaEvent(
+            episodeId = open.id,
             state = state,
-            at = now,
             matchedRule = newRule?.id,
             originalSeverity = newRule?.severity ?: open.severity,
+            at = now,
         )
 
         return EvalResult(
@@ -401,7 +460,7 @@ internal class SentinelEvaluatorImpl(
         )
 
         return EvalResult(
-            episodes = episodes.open(episode).withFatigueIncrement(),
+            episodes = episodes.open(episode),
             signals = listOf(signal),
             explanation = listOf(
                 ExplanationStep(

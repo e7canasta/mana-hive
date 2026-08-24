@@ -1,5 +1,6 @@
 package com.manahive.harbor
 
+import com.manahive.contracts.common.Channel
 import com.manahive.contracts.sentinel.ClosureCause
 import com.manahive.contracts.sentinel.SentinelSignal
 import com.manahive.kernel.NoticeId
@@ -134,6 +135,7 @@ public fun NoticeCommand.toEvent(now: java.time.Instant): NoticeEvent? = when (t
  */
 public fun ClosureCause.toResolution(): Resolution = when (this) {
     ClosureCause.STAFF_AND_SAFE -> Resolution.STAFF_PRESENT
+    ClosureCause.STAFF_PRESENT -> Resolution.STAFF_PRESENT
     ClosureCause.AUTO_RECOVERY -> Resolution.AUTO_RECOVERY
 }
 

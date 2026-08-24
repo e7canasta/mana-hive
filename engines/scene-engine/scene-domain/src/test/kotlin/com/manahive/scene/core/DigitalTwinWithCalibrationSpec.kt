@@ -1,9 +1,15 @@
 package com.manahive.scene.core
 
+import com.manahive.contracts.policy.ConfidenceConfig
 import com.manahive.contracts.policy.DwellThreshold
-import com.manahive.contracts.policy.buildPolicyCalibration
+import com.manahive.contracts.policy.HarborPolicy
+import com.manahive.contracts.policy.PolicyCalibration
+import com.manahive.contracts.policy.RecorderPolicy
+import com.manahive.contracts.policy.ScenePolicy
+import com.manahive.contracts.policy.SentinelPolicy
+import com.manahive.contracts.policy.TransitionKey
 import com.manahive.contracts.scene.PersonState
-import com.manahive.contracts.scene.SceneFact
+import com.manahive.contracts.scene.SceneEvent
 import com.manahive.contracts.scene.StateKind
 import com.manahive.kernel.BedId
 import com.manahive.kernel.NightId
@@ -28,21 +34,17 @@ import java.time.Instant
 class DigitalTwinWithCalibrationSpec : BehaviorSpec({
 
     Given("un PolicyCalibration para María") {
-        val policyCalibration = buildPolicyCalibration {
-            resident(ResidentId("maria"))
-            hysteresis {
-                from(StateKind.LYING) { to(StateKind.BED_EDGE) after Duration.ofMillis(1500) }
-            }
-            dwell {
-                StateKind.STANDING warning Duration.ofMinutes(4) exceeded Duration.ofMinutes(5)
-            }
-            confidence {
-                StateKind.BED_EDGE min 0.9
-            }
-            heartbeat {
-                timeout to Duration.ofSeconds(90)
-            }
-        }
+        val policyCalibration = PolicyCalibration(
+            residentId = ResidentId("maria"),
+            scene = ScenePolicy(
+                hysteresis = mapOf(TransitionKey(StateKind.LYING, StateKind.BED_EDGE) to Duration.ofMillis(1500)),
+                dwellThresholds = mapOf(StateKind.STANDING to DwellThreshold(Duration.ofMinutes(4), Duration.ofMinutes(5))),
+                confidence = ConfidenceConfig(minConfidence = mapOf(StateKind.BED_EDGE to 0.9), heartbeatTimeout = Duration.ofSeconds(90)),
+            ),
+            sentinel = SentinelPolicy(alertRules = emptyMap()),
+            harbor = HarborPolicy(defaultChannels = emptyMap(), escalationTimeouts = emptyMap()),
+            recorder = RecorderPolicy(transitionWindows = emptyMap()),
+        )
 
         And("convertido a SceneCalibration via adaptador") {
             val sceneCalibration = policyCalibration.toSceneCalibration()
@@ -68,7 +70,7 @@ class DigitalTwinWithCalibrationSpec : BehaviorSpec({
 
                 When("evoluciona con TransitionDetected") {
                     val updated = twin.evolve(
-                        SceneFact.TransitionDetected(
+                        SceneEvent.TransitionDetected(
                             bed = BedId("bed-3"),
                             night = NightId("night-1"),
                             at = SceneTestDsl.time03_00_02,

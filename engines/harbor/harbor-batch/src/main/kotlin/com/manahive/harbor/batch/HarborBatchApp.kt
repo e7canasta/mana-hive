@@ -81,15 +81,15 @@ class RunCommand : CliktCommand(
     ) {
         val calibration = HarborCalibration.default(ResidentId(resident))
         val engine = createHarborEngine(calibration)
-        var registry = NoticeRegistry()
+        var state = HarborState(budget = calibration.budget)
         val events = mutableListOf<NoticeEvent>()
 
         println("Processing ${signals.size} signals...")
 
         for (signal in signals) {
             val now = Instant.now(clock)
-            val result = engine.evaluate(signal, registry, now)
-            registry = result.value.registry
+            val result = engine.evaluate(signal, state, now)
+            state = result.value.state
             events.addAll(result.value.commands.mapNotNull { it.toEvent(now) })
 
             println("  t=${signal.at}  ${signal::class.simpleName} → ${result.value.commands.size} command(s)")

@@ -3,7 +3,7 @@ package com.manahive.recorder.batch
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.manahive.contracts.sentinel.SentinelSignal
 import com.manahive.contracts.scene.NightSummary
-import com.manahive.contracts.scene.SceneFact
+import com.manahive.contracts.scene.SceneEvent
 import com.manahive.contracts.scene.StateKind
 import com.manahive.contracts.scene.personStateFromKind
 import com.manahive.contracts.policy.Severity
@@ -22,7 +22,7 @@ import java.time.Duration
 import java.time.Instant
 
 /**
- * Parses SceneFact and SentinelSignal from JSONL/out files.
+ * Parses SceneEvent and SentinelSignal from JSONL/out files.
  *
  * Same parser as Harbor batch — shared contract.
  */
@@ -30,18 +30,18 @@ object SignalParser {
 
     private val mapper = jacksonObjectMapper()
 
-    // ── SceneFact Parsing ─────────────────────────────────────────
+    // ── SceneEvent Parsing ─────────────────────────────────────────
 
-    /** Parse Scene.out file (one SceneFact per line). */
-    fun parseSceneFacts(file: File): List<SceneFact> {
+    /** Parse Scene.out file (one SceneEvent per line). */
+    fun parseSceneEvents(file: File): List<SceneEvent> {
         if (!file.exists()) throw IllegalArgumentException("File not found: ${file.absolutePath}")
 
         return file.readLines()
-            .mapIndexed { index, line -> parseSceneFactLine(line, index + 1) }
+            .mapIndexed { index, line -> parseSceneEventLine(line, index + 1) }
             .filterNotNull()
     }
 
-    private fun parseSceneFactLine(line: String, lineNumber: Int): SceneFact? {
+    private fun parseSceneEventLine(line: String, lineNumber: Int): SceneEvent? {
         val trimmed = line.trim()
         if (trimmed.isEmpty()) return null
 
@@ -68,8 +68,8 @@ object SignalParser {
         }
     }
 
-    private fun parseNightOpened(json: com.fasterxml.jackson.databind.JsonNode): SceneFact.NightOpened {
-        return SceneFact.NightOpened(
+    private fun parseNightOpened(json: com.fasterxml.jackson.databind.JsonNode): SceneEvent.NightOpened {
+        return SceneEvent.NightOpened(
             bed = BedId(json.get("bed").asText()),
             night = NightId(json.get("night").asText()),
             at = Instant.parse(json.get("at").asText()),
@@ -81,8 +81,8 @@ object SignalParser {
         )
     }
 
-    private fun parseTransitionDetected(json: com.fasterxml.jackson.databind.JsonNode): SceneFact.TransitionDetected {
-        return SceneFact.TransitionDetected(
+    private fun parseTransitionDetected(json: com.fasterxml.jackson.databind.JsonNode): SceneEvent.TransitionDetected {
+        return SceneEvent.TransitionDetected(
             bed = BedId(json.get("bed").asText()),
             night = NightId(json.get("night").asText()),
             at = Instant.parse(json.get("at").asText()),
@@ -91,8 +91,8 @@ object SignalParser {
         )
     }
 
-    private fun parseDwellWarning(json: com.fasterxml.jackson.databind.JsonNode): SceneFact.DwellWarning {
-        return SceneFact.DwellWarning(
+    private fun parseDwellWarning(json: com.fasterxml.jackson.databind.JsonNode): SceneEvent.DwellWarning {
+        return SceneEvent.DwellWarning(
             bed = BedId(json.get("bed").asText()),
             night = NightId(json.get("night").asText()),
             at = Instant.parse(json.get("at").asText()),
@@ -102,8 +102,8 @@ object SignalParser {
         )
     }
 
-    private fun parseDwellExceeded(json: com.fasterxml.jackson.databind.JsonNode): SceneFact.DwellExceeded {
-        return SceneFact.DwellExceeded(
+    private fun parseDwellExceeded(json: com.fasterxml.jackson.databind.JsonNode): SceneEvent.DwellExceeded {
+        return SceneEvent.DwellExceeded(
             bed = BedId(json.get("bed").asText()),
             night = NightId(json.get("night").asText()),
             at = Instant.parse(json.get("at").asText()),
@@ -113,8 +113,8 @@ object SignalParser {
         )
     }
 
-    private fun parseSceneStateChanged(json: com.fasterxml.jackson.databind.JsonNode): SceneFact.SceneStateChanged {
-        return SceneFact.SceneStateChanged(
+    private fun parseSceneStateChanged(json: com.fasterxml.jackson.databind.JsonNode): SceneEvent.SceneStateChanged {
+        return SceneEvent.SceneStateChanged(
             bed = BedId(json.get("bed").asText()),
             night = NightId(json.get("night").asText()),
             at = Instant.parse(json.get("at").asText()),
@@ -124,8 +124,8 @@ object SignalParser {
         )
     }
 
-    private fun parseSceneDwellWarning(json: com.fasterxml.jackson.databind.JsonNode): SceneFact.SceneDwellWarning {
-        return SceneFact.SceneDwellWarning(
+    private fun parseSceneDwellWarning(json: com.fasterxml.jackson.databind.JsonNode): SceneEvent.SceneDwellWarning {
+        return SceneEvent.SceneDwellWarning(
             bed = BedId(json.get("bed").asText()),
             night = NightId(json.get("night").asText()),
             at = Instant.parse(json.get("at").asText()),
@@ -135,8 +135,8 @@ object SignalParser {
         )
     }
 
-    private fun parseSceneDwellExceeded(json: com.fasterxml.jackson.databind.JsonNode): SceneFact.SceneDwellExceeded {
-        return SceneFact.SceneDwellExceeded(
+    private fun parseSceneDwellExceeded(json: com.fasterxml.jackson.databind.JsonNode): SceneEvent.SceneDwellExceeded {
+        return SceneEvent.SceneDwellExceeded(
             bed = BedId(json.get("bed").asText()),
             night = NightId(json.get("night").asText()),
             at = Instant.parse(json.get("at").asText()),
@@ -146,8 +146,8 @@ object SignalParser {
         )
     }
 
-    private fun parseStaffPresenceDetected(json: com.fasterxml.jackson.databind.JsonNode): SceneFact.StaffPresenceDetected {
-        return SceneFact.StaffPresenceDetected(
+    private fun parseStaffPresenceDetected(json: com.fasterxml.jackson.databind.JsonNode): SceneEvent.StaffPresenceDetected {
+        return SceneEvent.StaffPresenceDetected(
             bed = BedId(json.get("bed").asText()),
             night = NightId(json.get("night").asText()),
             at = Instant.parse(json.get("at").asText()),
@@ -155,8 +155,8 @@ object SignalParser {
         )
     }
 
-    private fun parseSignalLost(json: com.fasterxml.jackson.databind.JsonNode): SceneFact.SignalLost {
-        return SceneFact.SignalLost(
+    private fun parseSignalLost(json: com.fasterxml.jackson.databind.JsonNode): SceneEvent.SignalLost {
+        return SceneEvent.SignalLost(
             bed = BedId(json.get("bed").asText()),
             night = NightId(json.get("night").asText()),
             at = Instant.parse(json.get("at").asText()),
@@ -165,8 +165,8 @@ object SignalParser {
         )
     }
 
-    private fun parseSignalRecovered(json: com.fasterxml.jackson.databind.JsonNode): SceneFact.SignalRecovered {
-        return SceneFact.SignalRecovered(
+    private fun parseSignalRecovered(json: com.fasterxml.jackson.databind.JsonNode): SceneEvent.SignalRecovered {
+        return SceneEvent.SignalRecovered(
             bed = BedId(json.get("bed").asText()),
             night = NightId(json.get("night").asText()),
             at = Instant.parse(json.get("at").asText()),
@@ -174,9 +174,9 @@ object SignalParser {
         )
     }
 
-    private fun parseNightClosed(json: com.fasterxml.jackson.databind.JsonNode): SceneFact.NightClosed {
+    private fun parseNightClosed(json: com.fasterxml.jackson.databind.JsonNode): SceneEvent.NightClosed {
         val summaryNode = json.get("summary")
-        return SceneFact.NightClosed(
+        return SceneEvent.NightClosed(
             bed = BedId(json.get("bed").asText()),
             night = NightId(json.get("night").asText()),
             at = Instant.parse(json.get("at").asText()),

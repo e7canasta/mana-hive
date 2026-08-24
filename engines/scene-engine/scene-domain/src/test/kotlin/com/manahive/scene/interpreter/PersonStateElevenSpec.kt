@@ -95,10 +95,11 @@ class PersonStateElevenSpec : BehaviorSpec({
             val obs = SceneTestDsl.obs(ObservationKind.STANDING, 0.95)
                 .at(SceneTestDsl.time03_00_02)
 
-            Then("la transicion es ilegal (LYING -> STANDING no existe)") {
+            Then("la transicion es legal (LYING -> STANDING directo)") {
                 val result = interpreter.interpret(twin, obs, SceneTestDsl.time03_00_02)
-                result.discards shouldHaveSize 1
-                result.discards[0].cause shouldBe DiscardCause.ILLEGAL_TRANSITION
+                result.discards shouldBe emptyList()
+                result.value.facts shouldHaveSize 1
+                result.value.twin.state.kind shouldBe StateKind.STANDING
             }
         }
 

@@ -1,5 +1,6 @@
 package com.manahive.harbor
 
+import com.manahive.contracts.common.Channel
 import com.manahive.contracts.policy.Severity
 import com.manahive.kernel.BedId
 import com.manahive.kernel.Engine

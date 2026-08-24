@@ -3,8 +3,8 @@ package com.manahive.scene.interpreter
 import com.manahive.contracts.perception.ObservationKind.BED_EDGE
 import com.manahive.contracts.perception.ObservationKind.STANDING
 import com.manahive.contracts.scene.PersonState
-import com.manahive.contracts.scene.SceneFact.SignalRecovered
-import com.manahive.contracts.scene.SceneFact.TransitionDetected
+import com.manahive.contracts.scene.SceneEvent.SignalRecovered
+import com.manahive.contracts.scene.SceneEvent.TransitionDetected
 import com.manahive.contracts.scene.StateKind.BED_EDGE as STATE_BED_EDGE
 import com.manahive.contracts.scene.StateKind.STANDING as STATE_STANDING
 import com.manahive.kernel.DiscardCause.DUPLICATE

@@ -7,7 +7,7 @@ import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.types.file
 import com.manahive.contracts.policy.Severity
 import com.manahive.contracts.scene.PersonState
-import com.manahive.contracts.scene.SceneFact
+import com.manahive.contracts.scene.SceneEvent
 import com.manahive.contracts.sentinel.SentinelSignal
 import com.manahive.recorder.*
 import com.manahive.kernel.BedId
@@ -69,10 +69,10 @@ class RunCommand : CliktCommand(
     }
 
     private fun runSceneSentinelMode(clock: Clock) {
-        val sceneFacts = SignalParser.parseSceneFacts(scene!!)
+        val sceneEvents = SignalParser.parseSceneEvents(scene!!)
         val sentinelSignals = SignalParser.parseSentinelSignals(sentinel!!)
         val outputFile = File(sentinel!!.parentFile, "recorder.out")
-        processEvents(sceneFacts, sentinelSignals, outputFile, clock)
+        processEvents(sceneEvents, sentinelSignals, outputFile, clock)
     }
 
     private fun runJsonlMode(clock: Clock) {
@@ -86,7 +86,7 @@ class RunCommand : CliktCommand(
     }
 
     private fun processEvents(
-        sceneFacts: List<SceneFact>,
+        sceneEvents: List<SceneEvent>,
         sentinelSignals: List<SentinelSignal>,
         outputFile: File,
         clock: Clock,
@@ -97,12 +97,12 @@ class RunCommand : CliktCommand(
         val commands = mutableListOf<RecordingCommand>()
         val evidenceRecords = mutableListOf<EvidenceRecord>()
 
-        println("Processing ${sceneFacts.size} scene facts + ${sentinelSignals.size} sentinel signals...")
+        println("Processing ${sceneEvents.size} scene facts + ${sentinelSignals.size} sentinel signals...")
 
         // Process scene facts first
-        for (fact in sceneFacts) {
+        for (fact in sceneEvents) {
             val now = Instant.now(clock)
-            val trigger = SceneFactTrigger(
+            val trigger = SceneEventTrigger(
                 fact = fact,
                 bed = fact.bed,
                 at = fact.at,

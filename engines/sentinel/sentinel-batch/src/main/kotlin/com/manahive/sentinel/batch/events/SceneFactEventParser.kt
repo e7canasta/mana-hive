@@ -23,11 +23,11 @@ import java.io.File
  *
  * Lines starting with `#` are comments. Blank lines are ignored.
  */
-object SceneFactEventParser {
+object SceneEventEventParser {
 
     private val OFFSET_PATTERN = Regex("""t=(\d+)([smh])?(\d+)?([smh])?""")
 
-    fun parse(file: File): List<SceneFactEvent> {
+    fun parse(file: File): List<SceneEventEvent> {
         if (!file.exists()) throw SentinelBatchError.EventsNotFound(file.absolutePath)
 
         return file.readLines()
@@ -35,7 +35,7 @@ object SceneFactEventParser {
             .filterNotNull()
     }
 
-    private fun parseLine(line: String, lineNumber: Int): SceneFactEvent? {
+    private fun parseLine(line: String, lineNumber: Int): SceneEventEvent? {
         val trimmed = line.trim()
         if (trimmed.isEmpty() || trimmed.startsWith("#")) return null
 
@@ -56,7 +56,7 @@ object SceneFactEventParser {
         }
     }
 
-    private fun parseTransition(text: String, offset: EventOffset, lineNumber: Int): SceneFactEvent.Transition {
+    private fun parseTransition(text: String, offset: EventOffset, lineNumber: Int): SceneEventEvent.Transition {
         val fromMatch = Regex("""from\s+(\w+)""").find(text)
             ?: throw SentinelBatchError.ParseError(lineNumber, "TRANSITION missing 'from'")
         val toMatch = Regex("""to\s+(\w+)""").find(text)
@@ -67,22 +67,22 @@ object SceneFactEventParser {
         val to = parseStateKind(toMatch.groupValues[1])
             ?: throw SentinelBatchError.ParseError(lineNumber, "unknown state: ${toMatch.groupValues[1]}")
 
-        return SceneFactEvent.Transition(offset, lineNumber, from, to)
+        return SceneEventEvent.Transition(offset, lineNumber, from, to)
     }
 
-    private fun parseStaffPresent(text: String, offset: EventOffset, lineNumber: Int): SceneFactEvent.StaffPresent {
+    private fun parseStaffPresent(text: String, offset: EventOffset, lineNumber: Int): SceneEventEvent.StaffPresent {
         val staffMatch = Regex("""staff\s+(\S+)""").find(text)
-        return SceneFactEvent.StaffPresent(offset, lineNumber, staffMatch?.groupValues?.get(1))
+        return SceneEventEvent.StaffPresent(offset, lineNumber, staffMatch?.groupValues?.get(1))
     }
 
-    private fun parseDwellExceeded(text: String, offset: EventOffset, lineNumber: Int): SceneFactEvent.DwellExceeded {
+    private fun parseDwellExceeded(text: String, offset: EventOffset, lineNumber: Int): SceneEventEvent.DwellExceeded {
         val (state, threshold) = parseDwellFields(text, lineNumber)
-        return SceneFactEvent.DwellExceeded(offset, lineNumber, state, threshold)
+        return SceneEventEvent.DwellExceeded(offset, lineNumber, state, threshold)
     }
 
-    private fun parseDwellWarning(text: String, offset: EventOffset, lineNumber: Int): SceneFactEvent.DwellWarning {
+    private fun parseDwellWarning(text: String, offset: EventOffset, lineNumber: Int): SceneEventEvent.DwellWarning {
         val (state, threshold) = parseDwellFields(text, lineNumber)
-        return SceneFactEvent.DwellWarning(offset, lineNumber, state, threshold)
+        return SceneEventEvent.DwellWarning(offset, lineNumber, state, threshold)
     }
 
     private fun parseDwellFields(text: String, lineNumber: Int): Pair<StateKind, java.time.Duration> {
@@ -103,19 +103,19 @@ object SceneFactEventParser {
         return state to threshold
     }
 
-    private fun parseSignalLost(text: String, offset: EventOffset, lineNumber: Int): SceneFactEvent.SignalLost {
+    private fun parseSignalLost(text: String, offset: EventOffset, lineNumber: Int): SceneEventEvent.SignalLost {
         val monitorMatch = Regex("""monitor\s+(\S+)""").find(text)
             ?: throw SentinelBatchError.ParseError(lineNumber, "SIGNAL_LOST missing 'monitor'")
         val heartbeatMatch = Regex("""lastHeartbeat\s+(\S+)""").find(text)
 
-        return SceneFactEvent.SignalLost(offset, lineNumber, monitorMatch.groupValues[1], heartbeatMatch?.groupValues?.get(1))
+        return SceneEventEvent.SignalLost(offset, lineNumber, monitorMatch.groupValues[1], heartbeatMatch?.groupValues?.get(1))
     }
 
-    private fun parseSignalRecovered(text: String, offset: EventOffset, lineNumber: Int): SceneFactEvent.SignalRecovered {
+    private fun parseSignalRecovered(text: String, offset: EventOffset, lineNumber: Int): SceneEventEvent.SignalRecovered {
         val monitorMatch = Regex("""monitor\s+(\S+)""").find(text)
             ?: throw SentinelBatchError.ParseError(lineNumber, "SIGNAL_RECOVERED missing 'monitor'")
 
-        return SceneFactEvent.SignalRecovered(offset, lineNumber, monitorMatch.groupValues[1])
+        return SceneEventEvent.SignalRecovered(offset, lineNumber, monitorMatch.groupValues[1])
     }
 
     private fun parseTypeName(text: String): String? {

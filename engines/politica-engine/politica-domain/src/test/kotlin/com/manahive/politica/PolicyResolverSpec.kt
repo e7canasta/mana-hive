@@ -30,7 +30,7 @@ import java.time.Instant
  */
 class PolicyResolverSpec : BehaviorSpec({
 
-    Given("un catálogo con plantillas") {
+    Given("un catalogo con plantillas") {
         val catalog = AlarmCatalog(
             transitions = mapOf(
                 TransitionKey(StateKind.LYING, StateKind.BED_EDGE) to Duration.ofMillis(1500),
@@ -75,17 +75,17 @@ class PolicyResolverSpec : BehaviorSpec({
             When("resuelvo las reglas") {
                 val calibration = PolicyResolver.resolve(catalog, profile)
 
-                Then("la calibración no es null") {
+                Then("la calibracion no es null") {
                     calibration shouldNotBe null
                 }
 
                 Then("la histeresis LYING → BED_EDGE viene del template (2s)") {
-                    calibration.hysteresis[TransitionKey(StateKind.LYING, StateKind.BED_EDGE)] shouldBe Duration.ofMillis(2000)
+                    calibration.scene.hysteresis[TransitionKey(StateKind.LYING, StateKind.BED_EDGE)] shouldBe Duration.ofMillis(2000)
                 }
 
                 Then("el dwell STANDING viene del template (3 min warning, 4 min exceeded)") {
-                    calibration.dwellThresholds[StateKind.STANDING]?.warning shouldBe Duration.ofMinutes(3)
-                    calibration.dwellThresholds[StateKind.STANDING]?.exceeded shouldBe Duration.ofMinutes(4)
+                    calibration.scene.dwellThresholds[StateKind.STANDING]?.warning shouldBe Duration.ofMinutes(3)
+                    calibration.scene.dwellThresholds[StateKind.STANDING]?.exceeded shouldBe Duration.ofMinutes(4)
                 }
 
                 Then("la fuente es TEMPLATE") {
@@ -98,7 +98,7 @@ class PolicyResolverSpec : BehaviorSpec({
             }
         }
 
-        And("un perfil sin template (usa catálogo base)") {
+        And("un perfil sin template (usa catalogo base)") {
             val profile = AlarmProfile(
                 residentId = ResidentId("jose"),
                 riskLevel = RiskLevel.LOW,
@@ -114,13 +114,13 @@ class PolicyResolverSpec : BehaviorSpec({
             When("resuelvo las reglas") {
                 val calibration = PolicyResolver.resolve(catalog, profile)
 
-                Then("la histeresis LYING → BED_EDGE viene del catálogo base (1.5s)") {
-                    calibration.hysteresis[TransitionKey(StateKind.LYING, StateKind.BED_EDGE)] shouldBe Duration.ofMillis(1500)
+                Then("la histeresis LYING → BED_EDGE viene del catalogo base (1.5s)") {
+                    calibration.scene.hysteresis[TransitionKey(StateKind.LYING, StateKind.BED_EDGE)] shouldBe Duration.ofMillis(1500)
                 }
 
-                Then("el dwell STANDING viene del catálogo base (4 min warning, 5 min exceeded)") {
-                    calibration.dwellThresholds[StateKind.STANDING]?.warning shouldBe Duration.ofMinutes(4)
-                    calibration.dwellThresholds[StateKind.STANDING]?.exceeded shouldBe Duration.ofMinutes(5)
+                Then("el dwell STANDING viene del catalogo base (4 min warning, 5 min exceeded)") {
+                    calibration.scene.dwellThresholds[StateKind.STANDING]?.warning shouldBe Duration.ofMinutes(4)
+                    calibration.scene.dwellThresholds[StateKind.STANDING]?.exceeded shouldBe Duration.ofMinutes(5)
                 }
 
                 Then("la fuente es CATALOG") {
@@ -152,11 +152,11 @@ class PolicyResolverSpec : BehaviorSpec({
                 val calibration = PolicyResolver.resolve(catalog, profile)
 
                 Then("la histeresis LYING → BED_EDGE viene del override (3s)") {
-                    calibration.hysteresis[TransitionKey(StateKind.LYING, StateKind.BED_EDGE)] shouldBe Duration.ofMillis(3000)
+                    calibration.scene.hysteresis[TransitionKey(StateKind.LYING, StateKind.BED_EDGE)] shouldBe Duration.ofMillis(3000)
                 }
 
-                Then("la histeresis BED_EDGE → STANDING viene del catálogo base (1.5s)") {
-                    calibration.hysteresis[TransitionKey(StateKind.BED_EDGE, StateKind.STANDING)] shouldBe Duration.ofMillis(1500)
+                Then("la histeresis BED_EDGE → STANDING viene del catalogo base (1.5s)") {
+                    calibration.scene.hysteresis[TransitionKey(StateKind.BED_EDGE, StateKind.STANDING)] shouldBe Duration.ofMillis(1500)
                 }
 
                 Then("la fuente es OVERRIDE") {
@@ -191,8 +191,8 @@ class PolicyResolverSpec : BehaviorSpec({
                 val calibration = PolicyResolver.resolve(catalog, profile)
 
                 Then("el dwell STANDING viene del override (2 min warning, 3 min exceeded)") {
-                    calibration.dwellThresholds[StateKind.STANDING]?.warning shouldBe Duration.ofMinutes(2)
-                    calibration.dwellThresholds[StateKind.STANDING]?.exceeded shouldBe Duration.ofMinutes(3)
+                    calibration.scene.dwellThresholds[StateKind.STANDING]?.warning shouldBe Duration.ofMinutes(2)
+                    calibration.scene.dwellThresholds[StateKind.STANDING]?.exceeded shouldBe Duration.ofMinutes(3)
                 }
 
                 Then("la fuente es OVERRIDE") {
@@ -202,7 +202,7 @@ class PolicyResolverSpec : BehaviorSpec({
         }
     }
 
-    Given("un catálogo vacío") {
+    Given("un catalogo vacio") {
         val catalog = AlarmCatalog(
             transitions = emptyMap(),
             dwellThresholds = emptyMap(),
@@ -226,12 +226,12 @@ class PolicyResolverSpec : BehaviorSpec({
             When("resuelvo las reglas") {
                 val calibration = PolicyResolver.resolve(catalog, profile)
 
-                Then("la histeresis está vacía") {
-                    calibration.hysteresis.isEmpty() shouldBe true
+                Then("la histeresis esta vacia") {
+                    calibration.scene.hysteresis.isEmpty() shouldBe true
                 }
 
-                Then("los dwell thresholds están vacíos") {
-                    calibration.dwellThresholds.isEmpty() shouldBe true
+                Then("los dwell thresholds estan vacios") {
+                    calibration.scene.dwellThresholds.isEmpty() shouldBe true
                 }
 
                 Then("la fuente es CATALOG") {
@@ -241,7 +241,7 @@ class PolicyResolverSpec : BehaviorSpec({
         }
     }
 
-    Given("un catálogo con plantillas") {
+    Given("un catalogo con plantillas") {
         val catalog = AlarmCatalog(
             transitions = mapOf(
                 TransitionKey(StateKind.LYING, StateKind.BED_EDGE) to Duration.ofMillis(1500),

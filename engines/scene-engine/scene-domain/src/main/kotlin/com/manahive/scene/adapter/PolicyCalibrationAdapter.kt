@@ -28,8 +28,8 @@ import com.manahive.scene.core.TransitionTable
 public fun PolicyCalibration.toSceneCalibration(
     base: TransitionTable = TransitionTable.RELEASE_2,
 ): SceneCalibration = SceneCalibration(
-    table = TransitionTable.from(base = base, overrides = hysteresis),
-    confidence = ConfidenceThresholds(confidence.minConfidence.mapValues { Confidence(it.value) }),
-    heartbeatTimeout = confidence.heartbeatTimeout,
-    dwellThresholds = dwellThresholds,
+    table = TransitionTable.from(base = base, overrides = scene.hysteresis),
+    confidence = ConfidenceThresholds(scene.confidence.minConfidence.mapValues { Confidence(it.value) }),
+    heartbeatTimeout = scene.confidence.heartbeatTimeout,
+    dwellThresholds = scene.dwellThresholds,
 )

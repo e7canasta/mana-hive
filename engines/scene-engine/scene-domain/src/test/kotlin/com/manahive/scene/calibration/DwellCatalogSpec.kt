@@ -3,8 +3,8 @@ package com.manahive.scene.calibration
 import com.manahive.contracts.shared.minutes
 import com.manahive.contracts.shared.seconds
 import com.manahive.contracts.scene.PersonState
-import com.manahive.contracts.scene.SceneFact.DwellExceeded
-import com.manahive.contracts.scene.SceneFact.DwellWarning
+import com.manahive.contracts.scene.SceneEvent.DwellExceeded
+import com.manahive.contracts.scene.SceneEvent.DwellWarning
 import com.manahive.contracts.scene.StateKind
 import com.manahive.scene.support.SceneTestDsl.bed
 import com.manahive.scene.calibration.dsl.calibration

@@ -20,7 +20,7 @@ object PolicyOutWriter {
 
     private fun formatResult(result: PolicyChangeResult): String {
         val eventType = result.emittedEvents.firstOrNull()?.let { it::class.simpleName } ?: "UNKNOWN"
-        val dwell = result.calibration.dwellThresholds.entries.joinToString(",") { (k, v) ->
+        val dwell = result.calibration.scene.dwellThresholds.entries.joinToString(",") { (k, v) ->
             "${k.name}:${v.warning}/${v.exceeded}"
         }
         return "CALIBRATION_CHANGED resident=${result.residentId.value} event=$eventType dwell=$dwell"

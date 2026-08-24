@@ -1,6 +1,12 @@
 package com.manahive.scene.interpreter
 
-import com.manahive.contracts.policy.buildPolicyCalibration
+import com.manahive.contracts.policy.ConfidenceConfig
+import com.manahive.contracts.policy.HarborPolicy
+import com.manahive.contracts.policy.PolicyCalibration
+import com.manahive.contracts.policy.RecorderPolicy
+import com.manahive.contracts.policy.ScenePolicy
+import com.manahive.contracts.policy.SentinelPolicy
+import com.manahive.contracts.policy.TransitionKey
 import com.manahive.contracts.perception.ObservationKind
 import com.manahive.contracts.scene.StateKind
 import com.manahive.kernel.DiscardCause.CONFIDENCE_TOO_LOW
@@ -26,31 +32,29 @@ import java.time.Duration
 class SceneInterpreterPerResidentSpec : BehaviorSpec({
 
     Given("dos PolicyCalibrations con diferentes confianzas") {
-        val mariaPolicy = buildPolicyCalibration {
-            resident(ResidentId("maria"))
-            hysteresis {
-                from(StateKind.LYING) { to(StateKind.BED_EDGE) after Duration.ofMillis(1500) }
-            }
-            confidence {
-                StateKind.BED_EDGE min 0.9
-            }
-            heartbeat {
-                timeout to Duration.ofSeconds(90)
-            }
-        }
+        val mariaPolicy = PolicyCalibration(
+            residentId = ResidentId("maria"),
+            scene = ScenePolicy(
+                hysteresis = mapOf(TransitionKey(StateKind.LYING, StateKind.BED_EDGE) to Duration.ofMillis(1500)),
+                dwellThresholds = emptyMap(),
+                confidence = ConfidenceConfig(minConfidence = mapOf(StateKind.BED_EDGE to 0.9), heartbeatTimeout = Duration.ofSeconds(90)),
+            ),
+            sentinel = SentinelPolicy(alertRules = emptyMap()),
+            harbor = HarborPolicy(defaultChannels = emptyMap(), escalationTimeouts = emptyMap()),
+            recorder = RecorderPolicy(transitionWindows = emptyMap()),
+        )
 
-        val josePolicy = buildPolicyCalibration {
-            resident(ResidentId("jose"))
-            hysteresis {
-                from(StateKind.LYING) { to(StateKind.BED_EDGE) after Duration.ofMillis(1500) }
-            }
-            confidence {
-                StateKind.BED_EDGE min 0.7
-            }
-            heartbeat {
-                timeout to Duration.ofSeconds(90)
-            }
-        }
+        val josePolicy = PolicyCalibration(
+            residentId = ResidentId("jose"),
+            scene = ScenePolicy(
+                hysteresis = mapOf(TransitionKey(StateKind.LYING, StateKind.BED_EDGE) to Duration.ofMillis(1500)),
+                dwellThresholds = emptyMap(),
+                confidence = ConfidenceConfig(minConfidence = mapOf(StateKind.BED_EDGE to 0.7), heartbeatTimeout = Duration.ofSeconds(90)),
+            ),
+            sentinel = SentinelPolicy(alertRules = emptyMap()),
+            harbor = HarborPolicy(defaultChannels = emptyMap(), escalationTimeouts = emptyMap()),
+            recorder = RecorderPolicy(transitionWindows = emptyMap()),
+        )
 
         And("ambos convertidos a SceneCalibration") {
             val mariaCalibration = mariaPolicy.toSceneCalibration()

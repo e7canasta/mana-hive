@@ -104,12 +104,29 @@ public sealed interface SentinelSignal {
         public val cause: SuppressionCause,
         public val evidence: EventRef,
     ) : SentinelSignal
+
+    /**
+     * Dwell warning: resident has been in a state for a prolonged period,
+     * but hasn't exceeded the threshold yet. This is an informational
+     * notification, not an episode opener.
+     */
+    public data class DwellPreWarning(
+        override val bed: BedId,
+        override val resident: ResidentId?,
+        override val at: Instant,
+        override val rulesFingerprint: String,
+        public val state: StateKind,
+        public val elapsed: Duration,
+        public val threshold: Duration,
+    ) : SentinelSignal
 }
 
 /** Why an episode closed. */
 public enum class ClosureCause {
     /** Staff assisted AND resident safe. */
     STAFF_AND_SAFE,
+    /** Staff present alone (STAFF_OR_SAFE closure). */
+    STAFF_PRESENT,
     /** Resident returned to safe state (only for SOLO_SEGURO closure). */
     AUTO_RECOVERY,
 }
@@ -121,7 +138,7 @@ public enum class SuppressionCause {
     /** This rule already fired for the current open episode. */
     EPISODE_ALREADY_ALERTED,
     /** Fatigue budget exceeded for this shift. */
-    FATIGUE_BUDGET,
+    NOTIFICATION_BUDGET,
     /** Scene fact is not a trigger for any rule. */
     NO_MATCHING_RULE,
 }

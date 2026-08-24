@@ -1,7 +1,7 @@
 package com.manahive.scene.sweeper
 
 import com.manahive.contracts.shared.seconds
-import com.manahive.contracts.scene.SceneFact.SignalLost
+import com.manahive.contracts.scene.SceneEvent.SignalLost
 import com.manahive.contracts.scene.StateKind
 import com.manahive.scene.support.SceneTestDsl.bed
 import com.manahive.scene.support.SceneTestDsl.maria

@@ -1,7 +1,7 @@
 package com.manahive.harbor.config
 
 import com.manahive.contracts.policy.Severity
-import com.manahive.harbor.Channel
+import com.manahive.contracts.common.Channel
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.assertions.throwables.shouldThrow

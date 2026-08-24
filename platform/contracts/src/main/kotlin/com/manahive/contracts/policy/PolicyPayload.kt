@@ -34,9 +34,14 @@ public data class CalibrationPayload(
     public fun toPolicyCalibration(residentId: ResidentId): PolicyCalibration =
         PolicyCalibration(
             residentId = residentId,
-            hysteresis = hysteresis,
-            dwellThresholds = dwellThresholds,
-            confidence = confidence,
+            scene = ScenePolicy(
+                hysteresis = hysteresis,
+                dwellThresholds = dwellThresholds,
+                confidence = confidence,
+            ),
+            sentinel = SentinelPolicy(alertRules = emptyMap()),
+            harbor = HarborPolicy(defaultChannels = emptyMap(), escalationTimeouts = emptyMap()),
+            recorder = RecorderPolicy(transitionWindows = emptyMap()),
         )
 }
 

@@ -19,6 +19,10 @@ public data class SceneCalibration(
     public val heartbeatTimeout: Duration,
     // ── Person State ──────────────────────────────────────────
     public val dwellThresholds: Map<StateKind, DwellThreshold> = emptyMap(),
+    // ── ComeBack (Inverse Dwell) ──────────────────────────────
+    // Measures time AWAY from a baseline state, not time IN a state.
+    // Key: the baseline state (e.g., LYING). Value: warning/exceeded thresholds.
+    public val comeBackThresholds: Map<StateKind, DwellThreshold> = emptyMap(),
     // ── Scene State ───────────────────────────────────────────
     public val sceneHysteresis: Map<String, Duration> = emptyMap(),  // field → hysteresis
     public val sceneThresholds: Map<String, DwellThreshold> = emptyMap(),  // field → dwell
@@ -56,6 +60,9 @@ public data class SceneCalibration(
  *     dwell {
  *         STANDING warning Duration.ofMinutes(4) exceeded Duration.ofMinutes(5)
  *     }
+ *     comeBack {
+ *         LYING warning Duration.ofMinutes(12) exceeded Duration.ofMinutes(15)
+ *     }
  *     sceneHysteresis {
  *         "staff" hysteresis Duration.ofSeconds(1.5)
  *     }
@@ -78,6 +85,7 @@ public class SceneCalibrationBuilder {
 
     private val confidenceBuilder = ConfidenceThresholdsBuilder()
     private val dwellBuilder = DwellThresholdsBuilder()
+    private val comeBackBuilder = ComeBackThresholdsBuilder()
     private val sceneHysteresisBuilder = SceneHysteresisBuilder()
     private val sceneDwellBuilder = SceneDwellThresholdsBuilder()
     private val sceneConfidenceBuilder = SceneConfidenceBuilder()
@@ -88,6 +96,26 @@ public class SceneCalibrationBuilder {
 
     public fun dwell(init: DwellThresholdsBuilder.() -> Unit) {
         dwellBuilder.apply(init)
+    }
+
+    /**
+     * Configure come-back (inverse dwell) thresholds.
+     *
+     * Unlike normal dwell which measures time IN a state,
+     * come-back measures time SINCE LEAVING a baseline state.
+     *
+     * Example:
+     * ```kotlin
+     * comeBack {
+     *     LYING warning Duration.ofMinutes(12) exceeded Duration.ofMinutes(15)
+     * }
+     * ```
+     *
+     * This means: if the resident has been away from LYING for more than
+     * 12 minutes, emit a warning. If more than 15 minutes, emit exceeded.
+     */
+    public fun comeBack(init: ComeBackThresholdsBuilder.() -> Unit) {
+        comeBackBuilder.apply(init)
     }
 
     public fun sceneHysteresis(init: SceneHysteresisBuilder.() -> Unit) {
@@ -107,6 +135,7 @@ public class SceneCalibrationBuilder {
         confidence = confidenceBuilder.build(),
         heartbeatTimeout = heartbeatTimeout,
         dwellThresholds = dwellBuilder.build(),
+        comeBackThresholds = comeBackBuilder.build(),
         sceneHysteresis = sceneHysteresisBuilder.build(),
         sceneThresholds = sceneDwellBuilder.build(),
         sceneConfidence = sceneConfidenceBuilder.build(),
@@ -124,6 +153,16 @@ public class ConfidenceThresholdsBuilder {
     public fun build(): ConfidenceThresholds = ConfidenceThresholds(thresholds)
 }
 
+// ── Generic Dwell Validation (Fowler: Extract Method) ────────────────────────
+
+private fun <K> requireValidDwell(key: K, warning: Duration, exceeded: Duration, label: (K) -> String) {
+    require(warning < exceeded) {
+        "${label(key)}: warning ($warning) must be less than exceeded ($exceeded)"
+    }
+}
+
+// ── Person State Dwell ───────────────────────────────────────────────────────
+
 @SceneCalibrationDsl
 public class DwellThresholdsBuilder {
     private val thresholds = mutableMapOf<StateKind, DwellThreshold>()
@@ -134,12 +173,14 @@ public class DwellThresholdsBuilder {
 
     public inner class DwellWarningEntry(private val state: StateKind, private val warning: Duration) {
         public infix fun exceeded(duration: Duration) {
+            requireValidDwell(state, warning, duration) { "dwell ${it.name}" }
             thresholds[state] = DwellThreshold(warning, duration)
         }
     }
 
     public val STANDING: DwellEntry get() = DwellEntry(StateKind.STANDING)
     public val LYING: DwellEntry get() = DwellEntry(StateKind.LYING)
+    public val SITTING_IN_BED: DwellEntry get() = DwellEntry(StateKind.SITTING_IN_BED)
     public val BED_EDGE: DwellEntry get() = DwellEntry(StateKind.BED_EDGE)
     public val IN_BATHROOM: DwellEntry get() = DwellEntry(StateKind.IN_BATHROOM)
     public val IN_HALLWAY: DwellEntry get() = DwellEntry(StateKind.IN_HALLWAY)
@@ -147,16 +188,34 @@ public class DwellThresholdsBuilder {
     public fun build(): Map<StateKind, DwellThreshold> = thresholds.toMap()
 }
 
-@SceneCalibrationDsl
-public class SceneHysteresisBuilder {
-    private val hysteresis = mutableMapOf<String, Duration>()
+// ── ComeBack (Inverse Dwell) ─────────────────────────────────────────────────
 
-    public infix fun String.hysteresis(duration: Duration) {
-        hysteresis[this] = duration
+@SceneCalibrationDsl
+public class ComeBackThresholdsBuilder {
+    private val thresholds = mutableMapOf<StateKind, DwellThreshold>()
+
+    public inner class ComeBackEntry(private val baseline: StateKind) {
+        public infix fun warning(duration: Duration): ComeBackWarningEntry =
+            ComeBackWarningEntry(baseline, duration)
     }
 
-    public fun build(): Map<String, Duration> = hysteresis.toMap()
+    public inner class ComeBackWarningEntry(
+        private val baseline: StateKind,
+        private val warning: Duration,
+    ) {
+        public infix fun exceeded(duration: Duration) {
+            requireValidDwell(baseline, warning, duration) { "comeBack ${it.name}" }
+            thresholds[baseline] = DwellThreshold(warning, duration)
+        }
+    }
+
+    public val LYING: ComeBackEntry get() = ComeBackEntry(StateKind.LYING)
+    public val STANDING: ComeBackEntry get() = ComeBackEntry(StateKind.STANDING)
+
+    public fun build(): Map<StateKind, DwellThreshold> = thresholds.toMap()
 }
+
+// ── Scene Dwell ──────────────────────────────────────────────────────────────
 
 @SceneCalibrationDsl
 public class SceneDwellThresholdsBuilder {
@@ -168,6 +227,7 @@ public class SceneDwellThresholdsBuilder {
 
     public inner class SceneDwellWarningEntry(private val field: String, private val warning: Duration) {
         public infix fun exceeded(duration: Duration) {
+            requireValidDwell(field, warning, duration) { "sceneDwell $it" }
             thresholds[field] = DwellThreshold(warning, duration)
         }
     }
@@ -179,6 +239,17 @@ public class SceneDwellThresholdsBuilder {
     public val bedRight: SceneDwellEntry get() = SceneDwellEntry("bed.right")
 
     public fun build(): Map<String, DwellThreshold> = thresholds.toMap()
+}
+
+@SceneCalibrationDsl
+public class SceneHysteresisBuilder {
+    private val hysteresis = mutableMapOf<String, Duration>()
+
+    public infix fun String.hysteresis(duration: Duration) {
+        hysteresis[this] = duration
+    }
+
+    public fun build(): Map<String, Duration> = hysteresis.toMap()
 }
 
 @SceneCalibrationDsl

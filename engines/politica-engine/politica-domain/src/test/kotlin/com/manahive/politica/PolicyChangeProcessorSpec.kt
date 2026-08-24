@@ -27,7 +27,7 @@ class PolicyChangeProcessorSpec : BehaviorSpec({
     Given("un PolicyChangeProcessor") {
         val processor = DefaultPolicyChangeProcessor()
 
-        And("un evento PolicyChangeDetected para María") {
+        And("un evento PolicyChangeDetected para Maria") {
             val event = PolicyChangeDetected(
                 residentId = ResidentId("maria"),
                 at = Instant.parse("2026-08-21T03:00:00Z"),
@@ -52,21 +52,21 @@ class PolicyChangeProcessorSpec : BehaviorSpec({
                     result.emittedEvents[0].shouldBeInstanceOf<CalibrationChanged>()
                 }
 
-                Then("la calibración tiene dwell para STANDING") {
-                    result.calibration.dwellThresholds.containsKey(StateKind.STANDING) shouldBe true
+                Then("la calibracion tiene dwell para STANDING") {
+                    result.calibration.scene.dwellThresholds.containsKey(StateKind.STANDING) shouldBe true
                 }
 
                 Then("el residentId es correcto") {
                     result.residentId shouldBe ResidentId("maria")
                 }
 
-                Then("la calibración no es null") {
+                Then("la calibracion no es null") {
                     result.calibration shouldNotBe null
                 }
             }
         }
 
-        And("un evento PolicyChangeDetected para José") {
+        And("un evento PolicyChangeDetected para Jose") {
             val event = PolicyChangeDetected(
                 residentId = ResidentId("jose"),
                 at = Instant.parse("2026-08-21T03:00:00Z"),

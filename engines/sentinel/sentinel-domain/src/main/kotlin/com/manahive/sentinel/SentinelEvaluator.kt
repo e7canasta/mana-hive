@@ -1,6 +1,6 @@
 package com.manahive.sentinel
 
-import com.manahive.contracts.scene.SceneFact
+import com.manahive.contracts.scene.SceneEvent
 import com.manahive.contracts.sentinel.SentinelSignal
 import com.manahive.kernel.Engine
 import com.manahive.kernel.Explained
@@ -42,7 +42,7 @@ public interface SentinelEvaluator : Engine {
      * @return         The verdict: signals to emit + next episode state
      */
     public fun evaluate(
-        fact: SceneFact,
+        fact: SceneEvent,
         episodes: EpisodeLedger,
         now: Instant,
     ): Explained<SentinelVerdict>

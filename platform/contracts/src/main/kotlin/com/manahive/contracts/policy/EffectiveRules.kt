@@ -55,5 +55,6 @@ public enum class Severity { INFO, WARNING, CRITICAL }
  *
  * SAFE_ONLY: closes when resident returns to safe state (alert)
  * STAFF_AND_SAFE: closes when staff assists AND resident is safe (incident)
+ * STAFF_OR_SAFE: closes when staff assists OR resident is safe (flexible)
  */
-public enum class ClosureCondition { SAFE_ONLY, STAFF_AND_SAFE }
+public enum class ClosureCondition { SAFE_ONLY, STAFF_AND_SAFE, STAFF_OR_SAFE }

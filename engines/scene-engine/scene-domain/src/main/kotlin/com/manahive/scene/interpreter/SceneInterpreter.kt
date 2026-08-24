@@ -1,7 +1,7 @@
 package com.manahive.scene.interpreter
 
 import com.manahive.contracts.perception.Observation
-import com.manahive.contracts.scene.SceneFact
+import com.manahive.contracts.scene.SceneEvent
 import com.manahive.kernel.Engine
 import com.manahive.kernel.Explained
 import com.manahive.scene.calibration.SceneCalibration

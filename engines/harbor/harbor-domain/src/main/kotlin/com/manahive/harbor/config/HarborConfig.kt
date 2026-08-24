@@ -1,7 +1,7 @@
 package com.manahive.harbor.config
 
 import com.manahive.contracts.policy.Severity
-import com.manahive.harbor.Channel
+import com.manahive.contracts.common.Channel
 import java.time.Duration
 
 /**

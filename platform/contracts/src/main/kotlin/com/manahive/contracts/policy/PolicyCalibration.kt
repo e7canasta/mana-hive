@@ -1,27 +1,77 @@
 package com.manahive.contracts.policy
 
+import com.manahive.contracts.common.Channel
 import com.manahive.contracts.scene.StateKind
 import com.manahive.kernel.ResidentId
 import java.time.Duration
 
 /**
- * The calibration that Politica Engine produces for Scene Engine.
+ * The calibration that Politica Engine produces for all downstream engines.
  * This is the CONTRACT between engines — lives in platform/contracts.
  *
- * Named "PolicyCalibration" (not "SceneCalibration") because:
- * - It's the output of the policy engine
- * - Scene Engine has its own SceneCalibration (compiled for the interpreter)
- * - Fowler: "Name things for what they ARE, not for where they're used"
- *
  * Vernon's ACL: this is the public interface of Politica engine.
- * Scene Engine only knows hysteresis, dwell, confidence — NOT
+ * Downstream engines only know resolved rules — NOT
  * RiskLevel, MobilityAid, AlarmProfile.
+ *
+ * Each engine's data is grouped into its own value object (Fowler: Extract Class).
+ * The adapters extract the relevant section for each engine.
  */
 public data class PolicyCalibration(
     public val residentId: ResidentId,
-    public val hysteresis: Map<TransitionKey, Duration>,
-    public val dwellThresholds: Map<StateKind, DwellThreshold>,
-    public val confidence: ConfidenceConfig,
+    public val scene: ScenePolicy,
+    public val sentinel: SentinelPolicy,
+    public val harbor: HarborPolicy,
+    public val recorder: RecorderPolicy,
+)
+
+/**
+ * Resolved rules for Scene Engine.
+ * Contains dwell thresholds, hysteresis, and confidence filtering.
+ */
+public data class ScenePolicy(
+    val hysteresis: Map<TransitionKey, Duration>,
+    val dwellThresholds: Map<StateKind, DwellThreshold>,
+    val confidence: ConfidenceConfig,
+)
+
+/**
+ * Resolved rules for Sentinel Engine.
+ * Contains alert rules derived from ResidentStateRule in catalog.
+ */
+public data class SentinelPolicy(
+    val alertRules: Map<StateKind, AlertRule>,
+)
+
+/**
+ * Resolved rules for Harbor Engine.
+ * Contains notification channels and escalation timeouts per severity.
+ *
+ * Channel is a shared type definition (like a C header) from contracts/common.
+ * No circular dependency — harbor-domain already depends on contracts.
+ */
+public data class HarborPolicy(
+    val defaultChannels: Map<Severity, Set<Channel>>,
+    val escalationTimeouts: Map<Severity, Duration>,
+)
+
+/**
+ * Resolved rules for Recorder Engine.
+ * Contains recording windows for specific transitions.
+ */
+public data class RecorderPolicy(
+    /** Recording windows keyed by transition (from → to). */
+    val transitionWindows: Map<TransitionKey, TransitionWindow>,
+)
+
+/**
+ * Recording window for a specific transition.
+ * Derived from DagTransitionRule.recordBefore/recordAfter.
+ *
+ * Value Object (Vernon): no identity, compared by value.
+ */
+public data class TransitionWindow(
+    val before: Duration,
+    val after: Duration,
 )
 
 /**

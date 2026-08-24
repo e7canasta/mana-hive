@@ -10,7 +10,7 @@ import com.manahive.kernel.ResidentId
  */
 public object Subjects {
     public fun perceptionObservation(bed: BedId): String = "perception.observation.v1.${bed.value}"
-    public fun sceneFact(bed: BedId): String = "scene.fact.v1.${bed.value}"
+    public fun sceneEvent(bed: BedId): String = "scene.fact.v1.${bed.value}"
     public fun sentinelSignal(bed: BedId): String = "sentinel.signal.v1.${bed.value}"
     public fun alarmEvent(alert: AlertId): String = "alarm.event.v1.${alert.value}"
     public fun effectiveRules(resident: ResidentId): String = "hub.policy.effective-rules.v1.${resident.value}"

@@ -8,7 +8,6 @@ import com.manahive.kernel.BedId
 import com.manahive.kernel.NightId
 import com.manahive.kernel.ResidentId
 import com.manahive.kernel.RuleId
-import com.manahive.sentinel.FatigueBudget
 import com.manahive.sentinel.SentinelCalibration
 import java.time.Duration
 import java.time.Instant
@@ -20,11 +19,14 @@ import java.time.Instant
  * domain objects — SentinelCalibration — without leaking framework details.
  *
  * Self-Validating Entity (Vernon): validates invariants on creation.
+ *
+ * NOTE: NotificationBudgetConfig is kept for backward compatibility but is NOT used
+ * by Sentinel. Fatigue is a delivery concern handled by Harbor.
  */
 data class BatchConfig(
     val resident: ResidentConfig,
     val rules: List<RuleConfig>,
-    val fatigue: FatigueConfig,
+    val fatigue: NotificationBudgetConfig,
     val events: EventsConfig,
 ) {
     init {
@@ -52,10 +54,6 @@ data class BatchConfig(
             residentId = residentId,
             rulesByTrigger = byTrigger,
             ruleIds = alertRules.map { it.id }.toSet(),
-            fatigue = FatigueBudget(
-                interruptionsThisShift = 0,
-                maxPerShift = fatigue.maxPerShift,
-            ),
             fingerprint = alertRules.joinToString(",") { it.id.value },
         )
     }
@@ -91,7 +89,14 @@ data class RuleConfig(
     )
 }
 
-data class FatigueConfig(
+/**
+ * Fatigue configuration.
+ *
+ * NOTE: This is kept in sentinel-batch for YAML backward compatibility.
+ * Sentinel itself does NOT use fatigue. This config will be moved to
+ * harbor-batch in a future refactor.
+ */
+data class NotificationBudgetConfig(
     val maxPerShift: Int = 5,
 )
 

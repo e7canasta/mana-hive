@@ -1,11 +1,13 @@
 package com.manahive.scene.sweeper
 
-import com.manahive.contracts.scene.SceneFact
-import com.manahive.contracts.scene.SceneFact.DwellExceeded
-import com.manahive.contracts.scene.SceneFact.DwellWarning
-import com.manahive.contracts.scene.SceneFact.SceneDwellExceeded
-import com.manahive.contracts.scene.SceneFact.SceneDwellWarning
-import com.manahive.contracts.scene.SceneFact.SignalLost
+import com.manahive.contracts.scene.SceneEvent
+import com.manahive.contracts.scene.SceneEvent.DwellExceeded
+import com.manahive.contracts.scene.SceneEvent.DwellWarning
+import com.manahive.contracts.scene.SceneEvent.ComeBackExceeded
+import com.manahive.contracts.scene.SceneEvent.ComeBackWarning
+import com.manahive.contracts.scene.SceneEvent.SceneDwellExceeded
+import com.manahive.contracts.scene.SceneEvent.SceneDwellWarning
+import com.manahive.contracts.scene.SceneEvent.SignalLost
 import com.manahive.contracts.scene.kind
 import com.manahive.kernel.EngineVersion
 import com.manahive.kernel.Explained
@@ -40,7 +42,7 @@ internal class ClockSweeperImpl : ClockSweeper {
         marks: DwellMarks,
     ): Explained<SweepResult> {
         val ctx = SweepContext(now, thresholds)
-        val allFacts = mutableListOf<SceneFact>()
+        val allFacts = mutableListOf<SceneEvent>()
         val newPersonMarks = mutableSetOf<DwellMarkKey>()
         val newSceneMarks = mutableSetOf<SceneDwellMarkKey>()
 
@@ -51,6 +53,10 @@ internal class ClockSweeperImpl : ClockSweeper {
             val (dwellFacts, dwellMarks) = checkDwell(twin, twinCtx, marks)
             allFacts += dwellFacts
             newPersonMarks += dwellMarks
+
+            val (comeBackFacts, comeBackMarks) = checkComeBack(twin, twinCtx, marks)
+            allFacts += comeBackFacts
+            newPersonMarks += comeBackMarks
 
             val (signalFacts, signalMarks) = checkSignalLost(twin, twinCtx, marks)
             allFacts += signalFacts
@@ -81,7 +87,7 @@ internal class ClockSweeperImpl : ClockSweeper {
     // ── Person State Dwell Check ────────────────────────────────────────────
 
     private data class DwellCheckResult(
-        val facts: List<SceneFact>,
+        val facts: List<SceneEvent>,
         val marks: Set<DwellMarkKey>,
     )
 
@@ -96,7 +102,7 @@ internal class ClockSweeperImpl : ClockSweeper {
         val duration = twin.durationInState(ctx.now)
         val markKey = twin.toDwellMarkKey()
 
-        val facts = mutableListOf<SceneFact>()
+        val facts = mutableListOf<SceneEvent>()
         val newMarks = mutableSetOf<DwellMarkKey>()
 
         checkDwellThreshold(
@@ -109,8 +115,65 @@ internal class ClockSweeperImpl : ClockSweeper {
             ),
             emittedMarks = marks.emitted,
             emitExceeded = { twin.emitDwellExceeded(dwellThreshold.exceeded, ctx.now) },
-            emitWarning = { twin.emitDwellWarning(dwellThreshold.exceeded, ctx.now) },
+            emitWarning = { twin.emitDwellWarning(dwellThreshold.warning, ctx.now) },
             isExceeded = { it is DwellExceeded },
+            facts = facts,
+            newMarks = newMarks,
+        )
+
+        return DwellCheckResult(facts, newMarks)
+    }
+
+    // ── ComeBack Check (Inverse Dwell — the mine) ────────────────────────
+
+    /**
+     * Checks come-back (inverse dwell) for a twin.
+     *
+     * The mine is planted when the person LEAVES the baseline state.
+     * It explodes if they don't return within the threshold.
+     * It's disarmed if they return before it explodes.
+     *
+     * Uses the same DwellMarkKey mechanism as normal dwell for idempotency:
+     * the mark key uses the baseline state and leftStateAt as identity.
+     */
+    private fun checkComeBack(
+        twin: DigitalTwin,
+        ctx: SweepContext,
+        marks: DwellMarks,
+    ): DwellCheckResult {
+        val baselineKind = twin.baselineState.kind
+        val comeBackThreshold = ctx.thresholds.comeBackByBaseline[baselineKind]
+            ?: return DwellCheckResult(emptyList(), emptySet())
+
+        // Mine not planted: person IS in baseline state
+        val duration = twin.durationSinceLeftBaseline(ctx.now)
+            ?: return DwellCheckResult(emptyList(), emptySet())
+
+        // Mark key: identity = (bed, baseline, leftStateAt, warning)
+        // This ensures the mark is unique per departure event
+        val leftAt = twin.leftStateAt ?: return DwellCheckResult(emptyList(), emptySet())
+        val markKey = DwellMarkKey(
+            bed = twin.bed,
+            state = baselineKind,
+            since = leftAt,
+            warning = false,
+        )
+
+        val facts = mutableListOf<SceneEvent>()
+        val newMarks = mutableSetOf<DwellMarkKey>()
+
+        checkDwellThreshold(
+            config = DwellThresholdConfig(
+                duration = duration,
+                exceeded = comeBackThreshold.exceeded,
+                warning = comeBackThreshold.warning,
+                markKey = markKey,
+                toWarningMark = { it.copy(warning = true) },
+            ),
+            emittedMarks = marks.emitted,
+            emitExceeded = { twin.emitComeBackExceeded(comeBackThreshold.exceeded, ctx.now) },
+            emitWarning = { twin.emitComeBackWarning(comeBackThreshold.warning, ctx.now) },
+            isExceeded = { it is ComeBackExceeded },
             facts = facts,
             newMarks = newMarks,
         )
@@ -121,7 +184,7 @@ internal class ClockSweeperImpl : ClockSweeper {
     // ── Scene State Dwell Check ─────────────────────────────────────────────
 
     private data class SceneDwellCheckResult(
-        val facts: List<SceneFact>,
+        val facts: List<SceneEvent>,
         val marks: Set<SceneDwellMarkKey>,
     )
 
@@ -129,7 +192,7 @@ internal class ClockSweeperImpl : ClockSweeper {
         twin: DigitalTwin,
         ctx: SweepContext,
     ): SceneDwellCheckResult {
-        val facts = mutableListOf<SceneFact>()
+        val facts = mutableListOf<SceneEvent>()
         val newMarks = mutableSetOf<SceneDwellMarkKey>()
 
         checkSceneFieldDwell(twin, "staff", twin.sceneSince, ctx, facts, newMarks)
@@ -146,7 +209,7 @@ internal class ClockSweeperImpl : ClockSweeper {
         field: String,
         since: Instant,
         ctx: SweepContext,
-        facts: MutableList<SceneFact>,
+        facts: MutableList<SceneEvent>,
         newMarks: MutableSet<SceneDwellMarkKey>,
     ) {
         val dwellThreshold = ctx.thresholds.sceneThresholds[field] ?: return
@@ -193,10 +256,10 @@ internal class ClockSweeperImpl : ClockSweeper {
     private fun <K> checkDwellThreshold(
         config: DwellThresholdConfig<K>,
         emittedMarks: Set<K>,
-        emitExceeded: () -> SceneFact,
-        emitWarning: () -> SceneFact,
-        isExceeded: (SceneFact) -> Boolean,
-        facts: MutableList<SceneFact>,
+        emitExceeded: () -> SceneEvent,
+        emitWarning: () -> SceneEvent,
+        isExceeded: (SceneEvent) -> Boolean,
+        facts: MutableList<SceneEvent>,
         newMarks: MutableSet<K>,
     ) {
         if (config.duration >= config.exceeded) {

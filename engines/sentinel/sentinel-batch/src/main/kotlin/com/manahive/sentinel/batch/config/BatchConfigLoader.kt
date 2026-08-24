@@ -36,7 +36,7 @@ object BatchConfigLoader {
 private data class RawBatchConfig(
     val resident: RawResidentConfig,
     val rules: List<RawRuleConfig>,
-    val fatigue: RawFatigueConfig = RawFatigueConfig(),
+    val fatigue: RawNotificationBudgetConfig = RawNotificationBudgetConfig(),
     val events: RawEventsConfig,
 ) {
     fun toDomain(): BatchConfig = BatchConfig(
@@ -79,10 +79,10 @@ private data class RawRuleConfig(
     )
 }
 
-private data class RawFatigueConfig(
+private data class RawNotificationBudgetConfig(
     val maxPerShift: Int = 5,
 ) {
-    fun toDomain(): FatigueConfig = FatigueConfig(maxPerShift)
+    fun toDomain(): NotificationBudgetConfig = NotificationBudgetConfig(maxPerShift)
 }
 
 private data class RawEventsConfig(

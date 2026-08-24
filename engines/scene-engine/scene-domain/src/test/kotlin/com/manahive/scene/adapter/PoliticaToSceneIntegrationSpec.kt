@@ -4,7 +4,11 @@ import com.manahive.contracts.perception.Observation
 import com.manahive.contracts.perception.ObservationKind
 import com.manahive.kernel.DiscardCause
 import com.manahive.contracts.policy.ConfidenceConfig
+import com.manahive.contracts.policy.HarborPolicy
 import com.manahive.contracts.policy.PolicyCalibration
+import com.manahive.contracts.policy.RecorderPolicy
+import com.manahive.contracts.policy.ScenePolicy
+import com.manahive.contracts.policy.SentinelPolicy
 import com.manahive.contracts.policy.TransitionKey
 import com.manahive.contracts.scene.PersonState
 import com.manahive.contracts.scene.StateKind
@@ -39,23 +43,28 @@ class PoliticaToSceneIntegrationSpec : BehaviorSpec({
     Given("a PolicyCalibration from Politica Engine for María") {
         val mariaPolicyCalibration = PolicyCalibration(
             residentId = ResidentId("maria"),
-            hysteresis = mapOf(
-                TransitionKey(StateKind.LYING, StateKind.BED_EDGE) to Duration.ofMillis(1500),
-                TransitionKey(StateKind.BED_EDGE, StateKind.STANDING) to Duration.ofMillis(1500),
-            ),
-            dwellThresholds = mapOf(
-                StateKind.STANDING to com.manahive.contracts.policy.DwellThreshold(
-                    warning = Duration.ofMinutes(4),
-                    exceeded = Duration.ofMinutes(5),
+            scene = ScenePolicy(
+                hysteresis = mapOf(
+                    TransitionKey(StateKind.LYING, StateKind.BED_EDGE) to Duration.ofMillis(1500),
+                    TransitionKey(StateKind.BED_EDGE, StateKind.STANDING) to Duration.ofMillis(1500),
+                ),
+                dwellThresholds = mapOf(
+                    StateKind.STANDING to com.manahive.contracts.policy.DwellThreshold(
+                        warning = Duration.ofMinutes(4),
+                        exceeded = Duration.ofMinutes(5),
+                    ),
+                ),
+                confidence = ConfidenceConfig(
+                    minConfidence = mapOf(
+                        StateKind.BED_EDGE to 0.9,
+                        StateKind.STANDING to 0.85,
+                    ),
+                    heartbeatTimeout = Duration.ofSeconds(90),
                 ),
             ),
-            confidence = ConfidenceConfig(
-                minConfidence = mapOf(
-                    StateKind.BED_EDGE to 0.9,
-                    StateKind.STANDING to 0.85,
-                ),
-                heartbeatTimeout = Duration.ofSeconds(90),
-            ),
+            sentinel = SentinelPolicy(alertRules = emptyMap()),
+            harbor = HarborPolicy(defaultChannels = emptyMap(), escalationTimeouts = emptyMap()),
+            recorder = RecorderPolicy(transitionWindows = emptyMap()),
         )
 
         When("converting to SceneCalibration via adapter") {
@@ -136,26 +145,36 @@ class PoliticaToSceneIntegrationSpec : BehaviorSpec({
     Given("two residents with different PolicyCalibrations") {
         val mariaPolicyCalibration = PolicyCalibration(
             residentId = ResidentId("maria"),
-            hysteresis = mapOf(
-                TransitionKey(StateKind.LYING, StateKind.BED_EDGE) to Duration.ofMillis(1500),
+            scene = ScenePolicy(
+                hysteresis = mapOf(
+                    TransitionKey(StateKind.LYING, StateKind.BED_EDGE) to Duration.ofMillis(1500),
+                ),
+                dwellThresholds = emptyMap(),
+                confidence = ConfidenceConfig(
+                    minConfidence = mapOf(StateKind.BED_EDGE to 0.9),
+                    heartbeatTimeout = Duration.ofSeconds(90),
+                ),
             ),
-            dwellThresholds = emptyMap(),
-            confidence = ConfidenceConfig(
-                minConfidence = mapOf(StateKind.BED_EDGE to 0.9),
-                heartbeatTimeout = Duration.ofSeconds(90),
-            ),
+            sentinel = SentinelPolicy(alertRules = emptyMap()),
+            harbor = HarborPolicy(defaultChannels = emptyMap(), escalationTimeouts = emptyMap()),
+            recorder = RecorderPolicy(transitionWindows = emptyMap()),
         )
 
         val josePolicyCalibration = PolicyCalibration(
             residentId = ResidentId("jose"),
-            hysteresis = mapOf(
-                TransitionKey(StateKind.LYING, StateKind.BED_EDGE) to Duration.ofMillis(1500),
+            scene = ScenePolicy(
+                hysteresis = mapOf(
+                    TransitionKey(StateKind.LYING, StateKind.BED_EDGE) to Duration.ofMillis(1500),
+                ),
+                dwellThresholds = emptyMap(),
+                confidence = ConfidenceConfig(
+                    minConfidence = mapOf(StateKind.BED_EDGE to 0.7),  // Lower threshold
+                    heartbeatTimeout = Duration.ofSeconds(90),
+                ),
             ),
-            dwellThresholds = emptyMap(),
-            confidence = ConfidenceConfig(
-                minConfidence = mapOf(StateKind.BED_EDGE to 0.7),  // Lower threshold
-                heartbeatTimeout = Duration.ofSeconds(90),
-            ),
+            sentinel = SentinelPolicy(alertRules = emptyMap()),
+            harbor = HarborPolicy(defaultChannels = emptyMap(), escalationTimeouts = emptyMap()),
+            recorder = RecorderPolicy(transitionWindows = emptyMap()),
         )
 
         When("converting both to SceneCalibrations") {

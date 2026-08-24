@@ -1,0 +1,27 @@
+spring:
+  application:
+    name: politica-engine
+  main:
+    banner-mode: off
+
+server:
+  port: 8085
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    com.manahive.politica: INFO
+    org.springframework: INFO
+
+nats:
+  url: nats://localhost:4222
+  cluster: manahive
+  durable: politica-engine

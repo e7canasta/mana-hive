@@ -1,5 +1,6 @@
 package com.manahive.harbor
 
+import com.manahive.contracts.common.Channel
 import com.manahive.contracts.policy.Severity
 import com.manahive.kernel.ResidentId
 import java.time.Duration
@@ -38,6 +39,7 @@ public class HarborCalibrationBuilder {
     private var residentId: ResidentId = ResidentId("default")
     private val channels = mutableMapOf<Severity, MutableSet<Channel>>()
     private val timeouts = mutableMapOf<Severity, Duration>()
+    private val budgetBudgets = mutableMapOf<Severity, BudgetEntry>()
 
     /** Set the resident ID for this calibration. */
     public fun resident(id: String) {
@@ -67,6 +69,11 @@ public class HarborCalibrationBuilder {
     /** Configure incidents (require immediate action). */
     public fun incident(init: SeverityConfig.() -> Unit): Unit = severity(Severity.CRITICAL, init)
 
+    /** Configure delivery budget per severity. CRITICAL is never suppressed. */
+    public fun budget(init: NotificationBudgetConfigBuilder.() -> Unit) {
+        NotificationBudgetConfigBuilder().apply(init).also { budgetBudgets.putAll(it.build()) }
+    }
+
     internal fun build(): HarborCalibration {
         // Ensure all severity levels are configured
         for (level in Severity.entries) {
@@ -82,12 +89,16 @@ public class HarborCalibrationBuilder {
             timeouts.entries.sortedBy { it.key.name }.forEach { (severity, timeout) ->
                 append("timeout:${severity.name}=${timeout.toMillis()};")
             }
+            budgetBudgets.entries.sortedBy { it.key.name }.forEach { (severity, budget) ->
+                append("budget:${severity.name}=${budget.maxPerShift};")
+            }
         }.hashCode().toString(16)
         return HarborCalibration(
             residentId = residentId,
             defaultChannels = channels.mapValues { it.value.toSet() },
             escalationTimeouts = timeouts,
             confirmationChannels = confirmChannels,
+            budget = NotificationBudget(budgetBudgets.toMap()),
             fingerprint = fingerprint,
         )
     }
@@ -105,6 +116,28 @@ public class SeverityConfig(
 
     /** Time before escalating if no acknowledgment. */
     public var escalationTimeout: Duration = Duration.ZERO
+}
+
+/**
+ * Builder for delivery budget budgets per severity.
+ *
+ * CRITICAL is never configurable — it's always delivered (life-safety).
+ */
+@HarborDsl
+public class NotificationBudgetConfigBuilder {
+    private val budgets = mutableMapOf<Severity, BudgetEntry>()
+
+    /** Set max notifications per shift for WARNING severity. */
+    public fun warning(max: Int) {
+        budgets[Severity.WARNING] = BudgetEntry(maxPerShift = max)
+    }
+
+    /** Set max notifications per shift for INFO severity. */
+    public fun info(max: Int) {
+        budgets[Severity.INFO] = BudgetEntry(maxPerShift = max)
+    }
+
+    internal fun build(): Map<Severity, BudgetEntry> = budgets.toMap()
 }
 
 @DslMarker

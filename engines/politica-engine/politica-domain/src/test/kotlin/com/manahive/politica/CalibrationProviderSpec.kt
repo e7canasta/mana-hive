@@ -1,8 +1,13 @@
 package com.manahive.politica
 
-import com.manahive.contracts.policy.PolicySource
-import com.manahive.contracts.policy.buildPolicyCalibration
-import com.manahive.contracts.shared.seconds
+import com.manahive.contracts.policy.ConfidenceConfig
+import com.manahive.contracts.policy.DwellThreshold
+import com.manahive.contracts.policy.HarborPolicy
+import com.manahive.contracts.policy.PolicyCalibration
+import com.manahive.contracts.policy.RecorderPolicy
+import com.manahive.contracts.policy.ScenePolicy
+import com.manahive.contracts.policy.SentinelPolicy
+import com.manahive.contracts.policy.TransitionKey
 import com.manahive.contracts.scene.StateKind
 import com.manahive.kernel.ResidentId
 import io.kotest.core.spec.style.BehaviorSpec
@@ -21,46 +26,52 @@ class CalibrationProviderSpec : BehaviorSpec({
     Given("un CalibrationProvider con calibraciones") {
         val provider = InMemoryCalibrationProvider()
 
-        And("una calibración para María") {
-            val calibration = buildPolicyCalibration {
-                resident(ResidentId("maria"))
-                hysteresis {
-                    from(StateKind.LYING) { to(StateKind.BED_EDGE) after Duration.ofMillis(1500) }
-                }
-                dwell {
-                    StateKind.STANDING warning Duration.ofMinutes(4) exceeded Duration.ofMinutes(5)
-                }
-                confidence {
-                    StateKind.BED_EDGE min 0.9
-                }
-                heartbeat {
-                    timeout to 90.seconds
-                }
-            }
+        And("una calibracion para Maria") {
+            val calibration = PolicyCalibration(
+                residentId = ResidentId("maria"),
+                scene = ScenePolicy(
+                    hysteresis = mapOf(
+                        TransitionKey(StateKind.LYING, StateKind.BED_EDGE) to Duration.ofMillis(1500),
+                    ),
+                    dwellThresholds = mapOf(
+                        StateKind.STANDING to DwellThreshold(
+                            warning = Duration.ofMinutes(4),
+                            exceeded = Duration.ofMinutes(5),
+                        ),
+                    ),
+                    confidence = ConfidenceConfig(
+                        minConfidence = mapOf(StateKind.BED_EDGE to 0.9),
+                        heartbeatTimeout = Duration.ofSeconds(90),
+                    ),
+                ),
+                sentinel = SentinelPolicy(alertRules = emptyMap()),
+                harbor = HarborPolicy(defaultChannels = emptyMap(), escalationTimeouts = emptyMap()),
+                recorder = RecorderPolicy(transitionWindows = emptyMap()),
+            )
             provider.register(ResidentId("maria"), calibration)
 
-            When("consulto la calibración de María") {
+            When("consulto la calibracion de Maria") {
                 val result = provider.getCalibration(ResidentId("maria"))
 
-                Then("obtengo la calibración correcta") {
+                Then("obtengo la calibracion correcta") {
                     result shouldNotBe null
                     result.value shouldNotBe null
                 }
 
-                Then("la calibración tiene el residentId correcto") {
+                Then("la calibracion tiene el residentId correcto") {
                     result.value?.residentId shouldBe ResidentId("maria")
                 }
 
-                Then("la calibración tiene histeresis") {
-                    result.value?.hysteresis?.isNotEmpty() shouldBe true
+                Then("la calibracion tiene histeresis") {
+                    result.value?.scene?.hysteresis?.isNotEmpty() shouldBe true
                 }
 
-                Then("la calibración tiene dwell thresholds") {
-                    result.value?.dwellThresholds?.isNotEmpty() shouldBe true
+                Then("la calibracion tiene dwell thresholds") {
+                    result.value?.scene?.dwellThresholds?.isNotEmpty() shouldBe true
                 }
 
-                Then("la calibración tiene confidence config") {
-                    result.value?.confidence shouldNotBe null
+                Then("la calibracion tiene confidence config") {
+                    result.value?.scene?.confidence shouldNotBe null
                 }
             }
         }
@@ -74,7 +85,7 @@ class CalibrationProviderSpec : BehaviorSpec({
         }
     }
 
-    Given("un CalibrationProvider vacío") {
+    Given("un CalibrationProvider vacio") {
         val provider = InMemoryCalibrationProvider()
 
         When("consulto un residente") {

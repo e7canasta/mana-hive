@@ -48,6 +48,7 @@ object BatchConfigLoader {
         @JsonProperty("transitions") val transitions: String = "RELEASE_2",
         @JsonProperty("confidence") val confidence: Map<String, Double> = emptyMap(),
         @JsonProperty("dwell") val dwell: Map<String, RawDwellConfig> = emptyMap(),
+        @JsonProperty("comeBack") val comeBack: Map<String, RawDwellConfig>? = null,
         @JsonProperty("heartbeat") val heartbeat: RawHeartbeatConfig = RawHeartbeatConfig(),
     )
 
@@ -89,6 +90,12 @@ object BatchConfigLoader {
         },
         confidence = confidence.mapKeys { StateKind.valueOf(it.key) },
         dwellThresholds = dwell.map { (key, raw) ->
+            StateKind.valueOf(key) to DwellThreshold(
+                warning = parseDuration(raw.warning ?: "0s"),
+                exceeded = parseDuration(raw.exceeded ?: "0s"),
+            )
+        }.toMap(),
+        comeBackThresholds = (comeBack ?: emptyMap()).map { (key, raw) ->
             StateKind.valueOf(key) to DwellThreshold(
                 warning = parseDuration(raw.warning ?: "0s"),
                 exceeded = parseDuration(raw.exceeded ?: "0s"),

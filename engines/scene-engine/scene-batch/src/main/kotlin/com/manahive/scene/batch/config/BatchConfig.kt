@@ -79,6 +79,7 @@ data class BatchConfig(
         ),
         heartbeatTimeout = calibration.heartbeatTimeout,
         dwellThresholds = calibration.dwellThresholds,
+        comeBackThresholds = calibration.comeBackThresholds,
     )
 
     /** Creates a [DigitalTwin] from this config at the given start time. */
@@ -103,6 +104,7 @@ data class CalibrationConfig(
     val transitionTable: TransitionTable = TransitionTable.RELEASE_2,
     val confidence: Map<StateKind, Double> = emptyMap(),
     val dwellThresholds: Map<StateKind, com.manahive.contracts.policy.DwellThreshold> = emptyMap(),
+    val comeBackThresholds: Map<StateKind, com.manahive.contracts.policy.DwellThreshold> = emptyMap(),
     val heartbeatTimeout: Duration = Duration.ofSeconds(90),
 )
 

@@ -3,10 +3,12 @@ package com.manahive.scene.interpreter
 import com.manahive.contracts.perception.Observation
 import com.manahive.contracts.perception.ObservationKind
 import com.manahive.contracts.scene.PersonState
-import com.manahive.contracts.scene.SceneFact
-import com.manahive.contracts.scene.SceneFact.SceneStateChanged
-import com.manahive.contracts.scene.SceneFact.SignalRecovered
-import com.manahive.contracts.scene.SceneFact.TransitionDetected
+import com.manahive.contracts.scene.SceneEvent
+import com.manahive.contracts.scene.SceneEvent.SceneStateChanged
+import com.manahive.contracts.scene.SceneEvent.SignalRecovered
+import com.manahive.contracts.scene.SceneEvent.StaffLeftDetected
+import com.manahive.contracts.scene.SceneEvent.StaffPresenceDetected
+import com.manahive.contracts.scene.SceneEvent.TransitionDetected
 import com.manahive.contracts.scene.kind
 import com.manahive.contracts.scene.toPersonState
 import com.manahive.contracts.scene.toSceneStateChange
@@ -115,12 +117,30 @@ internal class SceneInterpreterImpl(
 
         // 4. TRANSICION VALIDA — Evolve twin and emit fact
         val updatedTwin = twin.evolveScene(sceneChange, now)
-        val fact = updatedTwin.emitSceneStateChanged(
-            field = field,
-            from = oldScene.toBitmask().toString(),
-            to = newScene.toBitmask().toString(),
-            at = now,
-        )
+
+        // Emit StaffPresenceDetected or StaffLeftDetected for Sentinel to consume
+        val fact = when {
+            field == "staff" && newScene.staff != com.manahive.contracts.scene.PresenceState.NotPresent ->
+                StaffPresenceDetected(
+                    bed = twin.bed,
+                    night = twin.night,
+                    at = now,
+                    staff = null,
+                )
+            field == "staff" && newScene.staff == com.manahive.contracts.scene.PresenceState.NotPresent ->
+                StaffLeftDetected(
+                    bed = twin.bed,
+                    night = twin.night,
+                    at = now,
+                )
+            else ->
+                updatedTwin.emitSceneStateChanged(
+                    field = field,
+                    from = oldScene.toBitmask().toString(),
+                    to = newScene.toBitmask().toString(),
+                    at = now,
+                )
+        }
 
         val step = ExplanationStep(
             rule = "scene-state",
@@ -197,7 +217,7 @@ internal class SceneInterpreterImpl(
 
     private data class SensorRecovery(
         val twin: DigitalTwin,
-        val facts: List<SceneFact>,
+        val facts: List<SceneEvent>,
     )
 
     private fun recoverSensor(
@@ -218,7 +238,7 @@ internal class SceneInterpreterImpl(
     private fun checkDuplicate(
         twin: DigitalTwin,
         targetState: PersonState,
-        recoveryFacts: List<SceneFact>,
+        recoveryFacts: List<SceneEvent>,
     ): Explained<SceneVerdict>? {
         if (targetState != twin.state) return null
         return discarded(
@@ -234,7 +254,7 @@ internal class SceneInterpreterImpl(
     private fun checkIllegalTransition(
         twin: DigitalTwin,
         targetState: PersonState,
-        recoveryFacts: List<SceneFact>,
+        recoveryFacts: List<SceneEvent>,
     ): Explained<SceneVerdict>? {
         if (calibration.table.isLegal(twin.state.kind, targetState.kind)) return null
         return discarded(
@@ -251,8 +271,10 @@ internal class SceneInterpreterImpl(
         twin: DigitalTwin,
         targetState: PersonState,
         now: Instant,
-        recoveryFacts: List<SceneFact>,
+        recoveryFacts: List<SceneEvent>,
     ): Explained<SceneVerdict>? {
+        // Unknown has no prior observation — no flickering possible, skip hysteresis
+        if (twin.state is PersonState.Unknown) return null
         val durationInState = twin.durationInState(now)
         val minHysteresis = calibration.table.hysteresis(twin.state.kind, targetState.kind)
         if (durationInState >= minHysteresis) return null
@@ -270,9 +292,15 @@ internal class SceneInterpreterImpl(
         twin: DigitalTwin,
         targetState: PersonState,
         now: Instant,
-        recoveryFacts: List<SceneFact>,
+        recoveryFacts: List<SceneEvent>,
     ): Explained<SceneVerdict> {
-        val updatedTwin = twin.copy(state = targetState, stateSince = now)
+        val isReturningToBaseline = targetState == twin.baselineState
+        val updatedTwin = twin.copy(
+            state = targetState,
+            stateSince = now,
+            // Mine planted on departure, disarmed on return
+            leftStateAt = if (isReturningToBaseline) null else twin.leftStateAt ?: now,
+        )
         val fact = twin.emitTransition(targetState, now)
         val step = ExplanationStep(
             rule = "transition-table",
@@ -292,7 +320,7 @@ internal class SceneInterpreterImpl(
         twin: DigitalTwin,
         subject: String,
         cause: DiscardCause,
-        facts: List<SceneFact> = emptyList(),
+        facts: List<SceneEvent> = emptyList(),
     ): Explained<SceneVerdict> = Explained(
         value = SceneVerdict(twin, facts),
         explanation = emptyList(),

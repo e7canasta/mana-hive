@@ -4,10 +4,12 @@ import com.manahive.contracts.policy.AlertRule
 import com.manahive.contracts.policy.Severity
 import com.manahive.contracts.policy.ClosureCondition
 import com.manahive.contracts.scene.StateKind
+import com.manahive.contracts.sentinel.ClosureCause
 import com.manahive.kernel.BedId
 import com.manahive.kernel.EpisodeId
 import com.manahive.kernel.ResidentId
 import com.manahive.kernel.RuleId
+import com.manahive.kernel.StaffId
 import java.time.Duration
 import java.time.Instant
 import java.util.UUID
@@ -19,17 +21,21 @@ import java.util.UUID
  * in the scene stream.
  *
  * One ledger per resident. Episodes follow the resident across bed changes.
+ *
+ * NOTE: Fatigue is NOT tracked here. Fatigue is a delivery concern (Harbor),
+ * not a clinical judgment concern (Sentinel). Sentinel ALWAYS opens episodes.
  */
 public data class EpisodeLedger(
     public val residentId: ResidentId,
     /** One open episode per bed at most. Keyed by bed because a resident
      *  could theoretically have events on multiple beds in the same night. */
     public val open: Map<BedId, Episode>,
-    public val fatigue: FatigueBudget,
+    /** Closed episodes for audit trail. */
+    public val closed: List<Episode> = emptyList(),
 ) {
     public companion object {
-        public fun empty(residentId: ResidentId, budget: FatigueBudget): EpisodeLedger =
-            EpisodeLedger(residentId, emptyMap(), budget)
+        public fun empty(residentId: ResidentId): EpisodeLedger =
+            EpisodeLedger(residentId, open = emptyMap(), closed = emptyList())
     }
 
     /** Find the open episode for a specific bed. */
@@ -40,12 +46,13 @@ public data class EpisodeLedger(
         copy(open = open + (episode.bed to episode))
 
     /** Close an episode for a bed. */
-    public fun close(bed: BedId): EpisodeLedger =
-        copy(open = open - bed)
-
-    /** Increment fatigue counter (called when an episode opens). */
-    public fun withFatigueIncrement(): EpisodeLedger =
-        copy(fatigue = fatigue.copy(interruptionsThisShift = fatigue.interruptionsThisShift + 1))
+    public fun close(bed: BedId): EpisodeLedger {
+        val episode = open[bed] ?: return this
+        return copy(
+            open = open - bed,
+            closed = closed + episode,
+        )
+    }
 }
 
 /**
@@ -54,6 +61,8 @@ public data class EpisodeLedger(
  *
  * Vernon's Aggregate Root: the episode guards its own invariants.
  * Factory method enforces creation rules; business methods enforce state transitions.
+ *
+ * Event Sourced: each state change is recorded as an immutable EpisodeEvent.
  */
 public data class Episode(
     val id: EpisodeId,
@@ -68,8 +77,8 @@ public data class Episode(
     val closureCondition: ClosureCondition,
     /** Whether the resident can self-close (reversible). */
     val reversible: Boolean,
-    /** All events that occurred under this episode's umbrella. */
-    val events: List<EpisodeEvent>,
+    /** Event log: immutable record of all state changes. */
+    val eventLog: List<EpisodeEvent>,
     /** Whether staff has been present since the episode opened. */
     val staffPresent: Boolean,
     /** When the resident last returned to a safe state. null if still at risk. */
@@ -80,33 +89,44 @@ public data class Episode(
     public companion object {
         /**
          * Factory: open a new episode from a rule and trigger.
-         * Enforces invariant: episode ID is generated, events start empty.
+         * Enforces invariant: episode ID is generated, event log starts with Opened.
          */
         public fun open(
             bed: BedId,
             residentId: ResidentId,
             at: Instant,
             rule: AlertRule,
-        ): Episode = Episode(
-            id = EpisodeId("${bed.value}-${UUID.randomUUID()}"),
-            bed = bed,
-            residentId = residentId,
-            openedAt = at,
-            trigger = rule.trigger,
-            severity = rule.severity,
-            closureCondition = rule.closureCondition,
-            reversible = rule.reversible,
-            events = emptyList(),
-            staffPresent = false,
-            lastSafeState = null,
-            alertedRules = setOf(rule.id),
-        )
+        ): Episode {
+            val episodeId = EpisodeId("${bed.value}-${UUID.randomUUID()}")
+            return Episode(
+                id = episodeId,
+                bed = bed,
+                residentId = residentId,
+                openedAt = at,
+                trigger = rule.trigger,
+                severity = rule.severity,
+                closureCondition = rule.closureCondition,
+                reversible = rule.reversible,
+                eventLog = listOf(
+                    EpisodeEvent.Opened(
+                        episodeId = episodeId,
+                        trigger = rule.trigger,
+                        severity = rule.severity,
+                        at = at,
+                    ),
+                ),
+                staffPresent = false,
+                lastSafeState = null,
+                alertedRules = setOf(rule.id),
+            )
+        }
     }
 
     /** Can this episode close given current state? */
     public fun canClose(): Boolean = when (closureCondition) {
         ClosureCondition.SAFE_ONLY -> lastSafeState != null
         ClosureCondition.STAFF_AND_SAFE -> staffPresent && lastSafeState != null
+        ClosureCondition.STAFF_OR_SAFE -> staffPresent || lastSafeState != null
     }
 
     /** Duration from episode open to now (or close). */
@@ -116,41 +136,126 @@ public data class Episode(
     public fun gapDuration(now: Instant): Duration =
         if (staffPresent) Duration.ZERO else Duration.between(openedAt, now)
 
-    /** Mark staff as present. */
-    public fun withStaffPresent(): Episode = copy(staffPresent = true)
+    /** Mark staff as present. Records event in log. */
+    public fun withStaffPresent(at: Instant): Episode = copy(
+        staffPresent = true,
+        eventLog = eventLog + EpisodeEvent.StaffArrived(episodeId = id, at = at),
+    )
 
-    /** Mark safe state reached. */
-    public fun withSafeState(at: Instant): Episode = copy(lastSafeState = at)
+    /** Mark staff as absent (staff left the room). Records event in log. */
+    public fun withStaffAbsent(at: Instant): Episode = copy(
+        staffPresent = false,
+        eventLog = eventLog + EpisodeEvent.StaffLeft(episodeId = id, at = at),
+    )
+
+    /** Mark safe state reached. Records event in log. */
+    public fun withSafeState(at: Instant): Episode = copy(
+        lastSafeState = at,
+        eventLog = eventLog + EpisodeEvent.SafeStateReached(episodeId = id, at = at),
+    )
 
     /** Add an event under the umbrella. */
-    public fun withEvent(event: EpisodeEvent): Episode = copy(events = events + event)
+    public fun withEvent(event: EpisodeEvent): Episode = copy(eventLog = eventLog + event)
 
-    /** Escalate severity (only if new severity is higher). */
-    public fun escalate(rule: AlertRule): Episode = copy(
+    /** Escalate severity (only if new severity is higher). Records event in log. */
+    public fun escalate(rule: AlertRule, at: Instant): Episode = copy(
         severity = rule.severity,
         closureCondition = rule.closureCondition,
         alertedRules = alertedRules + rule.id,
+        eventLog = eventLog + EpisodeEvent.Escalated(
+            episodeId = id,
+            from = severity,
+            to = rule.severity,
+            ruleId = rule.id,
+            at = at,
+        ),
     )
+
+    /** Close the episode. Records event in log. */
+    public fun close(cause: ClosureCause, at: Instant): Episode = copy(
+        eventLog = eventLog + EpisodeEvent.Closed(
+            episodeId = id,
+            cause = cause,
+            at = at,
+        ),
+    )
+
+    /** Reconstruct state from event log (Event Sourcing). */
+    public fun reconstruct(): Episode = eventLog.fold(this) { ep, event ->
+        when (event) {
+            is EpisodeEvent.Opened -> ep
+            is EpisodeEvent.StaffArrived -> ep.copy(staffPresent = true)
+            is EpisodeEvent.StaffLeft -> ep.copy(staffPresent = false)
+            is EpisodeEvent.SafeStateReached -> ep.copy(lastSafeState = event.at)
+            is EpisodeEvent.UmbrellaEvent -> ep
+            is EpisodeEvent.Escalated -> ep.copy(
+                severity = event.to,
+                alertedRules = ep.alertedRules + event.ruleId,
+            )
+            is EpisodeEvent.Closed -> ep
+        }
+    }
 }
 
 /**
- * A single event under an episode's umbrella.
- * Preserves the original fact's criticity even though the event is
- * reported as "under umbrella" (not a new episode).
+ * Event Sourcing: immutable record of all state changes in an episode.
+ * Each event is a fact about what happened, not a command.
+ *
+ * Fowler: "Domain Event — a record of something that happened."
+ * Vernon: "Event Sourcing — capture all changes as a sequence of events."
  */
-public data class EpisodeEvent(
-    public val state: StateKind,
-    public val at: Instant,
-    /** The rule that would have triggered if no episode was open. */
-    public val matchedRule: RuleId?,
-    /** The severity that rule would have assigned. */
-    public val originalSeverity: Severity,
-)
+public sealed interface EpisodeEvent {
+    public val episodeId: EpisodeId
+    public val at: Instant
 
-/** Alarm fatigue as a design budget, not a staff complaint. */
-public data class FatigueBudget(
-    public val interruptionsThisShift: Int,
-    public val maxPerShift: Int,
-) {
-    public val exceeded: Boolean get() = interruptionsThisShift >= maxPerShift
+    /** Episode opened. */
+    public data class Opened(
+        override val episodeId: EpisodeId,
+        val trigger: StateKind,
+        val severity: Severity,
+        override val at: Instant,
+    ) : EpisodeEvent
+
+    /** Staff arrived in the room. */
+    public data class StaffArrived(
+        override val episodeId: EpisodeId,
+        override val at: Instant,
+    ) : EpisodeEvent
+
+    /** Staff left the room. */
+    public data class StaffLeft(
+        override val episodeId: EpisodeId,
+        override val at: Instant,
+    ) : EpisodeEvent
+
+    /** Resident returned to a safe state. */
+    public data class SafeStateReached(
+        override val episodeId: EpisodeId,
+        override val at: Instant,
+    ) : EpisodeEvent
+
+    /** Event under the episode's umbrella. */
+    public data class UmbrellaEvent(
+        override val episodeId: EpisodeId,
+        val state: StateKind,
+        val matchedRule: RuleId?,
+        val originalSeverity: Severity,
+        override val at: Instant,
+    ) : EpisodeEvent
+
+    /** Episode escalated to higher severity. */
+    public data class Escalated(
+        override val episodeId: EpisodeId,
+        val from: Severity,
+        val to: Severity,
+        val ruleId: RuleId,
+        override val at: Instant,
+    ) : EpisodeEvent
+
+    /** Episode closed. */
+    public data class Closed(
+        override val episodeId: EpisodeId,
+        val cause: ClosureCause,
+        override val at: Instant,
+    ) : EpisodeEvent
 }

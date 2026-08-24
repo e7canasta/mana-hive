@@ -41,7 +41,7 @@ annotation class SentinelBatchDsl
 class BatchConfigBuilder {
     private var resident: ResidentConfig? = null
     private val rules = mutableListOf<RuleConfig>()
-    private var fatigue = FatigueConfig()
+    private var fatigue = NotificationBudgetConfig()
     private var events = EventsConfig(source = "events.dat")
 
     fun resident(init: ResidentConfigBuilder.() -> Unit) {
@@ -52,8 +52,8 @@ class BatchConfigBuilder {
         rules.add(RuleConfigBuilder(id).apply(init).build())
     }
 
-    fun fatigue(init: FatigueConfigBuilder.() -> Unit) {
-        fatigue = FatigueConfigBuilder().apply(init).build()
+    fun fatigue(init: NotificationBudgetConfigBuilder.() -> Unit) {
+        fatigue = NotificationBudgetConfigBuilder().apply(init).build()
     }
 
     fun events(init: EventsConfigBuilder.() -> Unit) {
@@ -106,10 +106,10 @@ class RuleConfigBuilder(private val ruleId: String) {
 }
 
 @SentinelBatchDsl
-class FatigueConfigBuilder {
+class NotificationBudgetConfigBuilder {
     var maxPerShift: Int = 5
 
-    internal fun build(): FatigueConfig = FatigueConfig(maxPerShift)
+    internal fun build(): NotificationBudgetConfig = NotificationBudgetConfig(maxPerShift)
 }
 
 @SentinelBatchDsl

@@ -25,6 +25,7 @@ object BatchProcessor {
     data class ProcessResult(
         val state: BatchState,
         val accepted: Boolean,
+        val facts: List<com.manahive.contracts.scene.SceneEvent> = emptyList(),
     )
 
     fun processEvent(
@@ -35,9 +36,15 @@ object BatchProcessor {
     ): ProcessResult {
         val now = ctx.startTime.plus(event.offset.duration)
 
+        // Every observation refreshes the heartbeat, even before sweeper runs.
+        // This prevents false SIGNAL_LOST when the sensor is transmitting.
+        val heartbeatTwin = state.twin.copy(
+            signal = state.twin.signal.copy(lastHeartbeat = now),
+        )
+
         // 1. Run sweeper between last event and this event
         val sweepResult = ctx.sweeper.sweep(
-            twins = listOf(state.twin),
+            twins = listOf(heartbeatTwin),
             now = now,
             thresholds = ctx.dwellCatalog,
             marks = state.marks,
@@ -63,7 +70,7 @@ object BatchProcessor {
             observedAt = now,
         )
 
-        val result = ctx.interpreter.interpret(state.twin, obs, now)
+        val result = ctx.interpreter.interpret(heartbeatTwin, obs, now)
 
         return if (result.discards.isNotEmpty()) {
             for (discard in result.discards) {
@@ -84,6 +91,7 @@ object BatchProcessor {
                     discarded = state.discarded + 1,
                 ),
                 accepted = false,
+                facts = sweepResult.value.facts + result.value.facts,
             )
         } else {
             writers.jsonl.writeAll(result.value.facts, event.offset, event.lineNumber)
@@ -104,6 +112,7 @@ object BatchProcessor {
                     passed = state.passed + 1,
                 ),
                 accepted = true,
+                facts = sweepResult.value.facts + result.value.facts,
             )
         }
     }

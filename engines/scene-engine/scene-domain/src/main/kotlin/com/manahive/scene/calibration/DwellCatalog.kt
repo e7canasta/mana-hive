@@ -13,6 +13,8 @@ public data class DwellCatalog(
     public val byState: Map<StateKind, DwellThreshold>,
     public val heartbeatTimeout: Duration = PolicyDefaults.heartbeatTimeout,
     public val sceneThresholds: Map<String, DwellThreshold> = emptyMap(),
+    /** ComeBack (inverse dwell): thresholds keyed by baseline state. */
+    public val comeBackByBaseline: Map<StateKind, DwellThreshold> = emptyMap(),
 )
 
 /**
@@ -28,4 +30,5 @@ public fun SceneCalibration.toDwellCatalog(): DwellCatalog = DwellCatalog(
     byState = dwellThresholds.toMap(),
     heartbeatTimeout = heartbeatTimeout,
     sceneThresholds = sceneThresholds,
+    comeBackByBaseline = comeBackThresholds.toMap(),
 )

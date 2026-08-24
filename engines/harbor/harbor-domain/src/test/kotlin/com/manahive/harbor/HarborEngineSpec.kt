@@ -1,5 +1,6 @@
 package com.manahive.harbor
 
+import com.manahive.contracts.common.Channel
 import com.manahive.contracts.policy.Severity
 import com.manahive.contracts.sentinel.ClosureCause
 import com.manahive.contracts.sentinel.SentinelSignal
@@ -56,11 +57,11 @@ class HarborEngineSpec : BehaviorSpec({
 
     Given("an EpisodeOpened signal with WARNING severity") {
         val engine = createHarborEngine(HarborCalibration.default())
-        val registry = NoticeRegistry()
+        val state = HarborState(registry = NoticeRegistry())
         val signal = episodeOpenedSignal(severity = Severity.WARNING)
 
         When("evaluated") {
-            val result = engine.evaluate(signal, registry, now)
+            val result = engine.evaluate(signal, state, now)
 
             Then("creates a notice") {
                 val commands = result.value.commands
@@ -70,7 +71,7 @@ class HarborEngineSpec : BehaviorSpec({
             }
 
             Then("notice is in registry") {
-                val notice = result.value.registry.get(episode)
+                val notice = result.value.state.registry.get(episode)
                 notice.shouldNotBeNull()
                 notice.severity shouldBe Severity.WARNING
             }
@@ -81,11 +82,11 @@ class HarborEngineSpec : BehaviorSpec({
 
     Given("an EpisodeOpened signal with CRITICAL severity") {
         val engine = createHarborEngine(HarborCalibration.default())
-        val registry = NoticeRegistry()
+        val state = HarborState(registry = NoticeRegistry())
         val signal = episodeOpenedSignal(severity = Severity.CRITICAL)
 
         When("evaluated") {
-            val result = engine.evaluate(signal, registry, now)
+            val result = engine.evaluate(signal, state, now)
 
             Then("dispatches to all channels") {
                 val dispatch = result.value.commands[0] as NoticeCommand.Dispatch
@@ -99,11 +100,11 @@ class HarborEngineSpec : BehaviorSpec({
     Given("an EpisodeOpened signal for an existing episode") {
         val engine = createHarborEngine(HarborCalibration.default())
         val existingNotice = Notice.from(episodeOpenedSignal())
-        val registry = NoticeRegistry(active = mapOf(episode to existingNotice))
+        val state = HarborState(registry = NoticeRegistry(active = mapOf(episode to existingNotice)))
         val signal = episodeOpenedSignal()
 
         When("evaluated") {
-            val result = engine.evaluate(signal, registry, now)
+            val result = engine.evaluate(signal, state, now)
 
             Then("no new notice created") {
                 result.value.commands.shouldBeEmpty()
@@ -116,7 +117,7 @@ class HarborEngineSpec : BehaviorSpec({
     Given("an EpisodeClosed signal with STAFF_AND_SAFE") {
         val engine = createHarborEngine(HarborCalibration.default())
         val existingNotice = Notice.from(episodeOpenedSignal())
-        val registry = NoticeRegistry(active = mapOf(episode to existingNotice))
+        val state = HarborState(registry = NoticeRegistry(active = mapOf(episode to existingNotice)))
 
         val signal = SentinelSignal.EpisodeClosed(
             bed = bed,
@@ -129,7 +130,7 @@ class HarborEngineSpec : BehaviorSpec({
         )
 
         When("evaluated") {
-            val result = engine.evaluate(signal, registry, now)
+            val result = engine.evaluate(signal, state, now)
 
             Then("resolves notice with STAFF_PRESENT") {
                 val resolve = result.value.commands[0] as NoticeCommand.Resolve
@@ -137,7 +138,7 @@ class HarborEngineSpec : BehaviorSpec({
             }
 
             Then("notice removed from registry") {
-                result.value.registry.get(episode) shouldBe null
+                result.value.state.registry.get(episode) shouldBe null
             }
         }
     }
@@ -147,7 +148,7 @@ class HarborEngineSpec : BehaviorSpec({
     Given("an AutoRecovery signal with reversible=true") {
         val engine = createHarborEngine(HarborCalibration.default())
         val existingNotice = Notice.from(episodeOpenedSignal(reversible = true))
-        val registry = NoticeRegistry(active = mapOf(episode to existingNotice))
+        val state = HarborState(registry = NoticeRegistry(active = mapOf(episode to existingNotice)))
 
         val signal = SentinelSignal.AutoRecovery(
             bed = bed,
@@ -160,7 +161,7 @@ class HarborEngineSpec : BehaviorSpec({
         )
 
         When("evaluated") {
-            val result = engine.evaluate(signal, registry, now)
+            val result = engine.evaluate(signal, state, now)
 
             Then("resolves notice with AUTO_RECOVERY") {
                 val resolve = result.value.commands[0] as NoticeCommand.Resolve
@@ -174,7 +175,7 @@ class HarborEngineSpec : BehaviorSpec({
     Given("an AutoRecovery signal with reversible=false") {
         val engine = createHarborEngine(HarborCalibration.default())
         val existingNotice = Notice.from(episodeOpenedSignal(reversible = false))
-        val registry = NoticeRegistry(active = mapOf(episode to existingNotice))
+        val state = HarborState(registry = NoticeRegistry(active = mapOf(episode to existingNotice)))
 
         val signal = SentinelSignal.AutoRecovery(
             bed = bed,
@@ -187,7 +188,7 @@ class HarborEngineSpec : BehaviorSpec({
         )
 
         When("evaluated") {
-            val result = engine.evaluate(signal, registry, now)
+            val result = engine.evaluate(signal, state, now)
 
             Then("sends confirmation alert") {
                 val dispatch = result.value.commands[0] as NoticeCommand.Dispatch
@@ -195,7 +196,7 @@ class HarborEngineSpec : BehaviorSpec({
             }
 
             Then("notice remains open") {
-                result.value.registry.get(episode).shouldNotBeNull()
+                result.value.state.registry.get(episode).shouldNotBeNull()
             }
         }
     }
@@ -204,7 +205,7 @@ class HarborEngineSpec : BehaviorSpec({
 
     Given("an UmbrellaEvent signal") {
         val engine = createHarborEngine(HarborCalibration.default())
-        val registry = NoticeRegistry()
+        val state = HarborState(registry = NoticeRegistry())
 
         val signal = SentinelSignal.UmbrellaEvent(
             bed = bed,
@@ -217,7 +218,7 @@ class HarborEngineSpec : BehaviorSpec({
         )
 
         When("evaluated") {
-            val result = engine.evaluate(signal, registry, now)
+            val result = engine.evaluate(signal, state, now)
 
             Then("no commands produced") {
                 result.value.commands.shouldBeEmpty()
@@ -229,7 +230,7 @@ class HarborEngineSpec : BehaviorSpec({
 
     Given("a SuppressedWithRecord signal") {
         val engine = createHarborEngine(HarborCalibration.default())
-        val registry = NoticeRegistry()
+        val state = HarborState(registry = NoticeRegistry())
 
         val signal = SentinelSignal.SuppressedWithRecord(
             bed = bed,
@@ -242,7 +243,7 @@ class HarborEngineSpec : BehaviorSpec({
         )
 
         When("evaluated") {
-            val result = engine.evaluate(signal, registry, now)
+            val result = engine.evaluate(signal, state, now)
 
             Then("no commands produced") {
                 result.value.commands.shouldBeEmpty()

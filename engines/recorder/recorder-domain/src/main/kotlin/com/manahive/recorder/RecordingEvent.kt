@@ -1,6 +1,6 @@
 package com.manahive.recorder
 
-import com.manahive.contracts.scene.SceneFact
+import com.manahive.contracts.scene.SceneEvent
 import com.manahive.contracts.sentinel.SentinelSignal
 import com.manahive.kernel.BedId
 import com.manahive.kernel.EpisodeId
@@ -261,7 +261,7 @@ public data class Resolution(
 /**
  * Input to the Recorder engine.
  *
- * Either a SceneFact or a SentinelSignal can trigger recording.
+ * Either a SceneEvent or a SentinelSignal can trigger recording.
  * Fowler: "Intention-Revealing Interfaces" — the name should communicate what it is.
  */
 public sealed interface RecordingTrigger {
@@ -275,12 +275,12 @@ public sealed interface RecordingTrigger {
 }
 
 /**
- * SceneFact as a recording trigger.
+ * SceneEvent as a recording trigger.
  *
  * Standalone recording: not tied to an episode.
  */
-public data class SceneFactTrigger(
-    val fact: SceneFact,
+public data class SceneEventTrigger(
+    val fact: SceneEvent,
     override val bed: BedId,
     override val at: Instant,
 ) : RecordingTrigger {
@@ -303,6 +303,7 @@ public data class SentinelSignalTrigger(
         is SentinelSignal.AutoRecovery -> RecordingContext.TiedToEpisode(signal.episode)
         is SentinelSignal.UmbrellaEvent -> RecordingContext.TiedToEpisode(signal.episode)
         is SentinelSignal.SuppressedWithRecord -> RecordingContext.Standalone
+        is SentinelSignal.DwellPreWarning -> RecordingContext.Standalone
     }
 }
 

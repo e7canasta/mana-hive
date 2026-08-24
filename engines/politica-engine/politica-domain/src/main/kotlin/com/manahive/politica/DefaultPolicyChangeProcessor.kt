@@ -74,7 +74,7 @@ public class DefaultPolicyChangeProcessor(
 
 /** Generate a fingerprint from PolicyCalibration. */
 private fun PolicyCalibration.fingerprint(): Fingerprint = buildFingerprint(
-    "hysteresis" to hysteresis,
-    "dwell" to dwellThresholds,
-    "confidence" to confidence,
+    "hysteresis" to scene.hysteresis,
+    "dwell" to scene.dwellThresholds,
+    "confidence" to scene.confidence,
 )

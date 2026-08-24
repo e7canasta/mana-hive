@@ -5,7 +5,7 @@ import com.manahive.contracts.engine.ConfigNotFoundException
 import com.manahive.contracts.engine.ResidentConfigSource
 import com.manahive.contracts.engine.Subscription
 import com.manahive.contracts.policy.Severity
-import com.manahive.harbor.Channel
+import com.manahive.contracts.common.Channel
 import com.manahive.infrastructure.config.LocalConfig
 import com.manahive.infrastructure.config.TomlConfigSource
 import com.manahive.kernel.ResidentId

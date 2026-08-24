@@ -25,12 +25,12 @@ public data class RecordingTarget(
  * Context for recording: is this tied to an episode or standalone?
  *
  * Vernon: "Ubiquitous Language" — this is the "context" of the recording.
- * - Standalone: triggered by SceneFact (not tied to an episode)
+ * - Standalone: triggered by SceneEvent (not tied to an episode)
  * - TiedToEpisode: triggered by SentinelSignal (tied to an episode)
  */
 public sealed interface RecordingContext {
     /**
-     * Standalone recording: triggered by SceneFact, not tied to an episode.
+     * Standalone recording: triggered by SceneEvent, not tied to an episode.
      */
     public data object Standalone : RecordingContext
 

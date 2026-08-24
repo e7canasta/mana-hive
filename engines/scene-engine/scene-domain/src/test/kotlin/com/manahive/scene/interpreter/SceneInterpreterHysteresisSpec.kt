@@ -2,7 +2,7 @@ package com.manahive.scene.interpreter
 
 import com.manahive.contracts.perception.ObservationKind.BED_EDGE
 import com.manahive.contracts.scene.PersonState
-import com.manahive.contracts.scene.SceneFact.TransitionDetected
+import com.manahive.contracts.scene.SceneEvent.TransitionDetected
 import com.manahive.contracts.scene.StateKind.BED_EDGE as STATE_BED_EDGE
 import com.manahive.contracts.scene.StateKind.LYING
 import com.manahive.kernel.DiscardCause.HYSTERESIS_NOT_MET

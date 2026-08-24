@@ -3,8 +3,9 @@ package com.manahive.sentinel
 import com.manahive.contracts.policy.ClosureCondition
 import com.manahive.contracts.policy.Severity
 import com.manahive.contracts.scene.PersonState
-import com.manahive.contracts.scene.SceneFact
+import com.manahive.contracts.scene.SceneEvent
 import com.manahive.contracts.scene.StateKind
+import com.manahive.contracts.sentinel.ClosureCause
 import com.manahive.contracts.sentinel.SentinelSignal
 import com.manahive.kernel.BedId
 import com.manahive.kernel.NightId
@@ -22,7 +23,10 @@ import java.time.Instant
  * SentinelEvaluatorImpl tests.
  *
  * Covers: new episode, umbrella events, safe state, staff presence,
- * escalation, fatigue budget, dwell exceeded.
+ * escalation, dwell exceeded.
+ *
+ * NOTE: Fatigue is NOT tested here — it's Harbor's concern.
+ * Sentinel ALWAYS opens episodes when a rule matches.
  */
 class SentinelEvaluatorSpec : BehaviorSpec({
 
@@ -32,11 +36,8 @@ class SentinelEvaluatorSpec : BehaviorSpec({
 
     // ── Helper: create a calibration with common rules ──
 
-    fun testCalibration(
-        maxFatigue: Int = 5,
-    ): SentinelCalibration = sentinelCalibration {
+    fun testCalibration(): SentinelCalibration = sentinelCalibration {
         resident("maria")
-        fatigue { maxPerShift = maxFatigue }
 
         rule("r-sitting") {
             trigger = StateKind.SITTING_IN_BED
@@ -61,6 +62,13 @@ class SentinelEvaluatorSpec : BehaviorSpec({
             reversible = true
             umbrellaEvents(StateKind.SITTING_IN_BED)
         }
+
+        rule("r-staff-or-safe") {
+            trigger = StateKind.IN_BATHROOM
+            severity = Severity.WARNING
+            closureCondition = ClosureCondition.STAFF_OR_SAFE
+            reversible = true
+        }
     }
 
     // ── 1. No rule match → no signal ──
@@ -68,9 +76,9 @@ class SentinelEvaluatorSpec : BehaviorSpec({
     Given("a transition with no matching rule") {
         val calibration = testCalibration()
         val evaluator = createSentinelEvaluator(calibration)
-        val episodes = EpisodeLedger.empty(resident, FatigueBudget(0, 5))
+        val episodes = EpisodeLedger.empty(resident)
 
-        val fact = SceneFact.TransitionDetected(
+        val fact = SceneEvent.TransitionDetected(
             bed = bed, night = NightId("night-1"), at = now,
             from = PersonState.Lying,
             to = PersonState.InRoom,
@@ -94,9 +102,9 @@ class SentinelEvaluatorSpec : BehaviorSpec({
     Given("a SITTING_IN_BED transition (WARNING rule)") {
         val calibration = testCalibration()
         val evaluator = createSentinelEvaluator(calibration)
-        val episodes = EpisodeLedger.empty(resident, FatigueBudget(0, 5))
+        val episodes = EpisodeLedger.empty(resident)
 
-        val fact = SceneFact.TransitionDetected(
+        val fact = SceneEvent.TransitionDetected(
             bed = bed, night = NightId("night-1"), at = now,
             from = PersonState.Lying,
             to = PersonState.SittingInBed,
@@ -120,10 +128,6 @@ class SentinelEvaluatorSpec : BehaviorSpec({
                 open.severity shouldBe Severity.WARNING
                 open.closureCondition shouldBe ClosureCondition.SAFE_ONLY
             }
-
-            Then("fatigue incremented") {
-                result.value.episodes.fatigue.interruptionsThisShift shouldBe 1
-            }
         }
     }
 
@@ -132,9 +136,9 @@ class SentinelEvaluatorSpec : BehaviorSpec({
     Given("a BED_EDGE transition (CRITICAL rule)") {
         val calibration = testCalibration()
         val evaluator = createSentinelEvaluator(calibration)
-        val episodes = EpisodeLedger.empty(resident, FatigueBudget(0, 5))
+        val episodes = EpisodeLedger.empty(resident)
 
-        val fact = SceneFact.TransitionDetected(
+        val fact = SceneEvent.TransitionDetected(
             bed = bed, night = NightId("night-1"), at = now,
             from = PersonState.Standing,
             to = PersonState.BedEdge,
@@ -158,48 +162,22 @@ class SentinelEvaluatorSpec : BehaviorSpec({
         }
     }
 
-    // ── 4. Fatigue budget exceeded → suppressed ──
-
-    Given("fatigue budget exceeded") {
-        val calibration = testCalibration(maxFatigue = 1)
-        val evaluator = createSentinelEvaluator(calibration)
-        val episodes = EpisodeLedger.empty(resident, FatigueBudget(1, 1))
-
-        val fact = SceneFact.TransitionDetected(
-            bed = bed, night = NightId("night-1"), at = now,
-            from = PersonState.Lying,
-            to = PersonState.SittingInBed,
-        )
-
-        When("evaluated") {
-            val result = evaluator.evaluate(fact, episodes, now)
-
-            Then("no signals emitted") {
-                result.value.signals.shouldBeEmpty()
-            }
-
-            Then("no episode opened") {
-                result.value.episodes.open.size shouldBe 0
-            }
-        }
-    }
-
-    // ── 5. Umbrella event under open episode ──
+    // ── 4. Umbrella event under open episode ──
 
     Given("an open episode and a STANDING transition") {
         val calibration = testCalibration()
         val evaluator = createSentinelEvaluator(calibration)
 
         // Open an episode first
-        val openFact = SceneFact.TransitionDetected(
+        val openFact = SceneEvent.TransitionDetected(
             bed = bed, night = NightId("night-1"), at = now,
             from = PersonState.Lying,
             to = PersonState.BedEdge,
         )
-        val afterOpen = evaluator.evaluate(openFact, EpisodeLedger.empty(resident, FatigueBudget(0, 5)), now)
+        val afterOpen = evaluator.evaluate(openFact, EpisodeLedger.empty(resident), now)
 
         // Now a STANDING transition under the umbrella
-        val umbrellaFact = SceneFact.TransitionDetected(
+        val umbrellaFact = SceneEvent.TransitionDetected(
             bed = bed, night = NightId("night-1"), at = now.plusSeconds(10),
             from = PersonState.BedEdge,
             to = PersonState.Standing,
@@ -221,22 +199,22 @@ class SentinelEvaluatorSpec : BehaviorSpec({
         }
     }
 
-    // ── 6. Safe state → auto-recovery (reversible) ──
+    // ── 5. Safe state → auto-recovery (reversible) ──
 
     Given("open WARNING episode and LYING transition (reversible)") {
         val calibration = testCalibration()
         val evaluator = createSentinelEvaluator(calibration)
 
         // Open WARNING episode (SITTING_IN_BED)
-        val openFact = SceneFact.TransitionDetected(
+        val openFact = SceneEvent.TransitionDetected(
             bed = bed, night = NightId("night-1"), at = now,
             from = PersonState.Lying,
             to = PersonState.SittingInBed,
         )
-        val afterOpen = evaluator.evaluate(openFact, EpisodeLedger.empty(resident, FatigueBudget(0, 5)), now)
+        val afterOpen = evaluator.evaluate(openFact, EpisodeLedger.empty(resident), now)
 
         // Safe state
-        val safeFact = SceneFact.TransitionDetected(
+        val safeFact = SceneEvent.TransitionDetected(
             bed = bed, night = NightId("night-1"), at = now.plusSeconds(30),
             from = PersonState.SittingInBed,
             to = PersonState.Lying,
@@ -256,22 +234,22 @@ class SentinelEvaluatorSpec : BehaviorSpec({
         }
     }
 
-    // ── 7. Safe state → no close (non-reversible, STAFF_AND_SAFE) ──
+    // ── 6. Safe state → no close (non-reversible, STAFF_AND_SAFE) ──
 
     Given("open CRITICAL episode and LYING transition (non-reversible)") {
         val calibration = testCalibration()
         val evaluator = createSentinelEvaluator(calibration)
 
         // Open CRITICAL episode (BED_EDGE)
-        val openFact = SceneFact.TransitionDetected(
+        val openFact = SceneEvent.TransitionDetected(
             bed = bed, night = NightId("night-1"), at = now,
             from = PersonState.Standing,
             to = PersonState.BedEdge,
         )
-        val afterOpen = evaluator.evaluate(openFact, EpisodeLedger.empty(resident, FatigueBudget(0, 5)), now)
+        val afterOpen = evaluator.evaluate(openFact, EpisodeLedger.empty(resident), now)
 
         // Safe state
-        val safeFact = SceneFact.TransitionDetected(
+        val safeFact = SceneEvent.TransitionDetected(
             bed = bed, night = NightId("night-1"), at = now.plusSeconds(30),
             from = PersonState.BedEdge,
             to = PersonState.Lying,
@@ -292,22 +270,22 @@ class SentinelEvaluatorSpec : BehaviorSpec({
         }
     }
 
-    // ── 8. Staff presence → close (STAFF_AND_SAFE) ──
+    // ── 7. Staff presence → close (STAFF_AND_SAFE) ──
 
     Given("open CRITICAL episode and staff presence") {
         val calibration = testCalibration()
         val evaluator = createSentinelEvaluator(calibration)
 
         // Open CRITICAL episode
-        val openFact = SceneFact.TransitionDetected(
+        val openFact = SceneEvent.TransitionDetected(
             bed = bed, night = NightId("night-1"), at = now,
             from = PersonState.Standing,
             to = PersonState.BedEdge,
         )
-        val afterOpen = evaluator.evaluate(openFact, EpisodeLedger.empty(resident, FatigueBudget(0, 5)), now)
+        val afterOpen = evaluator.evaluate(openFact, EpisodeLedger.empty(resident), now)
 
         // Staff arrives
-        val staffFact = SceneFact.StaffPresenceDetected(
+        val staffFact = SceneEvent.StaffPresenceDetected(
             bed = bed, night = NightId("night-1"), at = now.plusSeconds(60),
             staff = StaffId("nurse-1"),
         )
@@ -327,29 +305,29 @@ class SentinelEvaluatorSpec : BehaviorSpec({
         }
     }
 
-    // ── 9. Staff presence + safe state → close ──
+    // ── 8. Staff presence + safe state → close ──
 
     Given("open CRITICAL episode with staff present and LYING transition") {
         val calibration = testCalibration()
         val evaluator = createSentinelEvaluator(calibration)
 
         // Open CRITICAL episode
-        val openFact = SceneFact.TransitionDetected(
+        val openFact = SceneEvent.TransitionDetected(
             bed = bed, night = NightId("night-1"), at = now,
             from = PersonState.Standing,
             to = PersonState.BedEdge,
         )
-        val afterOpen = evaluator.evaluate(openFact, EpisodeLedger.empty(resident, FatigueBudget(0, 5)), now)
+        val afterOpen = evaluator.evaluate(openFact, EpisodeLedger.empty(resident), now)
 
         // Staff arrives
-        val staffFact = SceneFact.StaffPresenceDetected(
+        val staffFact = SceneEvent.StaffPresenceDetected(
             bed = bed, night = NightId("night-1"), at = now.plusSeconds(30),
             staff = StaffId("nurse-1"),
         )
         val afterStaff = evaluator.evaluate(staffFact, afterOpen.value.episodes, now.plusSeconds(30))
 
         // Safe state
-        val safeFact = SceneFact.TransitionDetected(
+        val safeFact = SceneEvent.TransitionDetected(
             bed = bed, night = NightId("night-1"), at = now.plusSeconds(60),
             from = PersonState.BedEdge,
             to = PersonState.Lying,
@@ -374,22 +352,22 @@ class SentinelEvaluatorSpec : BehaviorSpec({
         }
     }
 
-    // ── 10. Escalation (higher severity under umbrella) ──
+    // ── 9. Escalation (higher severity under umbrella) ──
 
     Given("open WARNING episode and CRITICAL trigger under umbrella") {
         val calibration = testCalibration()
         val evaluator = createSentinelEvaluator(calibration)
 
         // Open WARNING episode (STANDING)
-        val openFact = SceneFact.TransitionDetected(
+        val openFact = SceneEvent.TransitionDetected(
             bed = bed, night = NightId("night-1"), at = now,
             from = PersonState.Lying,
             to = PersonState.Standing,
         )
-        val afterOpen = evaluator.evaluate(openFact, EpisodeLedger.empty(resident, FatigueBudget(0, 5)), now)
+        val afterOpen = evaluator.evaluate(openFact, EpisodeLedger.empty(resident), now)
 
         // BED_EDGE under umbrella (CRITICAL > WARNING → escalation)
-        val escalateFact = SceneFact.TransitionDetected(
+        val escalateFact = SceneEvent.TransitionDetected(
             bed = bed, night = NightId("night-1"), at = now.plusSeconds(10),
             from = PersonState.Standing,
             to = PersonState.BedEdge,
@@ -412,14 +390,14 @@ class SentinelEvaluatorSpec : BehaviorSpec({
         }
     }
 
-    // ── 11. Dwell exceeded → opens episode ──
+    // ── 10. Dwell exceeded → opens episode ──
 
     Given("a DwellExceeded fact with no open episode") {
         val calibration = testCalibration()
         val evaluator = createSentinelEvaluator(calibration)
-        val episodes = EpisodeLedger.empty(resident, FatigueBudget(0, 5))
+        val episodes = EpisodeLedger.empty(resident)
 
-        val fact = SceneFact.DwellExceeded(
+        val fact = SceneEvent.DwellExceeded(
             bed = bed, night = NightId("night-1"), at = now,
             state = PersonState.Standing,
             threshold = Duration.ofMinutes(5),
@@ -436,16 +414,236 @@ class SentinelEvaluatorSpec : BehaviorSpec({
         }
     }
 
-    // ── 12. Staff presence with no open episode → no-op ──
+    // ── 11. Staff presence with no open episode → no-op ──
 
     Given("staff presence with no open episode") {
         val calibration = testCalibration()
         val evaluator = createSentinelEvaluator(calibration)
-        val episodes = EpisodeLedger.empty(resident, FatigueBudget(0, 5))
+        val episodes = EpisodeLedger.empty(resident)
 
-        val fact = SceneFact.StaffPresenceDetected(
+        val fact = SceneEvent.StaffPresenceDetected(
             bed = bed, night = NightId("night-1"), at = now,
             staff = StaffId("nurse-1"),
+        )
+
+        When("evaluated") {
+            val result = evaluator.evaluate(fact, episodes, now)
+
+            Then("no signals emitted") {
+                result.value.signals.shouldBeEmpty()
+            }
+
+            Then("no episode opened") {
+                result.value.episodes.open.size shouldBe 0
+            }
+        }
+    }
+
+    // ── 12. Multiple episodes: Sentinel ALWAYS opens (no fatigue) ──
+
+    Given("multiple SITTING transitions in sequence") {
+        val calibration = testCalibration()
+        val evaluator = createSentinelEvaluator(calibration)
+
+        val fact1 = SceneEvent.TransitionDetected(
+            bed = bed, night = NightId("night-1"), at = now,
+            from = PersonState.Lying,
+            to = PersonState.SittingInBed,
+        )
+        val result1 = evaluator.evaluate(fact1, EpisodeLedger.empty(resident), now)
+
+        val fact2 = SceneEvent.TransitionDetected(
+            bed = bed, night = NightId("night-1"), at = now.plusSeconds(30),
+            from = PersonState.SittingInBed,
+            to = PersonState.Lying,
+        )
+        val result2 = evaluator.evaluate(fact2, result1.value.episodes, now.plusSeconds(30))
+
+        val fact3 = SceneEvent.TransitionDetected(
+            bed = bed, night = NightId("night-1"), at = now.plusSeconds(60),
+            from = PersonState.Lying,
+            to = PersonState.SittingInBed,
+        )
+
+        When("evaluated third time") {
+            val result3 = evaluator.evaluate(fact3, result2.value.episodes, now.plusSeconds(60))
+
+            Then("opens episode again (no fatigue suppression)") {
+                val signals = result3.value.signals
+                signals.shouldHaveSize(1)
+                val opened = signals[0] as SentinelSignal.EpisodeOpened
+                opened.severity shouldBe Severity.WARNING
+            }
+
+            Then("episode is open") {
+                result3.value.episodes.openForBed(bed).shouldNotBeNull()
+            }
+        }
+    }
+
+    // ── 13. STAFF_OR_SAFE: staff alone closes episode ──
+
+    Given("open IN_BATHROOM episode (STAFF_OR_SAFE) and staff presence") {
+        val calibration = testCalibration()
+        val evaluator = createSentinelEvaluator(calibration)
+
+        // Open IN_BATHROOM episode (r-staff-or-safe rule)
+        val openFact = SceneEvent.TransitionDetected(
+            bed = bed, night = NightId("night-1"), at = now,
+            from = PersonState.Standing,
+            to = PersonState.InBathroom,
+        )
+        val afterOpen = evaluator.evaluate(openFact, EpisodeLedger.empty(resident), now)
+
+        // Staff arrives
+        val staffFact = SceneEvent.StaffPresenceDetected(
+            bed = bed, night = NightId("night-1"), at = now.plusSeconds(60),
+            staff = StaffId("nurse-1"),
+        )
+
+        When("evaluated") {
+            val result = evaluator.evaluate(staffFact, afterOpen.value.episodes, now.plusSeconds(60))
+
+            Then("episode closes (staff alone is enough)") {
+                result.value.episodes.openForBed(bed) shouldBe null
+            }
+
+            Then("emits EpisodeClosed with STAFF_PRESENT cause") {
+                val closed = result.value.signals.filterIsInstance<SentinelSignal.EpisodeClosed>()
+                closed shouldHaveSize 1
+                closed[0].cause shouldBe ClosureCause.STAFF_PRESENT
+            }
+        }
+    }
+
+    // ── 14. STAFF_OR_SAFE: safe state alone closes episode ──
+
+    Given("open IN_BATHROOM episode (STAFF_OR_SAFE) and safe transition") {
+        val calibration = testCalibration()
+        val evaluator = createSentinelEvaluator(calibration)
+
+        // Open IN_BATHROOM episode (r-staff-or-safe rule)
+        val openFact = SceneEvent.TransitionDetected(
+            bed = bed, night = NightId("night-1"), at = now,
+            from = PersonState.Standing,
+            to = PersonState.InBathroom,
+        )
+        val afterOpen = evaluator.evaluate(openFact, EpisodeLedger.empty(resident), now)
+
+        // Safe transition: IN_BATHROOM -> LYING (safe state)
+        val safeFact = SceneEvent.TransitionDetected(
+            bed = bed, night = NightId("night-1"), at = now.plusSeconds(60),
+            from = PersonState.InBathroom,
+            to = PersonState.Lying,
+        )
+
+        When("evaluated") {
+            val result = evaluator.evaluate(safeFact, afterOpen.value.episodes, now.plusSeconds(60))
+
+            Then("episode closes (safe state alone is enough)") {
+                result.value.episodes.openForBed(bed) shouldBe null
+            }
+
+            Then("emits EpisodeClosed with AUTO_RECOVERY cause") {
+                val closed = result.value.signals.filterIsInstance<SentinelSignal.EpisodeClosed>()
+                closed shouldHaveSize 1
+                closed[0].cause shouldBe ClosureCause.AUTO_RECOVERY
+            }
+        }
+    }
+
+    // ── 15. STAFF_OR_SAFE: neither staff nor safe → stays open ──
+
+    Given("open IN_BATHROOM episode (STAFF_OR_SAFE) and unsafe transition") {
+        val calibration = testCalibration()
+        val evaluator = createSentinelEvaluator(calibration)
+
+        // Open IN_BATHROOM episode (r-staff-or-safe rule)
+        val openFact = SceneEvent.TransitionDetected(
+            bed = bed, night = NightId("night-1"), at = now,
+            from = PersonState.Standing,
+            to = PersonState.InBathroom,
+        )
+        val afterOpen = evaluator.evaluate(openFact, EpisodeLedger.empty(resident), now)
+
+        // Unsafe transition: IN_BATHROOM -> STANDING (not a safe state)
+        val unsafeFact = SceneEvent.TransitionDetected(
+            bed = bed, night = NightId("night-1"), at = now.plusSeconds(60),
+            from = PersonState.InBathroom,
+            to = PersonState.Standing,
+        )
+
+        When("evaluated") {
+            val result = evaluator.evaluate(unsafeFact, afterOpen.value.episodes, now.plusSeconds(60))
+
+            Then("episode remains open") {
+                result.value.episodes.openForBed(bed).shouldNotBeNull()
+            }
+
+            Then("no EpisodeClosed signal") {
+                val closed = result.value.signals.filterIsInstance<SentinelSignal.EpisodeClosed>()
+                closed.shouldBeEmpty()
+            }
+        }
+    }
+
+    // ── 16. Staff left → staffPresent reset ──
+
+    Given("open episode with staff present, then staff leaves") {
+        val calibration = testCalibration()
+        val evaluator = createSentinelEvaluator(calibration)
+
+        // Open BED_EDGE episode (r-bed-edge rule, STAFF_AND_SAFE — needs both staff AND safe)
+        val openFact = SceneEvent.TransitionDetected(
+            bed = bed, night = NightId("night-1"), at = now,
+            from = PersonState.Standing,
+            to = PersonState.BedEdge,
+        )
+        val afterOpen = evaluator.evaluate(openFact, EpisodeLedger.empty(resident), now)
+
+        // Staff arrives → staffPresent = true, but episode stays open (needs safe state too)
+        val staffFact = SceneEvent.StaffPresenceDetected(
+            bed = bed, night = NightId("night-1"), at = now.plusSeconds(60),
+            staff = StaffId("nurse-1"),
+        )
+        val afterStaff = evaluator.evaluate(staffFact, afterOpen.value.episodes, now.plusSeconds(60))
+
+        // Staff leaves → staffPresent = false
+        val staffLeftFact = SceneEvent.StaffLeftDetected(
+            bed = bed, night = NightId("night-1"), at = now.plusSeconds(120),
+        )
+
+        When("evaluated") {
+            val result = evaluator.evaluate(staffLeftFact, afterStaff.value.episodes, now.plusSeconds(120))
+
+            Then("episode remains open") {
+                result.value.episodes.openForBed(bed).shouldNotBeNull()
+            }
+
+            Then("staff marked absent") {
+                val open = result.value.episodes.openForBed(bed)
+                open.shouldNotBeNull()
+                open.staffPresent shouldBe false
+            }
+
+            Then("gap duration is no longer zero") {
+                val open = result.value.episodes.openForBed(bed)
+                open.shouldNotBeNull()
+                val gap = open.gapDuration(now.plusSeconds(120))
+                gap.seconds shouldBe 120
+            }
+        }
+    }
+
+    // ── 17. Staff left with no open episode → no-op ──
+
+    Given("staff left with no open episode") {
+        val calibration = testCalibration()
+        val evaluator = createSentinelEvaluator(calibration)
+        val episodes = EpisodeLedger.empty(resident)
+
+        val fact = SceneEvent.StaffLeftDetected(
+            bed = bed, night = NightId("night-1"), at = now,
         )
 
         When("evaluated") {

@@ -1,6 +1,6 @@
 package com.manahive.scene.batch.output
 
-import com.manahive.contracts.scene.SceneFact
+import com.manahive.contracts.scene.SceneEvent
 import com.manahive.contracts.scene.kind
 import com.manahive.scene.batch.config.formatOffset
 import com.manahive.scene.batch.events.EventOffset
@@ -24,11 +24,11 @@ class FactsOutWriter(private val outputFile: File) {
         outputFile.parentFile?.mkdirs()
     }
 
-    fun write(offset: EventOffset, fact: SceneFact, eventLine: Int) {
+    fun write(offset: EventOffset, fact: SceneEvent, eventLine: Int) {
         outputFile.appendText(formatFact(offset, fact, eventLine) + "\n")
     }
 
-    private fun formatFact(offset: EventOffset, fact: SceneFact, eventLine: Int): String {
+    private fun formatFact(offset: EventOffset, fact: SceneEvent, eventLine: Int): String {
         val t = "t=${formatOffset(offset)}"
         val padding = " ".repeat(maxOf(1, 10 - t.length))
         val body = formatBody(fact)
@@ -36,40 +36,46 @@ class FactsOutWriter(private val outputFile: File) {
     }
 
     /**
-     * Formats a SceneFact as a human-readable string.
+     * Formats a SceneEvent as a human-readable string.
      *
-     * The `when` is exhaustive over all SceneFact subtypes — adding a new
-     * subtype to SceneFact will cause a compile error here (Fowler: "Fix Switch Statements").
+     * The `when` is exhaustive over all SceneEvent subtypes — adding a new
+     * subtype to SceneEvent will cause a compile error here (Fowler: "Fix Switch Statements").
      */
-    private fun formatBody(fact: SceneFact): String = when (fact) {
+    private fun formatBody(fact: SceneEvent): String = when (fact) {
         // ── Person State Facts ─────────────────────────────
-        is SceneFact.TransitionDetected ->
+        is SceneEvent.TransitionDetected ->
             "TRANSITION ${fact.from.kind.name} → ${fact.to.kind.name}"
-        is SceneFact.DwellWarning ->
+        is SceneEvent.DwellWarning ->
             "DWELL_WARNING ${fact.state.kind.name} ${fact.threshold}"
-        is SceneFact.DwellExceeded ->
+        is SceneEvent.DwellExceeded ->
             "DWELL_EXCEEDED ${fact.state.kind.name} ${fact.threshold}"
 
+        // ── ComeBack Facts (Inverse Dwell) ─────────────
+        is SceneEvent.ComeBackWarning ->
+            "COMEBACK_WARNING ${fact.baseline.kind.name} ${fact.threshold}"
+        is SceneEvent.ComeBackExceeded ->
+            "COMEBACK_EXCEEDED ${fact.baseline.kind.name} ${fact.threshold}"
+
         // ── Scene State Facts ──────────────────────────────
-        is SceneFact.SceneStateChanged ->
+        is SceneEvent.SceneStateChanged ->
             "SCENE_CHANGED ${fact.field} ${fact.from} → ${fact.to}"
-        is SceneFact.SceneDwellWarning ->
+        is SceneEvent.SceneDwellWarning ->
             "SCENE_DWELL_WARNING ${fact.field} ${fact.threshold}"
-        is SceneFact.SceneDwellExceeded ->
+        is SceneEvent.SceneDwellExceeded ->
             "SCENE_DWELL_EXCEEDED ${fact.field} ${fact.threshold}"
 
         // ── Signal Facts ───────────────────────────────────
-        is SceneFact.SignalRecovered ->
+        is SceneEvent.SignalRecovered ->
             "SIGNAL_RECOVERED monitor=${fact.monitor.value}"
-        is SceneFact.SignalLost ->
+        is SceneEvent.SignalLost ->
             "SIGNAL_LOST monitor=${fact.monitor.value}"
-        is SceneFact.StaffPresenceDetected ->
+        is SceneEvent.StaffPresenceDetected ->
             "STAFF_PRESENCE staff=${fact.staff?.value}"
 
         // ── Lifecycle Facts ────────────────────────────────
-        is SceneFact.NightOpened ->
+        is SceneEvent.NightOpened ->
             "NIGHT_OPENED occupant=${fact.occupant?.value}"
-        is SceneFact.NightClosed ->
+        is SceneEvent.NightClosed ->
             "NIGHT_CLOSED"
     }
 }

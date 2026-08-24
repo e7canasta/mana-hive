@@ -1,5 +1,6 @@
 package com.manahive.harbor
 
+import com.manahive.contracts.common.Channel
 import com.manahive.contracts.policy.Severity
 import com.manahive.contracts.sentinel.SentinelSignal
 import com.manahive.kernel.BedId
@@ -93,14 +94,4 @@ public enum class Resolution {
     STAFF_PRESENT,    // staff went and assisted
     AUTO_RECOVERY,    // resident recovered on their own
     SUPERSEDED,       // another notice of higher severity replaced this
-}
-
-/**
- * Channels for delivering notices.
- */
-public enum class Channel {
-    PUSH,       // mobile push notification
-    TABLET,     // tablet app
-    WARD_BOARD, // ward display board
-    CONSOLE,    // monitoring console
 }

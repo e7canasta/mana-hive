@@ -1,10 +1,10 @@
 package com.manahive.sentinel.batch
 
-import com.manahive.contracts.scene.SceneFact
+import com.manahive.contracts.scene.SceneEvent
 import com.manahive.contracts.scene.personStateFromKind
 import com.manahive.kernel.MonitorId
 import com.manahive.kernel.StaffId
-import com.manahive.sentinel.batch.events.SceneFactEvent
+import com.manahive.sentinel.batch.events.SceneEventEvent
 import com.manahive.sentinel.batch.output.LogWriter
 import com.manahive.sentinel.batch.output.SignalJsonlWriter
 import com.manahive.sentinel.batch.output.SignalOutWriter
@@ -28,15 +28,15 @@ object SentinelBatchProcessor {
     )
 
     fun processEvent(
-        event: SceneFactEvent,
+        event: SceneEventEvent,
         state: BatchState,
         ctx: BatchContext,
         writers: BatchWriters,
     ): ProcessResult {
         val now = ctx.startTime.plus(event.offset.duration)
 
-        // 1. Convert batch event to SceneFact
-        val fact = toSceneFact(event, ctx, now)
+        // 1. Convert batch event to SceneEvent
+        val fact = toSceneEvent(event, ctx, now)
             ?: return ProcessResult(state = state, signalsEmitted = 0)
 
         // 2. Run evaluator
@@ -82,50 +82,50 @@ object SentinelBatchProcessor {
     }
 
     /**
-     * Converts a batch [SceneFactEvent] to a [SceneFact] for the evaluator.
+     * Converts a batch [SceneEventEvent] to a [SceneEvent] for the evaluator.
      *
      * Fowler: "Replace Conditional with Polymorphism" — the `when` is
      * exhaustive over sealed subtypes, no null checks needed.
      */
-    private fun toSceneFact(
-        event: SceneFactEvent,
+    private fun toSceneEvent(
+        event: SceneEventEvent,
         ctx: BatchContext,
         now: Instant,
-    ): SceneFact? {
+    ): SceneEvent? {
         val bed = ctx.bedId
         val night = ctx.nightId
 
         return when (event) {
-            is SceneFactEvent.Transition -> SceneFact.TransitionDetected(
+            is SceneEventEvent.Transition -> SceneEvent.TransitionDetected(
                 bed = bed, night = night, at = now,
                 from = personStateFromKind(event.from),
                 to = personStateFromKind(event.to),
             )
-            is SceneFactEvent.StaffPresent -> SceneFact.StaffPresenceDetected(
+            is SceneEventEvent.StaffPresent -> SceneEvent.StaffPresenceDetected(
                 bed = bed, night = night, at = now,
                 staff = event.staff?.let { StaffId(it) },
             )
-            is SceneFactEvent.DwellExceeded -> SceneFact.DwellExceeded(
+            is SceneEventEvent.DwellExceeded -> SceneEvent.DwellExceeded(
                 bed = bed, night = night, at = now,
                 state = personStateFromKind(event.state),
                 threshold = event.threshold,
                 since = now.minus(event.threshold),
             )
-            is SceneFactEvent.DwellWarning -> SceneFact.DwellWarning(
+            is SceneEventEvent.DwellWarning -> SceneEvent.DwellWarning(
                 bed = bed, night = night, at = now,
                 state = personStateFromKind(event.state),
                 threshold = event.threshold,
                 since = now.minus(event.threshold),
             )
-            is SceneFactEvent.SignalLost -> {
+            is SceneEventEvent.SignalLost -> {
                 val lastHb = event.lastHeartbeat?.let { Instant.parse(it) } ?: now.minusSeconds(60)
-                SceneFact.SignalLost(
+                SceneEvent.SignalLost(
                     bed = bed, night = night, at = now,
                     monitor = MonitorId(event.monitor),
                     lastHeartbeat = lastHb,
                 )
             }
-            is SceneFactEvent.SignalRecovered -> SceneFact.SignalRecovered(
+            is SceneEventEvent.SignalRecovered -> SceneEvent.SignalRecovered(
                 bed = bed, night = night, at = now,
                 monitor = MonitorId(event.monitor),
             )
