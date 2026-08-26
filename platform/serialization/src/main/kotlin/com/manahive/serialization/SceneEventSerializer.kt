@@ -1,5 +1,7 @@
 package com.manahive.serialization
 
+import com.manahive.contracts.scene.StateKind
+import com.manahive.contracts.scene.personStateFromKind
 import com.manahive.contracts.scene.SceneEvent
 import com.manahive.contracts.scene.PersonState
 import com.manahive.serialization.formats.TextEvent
@@ -260,15 +262,29 @@ object SceneEventSerializer {
         is SceneEvent.SceneDwellExceeded -> "${event.field} exceeded=${event.threshold}"
     }
 
-    private fun parsePersonState(name: String): PersonState = when (name) {
-        "Lying" -> PersonState.Lying
-        "SittingInBed" -> PersonState.SittingInBed
-        "AttemptingExit" -> PersonState.AttemptingExit
-        "BedEdge" -> PersonState.BedEdge
-        "Standing" -> PersonState.Standing
-        "InBathroom" -> PersonState.InBathroom
-        "InRoom" -> PersonState.InRoom
-        "Absent" -> PersonState.Absent
-        else -> throw IllegalArgumentException("Unknown PersonState: $name")
-    }
+    /**
+     * El inverso de `state::class.simpleName`, derivado del enum en vez de
+     * escrito a mano.
+     *
+     * La lista manual cubria 8 de los 13 estados: faltaban Unknown, InHallway,
+     * InChair, InWheelchair y Outdoor. Como el gemelo arranca en Unknown, la
+     * PRIMERA transicion de cada cama —Unknown → Lying— no se podia leer del
+     * otro lado del bus, y Vigilancia la descartaba con un warning.
+     *
+     * Derivarlo de [StateKind.entries] lo hace exhaustivo por construccion:
+     * [personStateFromKind] es un `when` sobre el enum, asi que agregar un
+     * estado nuevo sin mapearlo es error de compilacion y no un mensaje
+     * perdido en produccion. Es la misma leccion que dejo ABSENT en el adapter
+     * de escena.
+     */
+    private val byName: Map<String, PersonState> =
+        StateKind.entries.associateBy(
+            keySelector = { personStateFromKind(it)::class.simpleName!! },
+            valueTransform = { personStateFromKind(it) },
+        )
+
+    private fun parsePersonState(name: String): PersonState =
+        byName[name] ?: throw IllegalArgumentException(
+            "PersonState desconocido: $name (conocidos: ${byName.keys.sorted()})",
+        )
 }

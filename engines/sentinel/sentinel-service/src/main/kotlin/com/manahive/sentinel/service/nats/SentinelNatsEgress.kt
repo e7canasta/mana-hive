@@ -1,5 +1,6 @@
 package com.manahive.sentinel.service.nats
 
+import com.manahive.serialization.SentinelSignalSerializer
 import com.manahive.contracts.EventEnvelope
 import com.manahive.contracts.sentinel.SentinelSignal
 import com.manahive.messaging.NatsObjectMapper
@@ -49,7 +50,7 @@ public class SentinelNatsEgress(
                 version = 1,
                 occurredAt = signal.at,
                 source = "sentinel",
-                payloadJson = mapper.writeValueAsString(signal),
+                payloadJson = SentinelSignalSerializer.toJson(signal),
             )
             val data = mapper.writeValueAsBytes(envelope)
             jetStream.publish(subject, data)

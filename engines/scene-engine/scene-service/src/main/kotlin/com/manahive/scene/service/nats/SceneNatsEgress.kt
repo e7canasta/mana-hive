@@ -1,5 +1,6 @@
 package com.manahive.scene.service.nats
 
+import com.manahive.serialization.SceneEventSerializer
 import com.manahive.contracts.EventEnvelope
 import com.manahive.contracts.scene.SceneFact
 import com.manahive.messaging.NatsObjectMapper
@@ -49,7 +50,7 @@ public class SceneNatsEgress(
                 version = 1,
                 occurredAt = fact.at,
                 source = "scene-engine",
-                payloadJson = mapper.writeValueAsString(fact),
+                payloadJson = SceneEventSerializer.toJson(fact),
             )
             val data = mapper.writeValueAsBytes(envelope)
             jetStream.publish(subject, data)

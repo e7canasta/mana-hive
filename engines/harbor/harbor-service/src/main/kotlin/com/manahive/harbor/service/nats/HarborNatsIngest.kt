@@ -1,5 +1,6 @@
 package com.manahive.harbor.service.nats
 
+import com.manahive.serialization.SentinelSignalSerializer
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.manahive.contracts.EventEnvelope
 import com.manahive.contracts.sentinel.SentinelSignal
@@ -76,7 +77,7 @@ public class HarborNatsIngest(
 
     private fun handleSentinelSignal(envelope: EventEnvelope) {
         val signal = try {
-            mapper.readValue<SentinelSignal>(envelope.payloadJson)
+            SentinelSignalSerializer.fromJson(envelope.payloadJson)
         } catch (e: Exception) {
             log.warn("Failed to deserialize SentinelSignal from envelope {}: {}", envelope.eventId, e.message)
             return
