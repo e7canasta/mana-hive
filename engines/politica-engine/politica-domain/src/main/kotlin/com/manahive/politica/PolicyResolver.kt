@@ -9,6 +9,7 @@ import com.manahive.contracts.policy.ClosureCondition
 import com.manahive.contracts.policy.ConfidenceConfig
 import com.manahive.contracts.policy.DagCatalog
 import com.manahive.contracts.policy.DwellThreshold
+import com.manahive.contracts.policy.comeBackRuleId
 import com.manahive.contracts.policy.HarborPolicy
 import com.manahive.contracts.policy.PolicyCalibration
 import com.manahive.contracts.policy.PolicyDefaults
@@ -53,6 +54,8 @@ public object PolicyResolver {
         val hysteresis = resolveHysteresisFromDag(catalog, profile)
         val dwellThresholds = resolveDwellThresholdsFromDag(catalog, profile)
         val alertRules = resolveAlertRulesFromDag(catalog, profile)
+        val comeBackThresholds = resolveComeBackThresholdsFromDag(catalog, profile)
+        val comeBackAlertRules = resolveComeBackAlertRulesFromDag(catalog, profile)
         val transitionWindows = resolveTransitionWindowsFromDag(catalog)
 
         val calibration = PolicyCalibration(
@@ -60,12 +63,16 @@ public object PolicyResolver {
             scene = ScenePolicy(
                 hysteresis = hysteresis,
                 dwellThresholds = dwellThresholds,
+                comeBackThresholds = comeBackThresholds,
                 confidence = ConfidenceConfig(
                     minConfidence = PolicyDefaults.minConfidence,
                     heartbeatTimeout = PolicyDefaults.heartbeatTimeout,
                 ),
             ),
-            sentinel = SentinelPolicy(alertRules = alertRules),
+            sentinel = SentinelPolicy(
+                alertRules = alertRules,
+                comeBackRules = comeBackAlertRules,
+            ),
             harbor = HarborPolicy(
                 defaultChannels = emptyMap(),
                 escalationTimeouts = emptyMap(),
@@ -143,12 +150,7 @@ public object PolicyResolver {
     ): Map<StateKind, DwellThreshold> {
         val base = catalog.residentStates.mapNotNull { (state, rule) ->
             rule.alertAfter?.let { exceeded ->
-                // When the director gives only a deadline ("avísenme a los 15 minutos"),
-                // the silent pre-warning lands at half of it — the same rule the override
-                // path applies. Defaulting warning to `exceeded` instead would violate
-                // DwellThreshold's warning < exceeded invariant and crash the resolver.
-                val warning = rule.warningAfter ?: exceeded.dividedBy(2)
-                state to DwellThreshold(warning = warning, exceeded = exceeded)
+                state to DwellThreshold.of(rule.warningAfter, exceeded)
             }
         }.toMap()
         return applyOverrides<PolicyOverride.DwellOverride, StateKind, DwellThreshold>(base, profile.overrides) { it.state to it.value }
@@ -194,6 +196,60 @@ public object PolicyResolver {
     }
 
     /**
+     * Derive ComeBackThresholds from ComeBackRule in the catalog + profile overrides.
+     * Each ComeBackRule with alertAfter produces a DwellThreshold keyed by baseline.
+     */
+    private fun resolveComeBackThresholdsFromDag(
+        catalog: DagCatalog,
+        profile: AlarmProfile,
+    ): Map<StateKind, DwellThreshold> {
+        val catalogThresholds = catalog.comeBackRules.mapNotNull { (baseline, rule) ->
+            rule.alertAfter?.let { exceeded ->
+                baseline to DwellThreshold.of(rule.warningAfter, exceeded)
+            }
+        }.toMap()
+        return applyOverrides<PolicyOverride.ComeBackOverride, StateKind, DwellThreshold>(
+            catalogThresholds, profile.overrides
+        ) { it.baseline to it.value }
+    }
+
+    /**
+     * Derive ComeBack AlertRules from ComeBackRule in the catalog + profile overrides.
+     * ComeBack rules use [TriggerOn.COME_BACK] and are keyed by baseline state.
+     */
+    private fun resolveComeBackAlertRulesFromDag(
+        catalog: DagCatalog,
+        profile: AlarmProfile,
+    ): Map<StateKind, AlertRule> {
+        val catalogRules = catalog.comeBackRules.filterValues { it.alerts }
+
+        val overrides = profile.overrides.values
+            .filterIsInstance<PolicyOverride.ComeBackOverride>()
+            .associateBy { it.baseline }
+
+        // An override is not only a new deadline. When the director retimes a
+        // come-back he may also restate how loud it is and how it closes; when
+        // he says nothing about those, the catalog's values stand. Skipping the
+        // override whenever the catalog already knew the baseline — which is
+        // right for DwellOverride, since it carries no severity — silently
+        // applied half of what he asked for.
+        return (catalogRules.keys + overrides.keys).associateWith { baseline ->
+            val catalogRule = catalogRules[baseline]
+            val override = overrides[baseline]
+            buildAlertRule(
+                state = baseline,
+                severity = override?.severity
+                    ?: catalogRule?.severity
+                    ?: Severity.WARNING,
+                closureCondition = override?.closureCondition
+                    ?: catalogRule?.closureCondition
+                    ?: ClosureCondition.STAFF_OR_SAFE,
+                triggerOn = TriggerOn.COME_BACK,
+            )
+        }
+    }
+
+    /**
      * Build an AlertRule with sensible defaults for configurable fields.
      *
      * [triggerOn] has NO default on purpose: every call site must state how the
@@ -208,7 +264,11 @@ public object PolicyResolver {
         closureCondition: ClosureCondition,
         triggerOn: TriggerOn,
     ): AlertRule = AlertRule(
-        id = RuleId("alert-${state.name.lowercase()}"),
+        // The id names the rule, and a rule is a (state, trigger family) pair:
+        // "lleva mucho acostado" and "no volvió a la cama" both watch LYING but
+        // are two different rules. Keying both as `alert-lying` made the Sentinel
+        // adapter — whose builder is a map from RuleId — keep only the last one.
+        id = ruleIdFor(state, triggerOn),
         trigger = state,
         triggerOn = triggerOn,
         severity = severity,
@@ -219,6 +279,12 @@ public object PolicyResolver {
         confirmationWindow = null,
         umbrellaEvents = emptySet(),
     )
+
+    /** The id of the rule watching [state] under the [triggerOn] family. */
+    private fun ruleIdFor(state: StateKind, triggerOn: TriggerOn): RuleId = when (triggerOn) {
+        TriggerOn.COME_BACK -> comeBackRuleId(state)
+        TriggerOn.ENTRY, TriggerOn.DWELL -> RuleId("alert-${state.name.lowercase()}")
+    }
 
     /**
      * Derive TransitionWindows from DagTransitionRule.recordBefore/recordAfter.

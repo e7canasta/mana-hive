@@ -4,6 +4,7 @@ import com.manahive.contracts.scene.SceneEvent
 import com.manahive.contracts.scene.PersonState
 import com.manahive.contracts.scene.NightSummary
 import com.manahive.contracts.sentinel.SentinelSignal
+import com.manahive.contracts.sentinel.stateLabel
 import com.manahive.contracts.sentinel.ClosureCause
 import com.manahive.contracts.policy.Severity
 import com.manahive.contracts.policy.ClosureCondition
@@ -145,6 +146,50 @@ class SerializationRoundtripTest : FunSpec({
         restored.rule shouldBe rule
         restored.severity shouldBe Severity.WARNING
         restored.reversible shouldBe true
+    }
+
+    test("SentinelSignal.ComeBackPreWarning roundtrip") {
+        val original = SentinelSignal.ComeBackPreWarning(
+            bed = BedId("bed-301"),
+            resident = ResidentId("jose"),
+            at = Instant.parse("2024-01-15T23:27:00Z"),
+            rulesFingerprint = "abc123",
+            baseline = StateKind.LYING,
+            elapsed = Duration.ofMinutes(12),
+            threshold = Duration.ofMinutes(15),
+        )
+
+        val result = original.toJson().toSentinelSignal()
+
+        result.isSuccess shouldBe true
+        val restored = result.getOrNull()!!
+        restored.shouldBeInstanceOf<SentinelSignal.ComeBackPreWarning>()
+        restored.baseline shouldBe StateKind.LYING
+        restored.elapsed shouldBe Duration.ofMinutes(12)
+        restored.threshold shouldBe Duration.ofMinutes(15)
+    }
+
+    test("SentinelSignal.UmbrellaEvent keeps its trigger family across the wire") {
+        // The family is what tells a reader whether the resident IS in `state`
+        // or is NOT. Losing it in transit puts the lie back.
+        val original = SentinelSignal.UmbrellaEvent(
+            bed = BedId("bed-301"),
+            resident = ResidentId("jose"),
+            at = Instant.parse("2024-01-15T23:30:00Z"),
+            rulesFingerprint = "abc123",
+            episode = EpisodeId("ep-001"),
+            state = StateKind.LYING,
+            triggerOn = TriggerOn.COME_BACK,
+            originalSeverity = Severity.WARNING,
+        )
+
+        val result = original.toJson().toSentinelSignal()
+
+        result.isSuccess shouldBe true
+        val restored = result.getOrNull()!!
+        restored.shouldBeInstanceOf<SentinelSignal.UmbrellaEvent>()
+        restored.triggerOn shouldBe TriggerOn.COME_BACK
+        restored.stateLabel() shouldBe "awayFrom=LYING"
     }
 
     test("SentinelSignal.EpisodeClosed roundtrip") {

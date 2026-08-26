@@ -1,6 +1,15 @@
 package jose301
 
+import com.manahive.contracts.policy.ClosureCondition
+import com.manahive.contracts.policy.MobilityAid
+import com.manahive.contracts.policy.RiskLevel
+import com.manahive.contracts.policy.Severity
+import com.manahive.contracts.policy.WatchLevel
+import com.manahive.contracts.policy.buildDagCatalog
+import com.manahive.contracts.policy.buildResidentProfile
 import com.manahive.contracts.scene.StateKind
+import com.manahive.politica.PolicyResolver
+import com.manahive.politica.adapters.toSceneCalibration
 import com.manahive.scene.calibration.sceneCalibration
 import com.manahive.scene.core.TransitionTable
 import java.time.Duration
@@ -29,3 +38,50 @@ val configConDwell = sceneCalibration {
     }
     heartbeatTimeout = Duration.ofSeconds(90)
 }
+
+// ── Config via Policy: DAG catalog + profile → PolicyResolver → Scene ───────
+// SPEC-05: ComeBack configured at catalog level, resolved through Politica Engine.
+
+val catalogComeBack = buildDagCatalog {
+    resident {
+        comeBackTo(StateKind.LYING) {
+            warningAfter(Duration.ofMinutes(12))
+            alertAfter(Duration.ofMinutes(15))
+            severity(Severity.WARNING)
+            closure(ClosureCondition.STAFF_OR_SAFE)
+        }
+    }
+}
+
+val profileJose = buildResidentProfile("jose") {
+    risk(RiskLevel.LOW)
+    mobility(MobilityAid.NONE)
+    level(WatchLevel.STANDARD)
+}
+
+// El adapter ya arma la tabla desde la hysteresis del catalogo; el .copy() que
+// habia aca la pisaba con RELEASE_2 y tapaba que el adapter la estaba perdiendo.
+val configViaPolicy = PolicyResolver.resolve(catalogComeBack, profileJose.profile).value
+    .toSceneCalibration()
+
+// ── Config via Policy: comeBack 20/25 + dwell 10/15 ─────────────────────────
+
+val catalogComeBackAndDwell = buildDagCatalog {
+    resident {
+        sitting {
+            warningAfter(Duration.ofMinutes(10))
+            alertAfter(Duration.ofMinutes(15))
+            severity(Severity.WARNING)
+            closure(ClosureCondition.SAFE_ONLY)
+        }
+        comeBackTo(StateKind.LYING) {
+            warningAfter(Duration.ofMinutes(20))
+            alertAfter(Duration.ofMinutes(25))
+            severity(Severity.WARNING)
+            closure(ClosureCondition.STAFF_OR_SAFE)
+        }
+    }
+}
+
+val configViaPolicyConDwell = PolicyResolver.resolve(catalogComeBackAndDwell, profileJose.profile).value
+    .toSceneCalibration()

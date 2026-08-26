@@ -241,4 +241,45 @@ class PoliticaCatalogSpec : BehaviorSpec({
             }
         }
     }
+
+    // ── Harbor and Recorder: documented gaps ────────────────────────────────
+
+    Given("a FALL_RISK catalog with LYING→STANDING record()") {
+        val profile = AlarmProfile(
+            residentId = ResidentId("gap-test"),
+            riskLevel = RiskLevel.HIGH,
+            mobilityAid = MobilityAid.NONE,
+            autopilot = false,
+            mode = PolicyMode.PRESET,
+            templateId = null,
+            overrides = emptyMap(),
+            catalogVersion = CatalogVersion("2.1.0"),
+            validFrom = now,
+        )
+
+        When("resolved") {
+            val calibration = PolicyResolver.resolve(FALL_RISK_CATALOG, profile).value
+
+            Then("Harbor is intentionally empty — adapter provides defaults") {
+                // SPEC-04: Harbor channels/escalation are not yet in the DAG catalog.
+                // The adapter (toHarborCalibration) falls back to sensible defaults:
+                //   INFO → CONSOLE, WARNING → PUSH+TABLET, CRITICAL → all channels.
+                // When the DAG gains harbor configuration, this test should change.
+                calibration.harbor.defaultChannels.isEmpty() shouldBe true
+                calibration.harbor.escalationTimeouts.isEmpty() shouldBe true
+            }
+
+            Then("Recorder transition windows come from catalog record() entries") {
+                // FALL_RISK_CATALOG defines record(before=2m, after=5m) on LYING→STANDING.
+                val lyingToStanding = com.manahive.contracts.policy.TransitionKey(
+                    com.manahive.contracts.scene.StateKind.LYING,
+                    com.manahive.contracts.scene.StateKind.STANDING,
+                )
+                val window = calibration.recorder.transitionWindows[lyingToStanding]
+                window shouldNotBe null
+                window!!.before shouldBe java.time.Duration.ofMinutes(2)
+                window.after shouldBe java.time.Duration.ofMinutes(5)
+            }
+        }
+    }
 })

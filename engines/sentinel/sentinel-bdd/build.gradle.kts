@@ -6,5 +6,6 @@ plugins {
 dependencies {
     api(projects.platform.domainKernel)
     api(projects.platform.contracts)
+    api(projects.platform.blueprintHarness)
     api(projects.engines.sentinel.sentinelDomain)
 }

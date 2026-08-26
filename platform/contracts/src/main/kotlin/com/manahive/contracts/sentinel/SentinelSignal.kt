@@ -1,6 +1,7 @@
 package com.manahive.contracts.sentinel
 
 import com.manahive.contracts.policy.Severity
+import com.manahive.contracts.policy.TriggerOn
 import com.manahive.contracts.scene.StateKind
 import com.manahive.kernel.BedId
 import com.manahive.kernel.EpisodeId
@@ -25,6 +26,7 @@ public enum class SignalType {
     EPISODE_CLOSED,
     SUPPRESSED_WITH_RECORD,
     DWELL_PRE_WARNING,
+    COME_BACK_PRE_WARNING,
 }
 
 /**
@@ -77,6 +79,17 @@ public sealed interface SentinelSignal {
         override val rulesFingerprint: String,
         public val episode: EpisodeId,
         public val state: StateKind,
+        /**
+         * Which family of rule raised this, and therefore how [state] reads.
+         *
+         * ENTRY/DWELL: the resident IS in [state]. COME_BACK: he is NOT — the
+         * state is the baseline he has not returned to. Without this the two
+         * are the same signal saying opposite things, and every formatter
+         * printed "state=LYING" for a resident who was out of bed.
+         *
+         * No default on purpose: the caller knows which question it answered.
+         */
+        public val triggerOn: TriggerOn,
         public val originalSeverity: Severity,
     ) : SentinelSignal
 
@@ -143,6 +156,42 @@ public sealed interface SentinelSignal {
         public val elapsed: Duration,
         public val threshold: Duration,
     ) : SentinelSignal
+
+    /**
+     * Come-back warning: the resident left [baseline] and has been away long
+     * enough to be worth mentioning, but not long enough to open an episode.
+     *
+     * A type of its own rather than a [DwellPreWarning] over the baseline, for
+     * the same reason `ComeBackExceeded` is not a `DwellExceeded` (AD-3):
+     * "lleva mucho acostado" and "no volvió a la cama" are different clinical
+     * questions. Fusing them made every formatter print "dwell LYING for 12M"
+     * about a resident who was out of bed — the exact opposite of the fact.
+     * Being a separate subtype means the compiler asks each consumer which of
+     * the two it is looking at, instead of letting it assume.
+     */
+    public data class ComeBackPreWarning(
+        override val type: SignalType = SignalType.COME_BACK_PRE_WARNING,
+        override val bed: BedId,
+        override val resident: ResidentId?,
+        override val at: Instant,
+        override val rulesFingerprint: String,
+        /** The state he left and has not returned to. */
+        public val baseline: StateKind,
+        public val elapsed: Duration,
+        public val threshold: Duration,
+    ) : SentinelSignal
+}
+
+/**
+ * How [SentinelSignal.UmbrellaEvent.state] must be read out loud.
+ *
+ * Four formatters print this signal and each used to hardcode `state=`, which
+ * is a lie for a come-back: the resident is not in that state, that is the
+ * whole point. One helper so the four cannot drift apart again.
+ */
+public fun SentinelSignal.UmbrellaEvent.stateLabel(): String = when (triggerOn) {
+    TriggerOn.COME_BACK -> "awayFrom=${state.name}"
+    TriggerOn.ENTRY, TriggerOn.DWELL -> "state=${state.name}"
 }
 
 /** Why an episode closed. */
@@ -206,6 +255,7 @@ public fun SentinelSignal.toMap(): Map<String, Any?> = linkedMapOf<String, Any?>
         is SentinelSignal.UmbrellaEvent -> {
             put("episode", episode.value)
             put("state", state.name)
+            put("triggerOn", triggerOn.name)
             put("originalSeverity", originalSeverity.name)
         }
         is SentinelSignal.SuppressedWithRecord -> {
@@ -216,6 +266,11 @@ public fun SentinelSignal.toMap(): Map<String, Any?> = linkedMapOf<String, Any?>
         }
         is SentinelSignal.DwellPreWarning -> {
             put("state", state.name)
+            put("elapsed", elapsed.toString())
+            put("threshold", threshold.toString())
+        }
+        is SentinelSignal.ComeBackPreWarning -> {
+            put("baseline", baseline.name)
             put("elapsed", elapsed.toString())
             put("threshold", threshold.toString())
         }

@@ -110,5 +110,6 @@ public class HarborNatsEgress(
         is SentinelSignal.EpisodeClosed -> com.manahive.contracts.policy.Severity.INFO
         is SentinelSignal.SuppressedWithRecord -> com.manahive.contracts.policy.Severity.INFO
         is SentinelSignal.DwellPreWarning -> com.manahive.contracts.policy.Severity.INFO
+        is SentinelSignal.ComeBackPreWarning -> com.manahive.contracts.policy.Severity.INFO
     }
 }

@@ -19,6 +19,13 @@ import com.manahive.scene.core.TransitionTable
  * - confidence.minConfidence → minConfidence
  * - confidence.heartbeatTimeout → heartbeatTimeout
  * - dwellThresholds → dwellThresholds
+ * - comeBackThresholds → comeBackThresholds
+ *
+ * Every field of [PolicyCalibration.scene] must appear here. There used to be
+ * a second adapter with the same name in politica-adapters; each carried half
+ * the policy — this one dropped comeBackThresholds, that one dropped the
+ * hysteresis — and which half a caller lost depended on which import it had
+ * picked. That one now delegates here.
  *
  * Fowler: "Feature Envy" → Use TransitionTable.from() factory.
  *
@@ -32,4 +39,5 @@ public fun PolicyCalibration.toSceneCalibration(
     confidence = ConfidenceThresholds(scene.confidence.minConfidence.mapValues { Confidence(it.value) }),
     heartbeatTimeout = scene.confidence.heartbeatTimeout,
     dwellThresholds = scene.dwellThresholds,
+    comeBackThresholds = scene.comeBackThresholds,
 )

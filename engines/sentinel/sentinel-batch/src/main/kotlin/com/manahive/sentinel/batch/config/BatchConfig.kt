@@ -50,15 +50,18 @@ data class BatchConfig(
     /** Creates a [SentinelCalibration] from this config. */
     fun toSentinelCalibration(): SentinelCalibration {
         val alertRules = rules.map { it.toAlertRule() }
+        val nonComeBack = alertRules.filter { it.triggerOn != TriggerOn.COME_BACK }
+        val comeBack = alertRules.filter { it.triggerOn == TriggerOn.COME_BACK }
         return SentinelCalibration(
             residentId = residentId,
-            rulesByState = alertRules.groupBy { it.trigger },
+            rulesByState = nonComeBack.groupBy { it.trigger },
             transitionRules = alertRules
                 .filter { it.triggerOn == TriggerOn.ENTRY }
                 .associateBy { it.trigger },
             dwellRules = alertRules
                 .filter { it.triggerOn == TriggerOn.DWELL }
                 .associateBy { it.trigger },
+            comeBackRules = comeBack.associateBy { it.trigger },
             sceneStateRules = emptyMap(),
             ruleIds = alertRules.map { it.id }.toSet(),
             fingerprint = alertRules.joinToString(",") { it.id.value },

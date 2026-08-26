@@ -82,30 +82,30 @@
 
 ---
 
-## Inverse Dwell — Feature Necesario
+## ComeBack (Dwell Inverso) — Implementado (SPEC-05)
 
 ### El Problema
 
 El dwell normal responde: **"¿Cuánto tiempo lleva EN este estado?"**
 
-Necesitamos que responda: **"¿Cuánto tiempo lleva FUERA de este estado?"**
+ComeBack responde: **"¿Cuánto tiempo lleva FUERA de este estado?"**
 
 ### La Mina
 
 ```
 Normal:   planta al ENTRAR al estado    → explota si permanece >= threshold
-Inverso:  planta al SALIR del estado    → explota si no regresa >= threshold
+ComeBack: planta al SALIR del estado    → explota si no regresa >= threshold
 ```
 
 ### Ejemplo con José (E1)
 
 ```
 23:15  José sale de LYING → SITTING_IN_BED
-       💣 mina inversa plantada (leftStateAt = 23:15)
+       💣 mina plantada (leftStateAt = 23:15)
 
 23:16  sweep → 1 min fuera de LYING < 15 min → no explota
 23:29  sweep → 14 min < 15 min → no explota
-23:30  sweep → 15 min >= 15 min → 💥 DwellExceeded(LYING)
+23:30  sweep → 15 min >= 15 min → 💥 ComeBackExceeded(LYING)
        mina gastada.
 
 23:32  José vuelve a LYING
@@ -116,40 +116,42 @@ Inverso:  planta al SALIR del estado    → explota si no regresa >= threshold
 
 ```
 03:50  José sale de LYING → SITTING_IN_BED
-       💣 mina inversa plantada (leftStateAt = 03:50)
+       💣 mina plantada (leftStateAt = 03:50)
 
 03:53  sweep → 3 min < 15 min → no explota
 
 03:54  José vuelve a LYING
        mina DESARMADA (volvió al estado)
-       No hubo DwellExceeded.
+       No hubo ComeBackExceeded.
 ```
 
-### Impacto en Código
+### Cadena de punta a punta (SPEC-05)
 
 | Componente | Cambia | No Cambia |
 |------------|--------|-----------|
-| `PolicyCalibration` | `DwellThreshold + returnTo` | — |
-| `ClockSweeper` | `checkInverseDwell()` | — |
-| `DigitalTwin` | `leftStateAt: Instant?` | — |
-| `SceneInterpreter` | — | ✅ |
-| `Sentinel` | — | ✅ (ve otro DwellExceeded) |
+| `DagDsl` | `comeBackTo(baseline) { alertAfter(...) }` | — |
+| `PolicyCalibration` | `ScenePolicy.comeBackThresholds` | — |
+| `PolicyResolver` | `resolveComeBackThresholdsFromDag()` | — |
+| `PolicyAdapters` | Wire `comeBackThresholds` → scene | — |
+| `SentinelCalibration` | `comeBackRules`, `comeBackRuleFor()` | — |
+| `SentinelEvaluatorImpl` | `evaluateComeBackExceeded()`, `evaluateComeBackWarning()` | — |
+| `ClockSweeper` | — | ✅ (ya existía) |
+| `DigitalTwin` | — | ✅ (`leftStateAt`, `baselineState`) |
 | `Harbor` | — | ✅ (ve otro SceneFact) |
 | `Hub` | — | ✅ (ingesta normal) |
 
-**Sentinel no distingue dwell normal de inverso. Es otro `DwellExceeded` en el stream.**
+**Sentinel distingue ComeBackExceeded de DwellExceeded: son tipos distintos en el stream.**
 
 ---
 
 ## Verificación
 
 ```bash
-# Config 1: solo sentarse
-scene-batch verify config1-run.yaml expected1.out
+# Blueprint completo (via scene directa + via policy).
+# Sale distinto de cero si algun check queda rojo.
+LANG=C.UTF-8 LC_ALL=C.UTF-8 ./gradlew :blueprints:jose-301-sitting-bed:run
 
-# Config 2: viaje completo
-scene-batch verify config2-run.yaml expected2.out
-
-# Config 3: viaje + dwell (inverse dwell pendiente)
-scene-batch verify config3-run.yaml expected3.out
+# Tests unitarios. OJO: `check` NO ejecuta los blueprints — ningun blueprint
+# tiene source set de test, asi que `check` solo los compila.
+LANG=C.UTF-8 LC_ALL=C.UTF-8 ./gradlew check
 ```

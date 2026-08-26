@@ -3,6 +3,7 @@ package com.manahive.politica.adapters
 import com.manahive.contracts.policy.PolicyCalibration
 import com.manahive.contracts.policy.Severity
 import com.manahive.contracts.policy.TransitionWindow
+import com.manahive.contracts.policy.TriggerOn
 import com.manahive.contracts.scene.PersonState
 import com.manahive.contracts.scene.StateKind
 import com.manahive.contracts.scene.UnknownCause
@@ -14,8 +15,8 @@ import com.manahive.kernel.MonitorId
 import com.manahive.recorder.Quality
 import com.manahive.recorder.RecordingCalibration
 import com.manahive.recorder.recordingCalibration
+import com.manahive.scene.adapter.toSceneCalibration as toSceneCalibrationFromPolicy
 import com.manahive.scene.calibration.SceneCalibration
-import com.manahive.scene.calibration.sceneCalibration
 import com.manahive.sentinel.SentinelCalibration
 import com.manahive.sentinel.sentinelCalibration
 import java.time.Duration
@@ -35,26 +36,16 @@ import java.time.Duration
 
 /**
  * Convert PolicyCalibration.scene → SceneCalibration.
+ *
+ * Delegates to the adapter that lives next to [SceneCalibration] itself. This
+ * used to be a second, independent translation of the same policy, and the two
+ * had drifted: this one rebuilt the calibration through the DSL and never
+ * applied `scene.hysteresis`, so every catalog that tuned a transition had that
+ * tuning dropped on the way to the engine — silently, and only for the callers
+ * who happened to import this one.
  */
-public fun PolicyCalibration.toSceneCalibration(): SceneCalibration = sceneCalibration {
-    val scenePolicy = this@toSceneCalibration.scene
-
-    heartbeatTimeout = scenePolicy.confidence.heartbeatTimeout
-
-    dwell {
-        // Sin `when`: traducir un mapa enumerando estados a mano hace que olvidar
-        // uno pierda el umbral en silencio. Es lo que pasaba con ABSENT.
-        scenePolicy.dwellThresholds.forEach { (kind, threshold) ->
-            state(kind) warning threshold.warning exceeded threshold.exceeded
-        }
-    }
-
-    confidence {
-        scenePolicy.confidence.minConfidence.forEach { (state, minConf) ->
-            state min minConf
-        }
-    }
-}
+public fun PolicyCalibration.toSceneCalibration(): SceneCalibration =
+    toSceneCalibrationFromPolicy()
 
 // ── Sentinel Adapter ────────────────────────────────────────────────────────
 
@@ -65,8 +56,7 @@ public fun PolicyCalibration.toSentinelCalibration(): SentinelCalibration = sent
     resident(this@toSentinelCalibration.residentId.value)
 
     this@toSentinelCalibration.sentinel.alertRules.values.forEach { rule ->
-        rule(rule.id.value) {
-            trigger = rule.trigger
+        rule(rule.id.value, rule.trigger, rule.triggerOn) {
             severity = rule.severity
             closureCondition = rule.closureCondition
             reversible = rule.reversible
@@ -76,6 +66,17 @@ public fun PolicyCalibration.toSentinelCalibration(): SentinelCalibration = sent
             if (rule.umbrellaEvents.isNotEmpty()) {
                 umbrellaEvents(*rule.umbrellaEvents.toTypedArray())
             }
+        }
+    }
+
+    this@toSentinelCalibration.sentinel.comeBackRules.values.forEach { rule ->
+        rule(rule.id.value, rule.trigger, TriggerOn.COME_BACK) {
+            severity = rule.severity
+            closureCondition = rule.closureCondition
+            reversible = rule.reversible
+            requiresConfirmation = rule.requiresConfirmation
+            requiresNvr = rule.requiresNvr
+            confirmationWindow = rule.confirmationWindow
         }
     }
 }

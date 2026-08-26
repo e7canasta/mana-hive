@@ -40,20 +40,23 @@ public data class PolicyCalibration(
 
 /**
  * Resolved rules for Scene Engine.
- * Contains dwell thresholds, hysteresis, and confidence filtering.
+ * Contains dwell thresholds, come-back thresholds, hysteresis, and confidence filtering.
  */
 public data class ScenePolicy(
     val hysteresis: Map<TransitionKey, Duration>,
     val dwellThresholds: Map<StateKind, DwellThreshold>,
+    val comeBackThresholds: Map<StateKind, DwellThreshold> = emptyMap(),
     val confidence: ConfidenceConfig,
 )
 
 /**
  * Resolved rules for Sentinel Engine.
- * Contains alert rules derived from ResidentStateRule in catalog.
+ * Contains alert rules derived from ResidentStateRule in catalog,
+ * and come-back rules derived from ComeBackRule.
  */
 public data class SentinelPolicy(
     val alertRules: Map<StateKind, AlertRule>,
+    val comeBackRules: Map<StateKind, AlertRule> = emptyMap(),
 )
 
 /**
@@ -139,5 +142,21 @@ public data class DwellThreshold(
         require(warning < exceeded) {
             "warning ($warning) must be less than exceeded ($exceeded)"
         }
+    }
+
+    public companion object {
+        /**
+         * Build a threshold from what the director actually said.
+         *
+         * When he gives only a deadline — "avísenme a los quince minutos" — the
+         * silent pre-warning lands at half of it. That default lived in three
+         * places (dwell resolution, come-back resolution, and the profile DSL)
+         * and had to agree in all three; here it is one decision.
+         *
+         * Defaulting [warningAfter] to [exceeded] instead would violate the
+         * `warning < exceeded` invariant above and fail the resolver.
+         */
+        public fun of(warningAfter: Duration?, exceeded: Duration): DwellThreshold =
+            DwellThreshold(warning = warningAfter ?: exceeded.dividedBy(2), exceeded = exceeded)
     }
 }

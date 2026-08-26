@@ -9,6 +9,7 @@ import com.manahive.scene.SceneEngine
 import com.manahive.scene.ObservedAt
 import com.manahive.scene.calibration.SceneCalibration
 import com.manahive.scene.core.DigitalTwin
+import com.manahive.blueprint.BlueprintOutcome
 import com.manahive.kernel.BedId
 import com.manahive.kernel.MonitorId
 import java.time.Instant
@@ -156,6 +157,12 @@ class ScenarioBuilder(private val ctx: BddContext) {
                 ScenarioCheck(desc, passed = true)
             } catch (e: AssertionError) {
                 ScenarioCheck(desc, passed = false, error = e.message)
+            } catch (e: IllegalStateException) {
+                // Las aserciones de abajo usan check(), que lanza
+                // IllegalStateException, no AssertionError. Sin esta rama una
+                // sola aserción roja aborta el escenario entero y las que
+                // siguen no llegan a correr.
+                ScenarioCheck(desc, passed = false, error = e.message)
             }
         }
 
@@ -278,8 +285,10 @@ data class ScenarioResult(
             if (check.error != null) println("     ${check.error}")
         }
         println()
+        BlueprintOutcome.record(name, checks.map { it.description to it.passed })
     }
 }
+
 
 // ── Top-level DSL ───────────────────────────────────────────────────────────
 
@@ -321,6 +330,10 @@ class ComparisonBuilder(private val ctx: BddContext) {
                     check(result.facts)
                     ScenarioCheck(desc, passed = true)
                 } catch (e: AssertionError) {
+                    ScenarioCheck(desc, passed = false, error = e.message)
+                } catch (e: IllegalStateException) {
+                    // Mismo motivo que en ScenarioBuilder.run(): transitions(),
+                    // comeBackExceeded() y noComeBackExceeded() usan check().
                     ScenarioCheck(desc, passed = false, error = e.message)
                 }
             }

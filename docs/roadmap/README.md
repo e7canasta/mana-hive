@@ -15,8 +15,8 @@
 | `SPEC-01` Episodio prematuro | ✅ **cerrada** — el episodio se abre al vencer el plazo |
 | `SPEC-02` Política canónica | ✅ **cerrada** — ver [ADR-001](../adr/ADR-001-modelo-de-politica-canonico.md) |
 | `SPEC-03` Los cuatro niveles | ✅ **cerrada** |
-| `SPEC-04` Adapters a producción | abierta |
-| `SPEC-05` Cadena ComeBack | abierta |
+| `SPEC-04` Adapters a producción | ✅ **cerrada** |
+| `SPEC-05` Cadena ComeBack | ✅ **cerrada** — ComeBack de punta a punta: DSL → Politica → Scene → Sentinel |
 | `SPEC-06` Catálogo en el hub + API | abierta |
 | `SPEC-07` Lenguaje y documentación | parcial — punto 1 (README) cerrado con `SPEC-00` |
 
@@ -79,6 +79,30 @@ La causa real eran **tres defectos encadenados**, y el escenario estaba destapan
 Los tres arreglados. El (2) se cerró estructuralmente, no por caso: se agregó `state(kind)` a los builders de dwell y el adapter dejó de enumerar estados a mano, así que la clase entera de bug —"olvidé un estado en el `when`"— deja de ser posible. El escenario retirado volvió al blueprint y pasa.
 
 **Lección para las specs que siguen:** un escenario que no pasa es una hipótesis sobre el motor, no un veredicto. Antes de retirarlo, reproducir la causa en un test del componente acusado. Acá el componente acusado estaba sano y el bug estaba en otros tres lugares.
+
+### Lo verificado al cerrar `SPEC-04`
+
+`./gradlew check` verde, **445 tests, 0 fallidos**, los cinco blueprints con la misma salida que antes (22 / 18 / 11 / 9 / 12). `PolicyAdapters.kt` vive en `politica-adapters`; ningún módulo de producción depende de `-bdd` ni `-test-data`.
+
+**La guarda se probó en las dos direcciones**, que es lo que hace que una guarda sirva:
+
+- `implementation(scene-bdd)` desde un módulo de producción → falla, con un mensaje que nombra la configuración culpable y sugiere el arreglo.
+- `testImplementation(scene-bdd)` → **pasa**. Es importante: una guarda que prohibiera esto empujaría a duplicar los helpers de BDD o a moverlos a producción para esquivarla, que es exactamente lo que la guarda existe para impedir.
+
+(Cuidado al probarla: `scene-domain → scene-bdd` produce una dependencia circular y Gradle falla *antes* de llegar a la guarda. Para verificarla hace falta un par sin ciclo, como `politica-adapters → scene-bdd`.)
+
+#### Un clone limpio de este repositorio no compilaba
+
+`SPEC-04` sacó `build-logic/` del `.gitignore` — correcto, las convenciones de build no estaban versionadas. Al revisar ese cambio apareció algo peor en el mismo archivo:
+
+```
+.gradle/     ← la caché. Ignorarla está bien.
+gradle/      ← el wrapper y libs.versions.toml. Ignorarlo rompe el repo.
+```
+
+Se confundieron los dos directorios. Consecuencia: `gradle/libs.versions.toml` —el catálogo con todas las versiones de dependencias— y `gradle/wrapper/` no estaban en git. **Cualquiera que clonara el repositorio no tenía con qué compilar.** Corregido.
+
+Queda una decisión pendiente que no me corresponde tomar: **`crates/` sigue ignorado**, y son 28 entradas — el workspace Rust con los contextos acotados (`ctx-residencia`, `ctx-politica`, `ctx-vigilancia`…). O es deliberado y va a otro repositorio, o es la misma pérdida a mayor escala.
 
 **Deuda nueva anotada:** hay **dos** clases `DwellThresholdsBuilder` — una en `calibration/dsl/DwellThresholdsDsl.kt` y otra en `calibration/SceneCalibration.kt:167`, con APIs distintas y cobertura de estados distinta. Es la jerarquía paralela que el comentario del primer archivo dice haber eliminado. Unificarlas antes de que la divergencia esconda otro estado.
 

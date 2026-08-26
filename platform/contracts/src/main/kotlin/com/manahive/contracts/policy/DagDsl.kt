@@ -20,13 +20,14 @@ public class DagCatalogBuilder {
     private val residentStates = mutableMapOf<StateKind, ResidentStateRule>()
     private val roomStates = mutableMapOf<String, RoomStateRule>()
     private val transitions = mutableMapOf<TransitionKey, DagTransitionRule>()
+    private val comeBackRules = mutableMapOf<StateKind, ComeBackRule>()
 
     public fun version(value: String) {
         version = CatalogVersion(value)
     }
 
     public fun resident(block: DagResidentStatesBuilder.() -> Unit) {
-        DagResidentStatesBuilder(residentStates).apply(block)
+        DagResidentStatesBuilder(residentStates, comeBackRules).apply(block)
     }
 
     public fun room(block: DagRoomStatesBuilder.() -> Unit) {
@@ -42,12 +43,14 @@ public class DagCatalogBuilder {
         residentStates = residentStates.toMap(),
         roomStates = roomStates.toMap(),
         transitions = transitions.toMap(),
+        comeBackRules = comeBackRules.toMap(),
     )
 }
 
 @DagCatalogDsl
 public class DagResidentStatesBuilder(
     private val states: MutableMap<StateKind, ResidentStateRule>,
+    private val comeBackRules: MutableMap<StateKind, ComeBackRule>,
 ) {
     public fun lying(block: DagResidentStateRuleBuilder.() -> Unit) {
         states[StateKind.LYING] = DagResidentStateRuleBuilder(StateKind.LYING).apply(block).build()
@@ -71,6 +74,14 @@ public class DagResidentStatesBuilder(
 
     public fun absent(block: DagResidentStateRuleBuilder.() -> Unit) {
         states[StateKind.ABSENT] = DagResidentStateRuleBuilder(StateKind.ABSENT).apply(block).build()
+    }
+
+    /**
+     * "Si sale de [baseline] y no vuelve en X minutos, avísenme."
+     * Mina que explota al vencer el plazo de retorno al estado de referencia.
+     */
+    public fun comeBackTo(baseline: StateKind, block: ComeBackRuleBuilder.() -> Unit) {
+        comeBackRules[baseline] = ComeBackRuleBuilder(baseline).apply(block).build()
     }
 }
 
@@ -145,6 +156,40 @@ public data class ResidentStateRule(
 ) {
     /** ¿Esta regla produce alerta? Observación pura si no. */
     val alerts: Boolean get() = triggerOn == TriggerOn.ENTRY || alertAfter != null
+}
+
+@DagCatalogDsl
+public class ComeBackRuleBuilder(private val baseline: StateKind) {
+    private var warningAfter: Duration? = null
+    private var alertAfter: Duration? = null
+    private var severity: Severity = Severity.WARNING
+    private var closureCondition: ClosureCondition = ClosureCondition.STAFF_OR_SAFE
+
+    /** "Avísenme antes de que se cumpla el plazo." Preaviso silencioso. */
+    public fun warningAfter(duration: Duration) {
+        warningAfter = duration
+    }
+
+    /** "Si no vuelve en X, avísenme." Abre episodio al vencer el plazo. */
+    public fun alertAfter(duration: Duration) {
+        alertAfter = duration
+    }
+
+    public fun severity(value: Severity) {
+        severity = value
+    }
+
+    public fun closure(value: ClosureCondition) {
+        closureCondition = value
+    }
+
+    internal fun build(): ComeBackRule = ComeBackRule(
+        baseline = baseline,
+        warningAfter = warningAfter,
+        alertAfter = alertAfter,
+        severity = severity,
+        closureCondition = closureCondition,
+    )
 }
 
 @DagCatalogDsl
@@ -233,11 +278,44 @@ public data class DagTransitionRule(
     val recordAfter: Duration?,
 )
 
+/**
+ * Come-back rule: watches time AWAY from a baseline state.
+ *
+ * Unlike [ResidentStateRule] (time IN a state), this measures time since
+ * leaving the baseline. "Avisame si no vuelve a la cama" — LYING is the
+ * baseline, and the mine is planted on departure.
+ *
+ * The [alerts] property follows the same pattern as [ResidentStateRule.alerts]:
+ * a rule without [alertAfter] produces no episode, only observation.
+ */
+public data class ComeBackRule(
+    val baseline: StateKind,
+    val warningAfter: Duration?,
+    val alertAfter: Duration?,
+    val severity: Severity,
+    val closureCondition: ClosureCondition,
+) {
+    /** ¿Esta regla produce alerta? Observación pura si no. */
+    val alerts: Boolean get() = alertAfter != null
+}
+
+/**
+ * The identity of the come-back rule watching [baseline].
+ *
+ * It must differ from the dwell rule's id for the same state: "lleva mucho
+ * acostado" and "no volvió a la cama" are two rules, and any consumer that
+ * keys rules by id — the Sentinel adapter does — keeps only one of two rules
+ * that share an id.
+ */
+public fun comeBackRuleId(baseline: StateKind): RuleId =
+    RuleId("comeback-${baseline.name.lowercase()}")
+
 public data class DagCatalog(
     val version: CatalogVersion,
     val residentStates: Map<StateKind, ResidentStateRule>,
     val roomStates: Map<String, RoomStateRule>,
     val transitions: Map<TransitionKey, DagTransitionRule>,
+    val comeBackRules: Map<StateKind, ComeBackRule> = emptyMap(),
 )
 
 // ── Resident Profile DSL ───────────────────────────────────────────────────
@@ -259,6 +337,7 @@ public class ResidentProfileBuilder(private val residentId: ResidentId) {
     private var templateId: TemplateId? = null
     private val stateOverrides = mutableMapOf<StateKind, ProfileStateOverride>()
     private val transitionOverrides = mutableMapOf<TransitionKey, ProfileTransitionOverride>()
+    private val comeBackOverrides = mutableMapOf<StateKind, ProfileComeBackOverride>()
 
     public fun risk(level: RiskLevel) {
         riskLevel = level
@@ -291,6 +370,14 @@ public class ResidentProfileBuilder(private val residentId: ResidentId) {
 
     public fun transitions(block: TransitionOverridesBuilder.() -> Unit) {
         TransitionOverridesBuilder(transitionOverrides).apply(block)
+    }
+
+    /**
+     * "Avísenme si [residentId] no vuelve a [baseline] en X minutos."
+     * Override per-residente de umbrales de come-back.
+     */
+    public fun comeBack(baseline: StateKind, block: ProfileComeBackOverrideBuilder.() -> Unit) {
+        comeBackOverrides[baseline] = ProfileComeBackOverrideBuilder().apply(block).build()
     }
 
     internal fun build(): ResidentProfileConfig = ResidentProfileConfig(
@@ -334,6 +421,22 @@ public class ResidentProfileBuilder(private val residentId: ResidentId) {
                     ruleId = RuleId("hysteresis-${key.from}-${key.to}"),
                     key = key,
                     value = override.hysteresis,
+                )
+            }
+        }
+
+        comeBackOverrides.forEach { (baseline, override) ->
+            if (override.alertAfter != null) {
+                val ruleId = comeBackRuleId(baseline)
+                // severity/closure travel as given — null included. Only the
+                // resolver knows whether there is a catalog rule underneath to
+                // fall back on, so it is the only place allowed to pick a default.
+                overrides[ruleId] = PolicyOverride.ComeBackOverride(
+                    ruleId = ruleId,
+                    baseline = baseline,
+                    value = DwellThreshold.of(override.warningAfter, override.alertAfter),
+                    severity = override.severity,
+                    closureCondition = override.closureCondition,
                 )
             }
         }
@@ -428,6 +531,44 @@ public class ProfileTransitionOverrideBuilder {
 
 public data class ProfileTransitionOverride(
     val hysteresis: Duration?,
+)
+
+@ResidentProfileDsl
+public class ProfileComeBackOverrideBuilder {
+    private var warningAfter: Duration? = null
+    private var alertAfter: Duration? = null
+    private var severity: Severity? = null
+    private var closureCondition: ClosureCondition? = null
+
+    public fun warningAfter(duration: Duration) {
+        warningAfter = duration
+    }
+
+    public fun alertAfter(duration: Duration) {
+        alertAfter = duration
+    }
+
+    public fun severity(value: Severity) {
+        severity = value
+    }
+
+    public fun closure(value: ClosureCondition) {
+        closureCondition = value
+    }
+
+    internal fun build(): ProfileComeBackOverride = ProfileComeBackOverride(
+        warningAfter = warningAfter,
+        alertAfter = alertAfter,
+        severity = severity,
+        closureCondition = closureCondition,
+    )
+}
+
+public data class ProfileComeBackOverride(
+    val warningAfter: Duration?,
+    val alertAfter: Duration?,
+    val severity: Severity?,
+    val closureCondition: ClosureCondition?,
 )
 
 public data class ResidentProfileConfig(

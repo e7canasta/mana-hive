@@ -1,5 +1,6 @@
 package jose301sentinel
 
+import com.manahive.blueprint.BlueprintOutcome
 import com.manahive.contracts.sentinel.ClosureCause
 import com.manahive.contracts.scene.PersonState
 import com.manahive.contracts.scene.StateKind
@@ -90,7 +91,6 @@ fun main() {
         }
     }.report()
 
-    println("═══════════════════════════════════════════════════════════════")
-    println("  ✅ DONE")
-    println("═══════════════════════════════════════════════════════════════")
+    // Este main imprimia "✅ DONE" incluso cuando reventaba antes de llegar.
+    BlueprintOutcome.summarize()
 }

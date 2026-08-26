@@ -40,17 +40,13 @@ class SentinelEvaluatorSpec : BehaviorSpec({
     fun testCalibration(): SentinelCalibration = sentinelCalibration {
         resident("maria")
 
-        rule("r-sitting") {
-            trigger = StateKind.SITTING_IN_BED
-            triggerOn = TriggerOn.ENTRY
+        rule("r-sitting", StateKind.SITTING_IN_BED, TriggerOn.ENTRY) {
             severity = Severity.WARNING
             closureCondition = ClosureCondition.SAFE_ONLY
             reversible = true
         }
 
-        rule("r-bed-edge") {
-            trigger = StateKind.BED_EDGE
-            triggerOn = TriggerOn.ENTRY
+        rule("r-bed-edge", StateKind.BED_EDGE, TriggerOn.ENTRY) {
             severity = Severity.CRITICAL
             closureCondition = ClosureCondition.STAFF_AND_SAFE
             reversible = false
@@ -58,26 +54,20 @@ class SentinelEvaluatorSpec : BehaviorSpec({
             umbrellaEvents(StateKind.STANDING, StateKind.ATTEMPTING_EXIT)
         }
 
-        rule("r-standing") {
-            trigger = StateKind.STANDING
-            triggerOn = TriggerOn.ENTRY
+        rule("r-standing", StateKind.STANDING, TriggerOn.ENTRY) {
             severity = Severity.WARNING
             closureCondition = ClosureCondition.SAFE_ONLY
             reversible = true
             umbrellaEvents(StateKind.SITTING_IN_BED)
         }
 
-        rule("r-standing-dwell") {
-            trigger = StateKind.STANDING
-            triggerOn = TriggerOn.DWELL
+        rule("r-standing-dwell", StateKind.STANDING, TriggerOn.DWELL) {
             severity = Severity.WARNING
             closureCondition = ClosureCondition.SAFE_ONLY
             reversible = true
         }
 
-        rule("r-staff-or-safe") {
-            trigger = StateKind.IN_BATHROOM
-            triggerOn = TriggerOn.ENTRY
+        rule("r-staff-or-safe", StateKind.IN_BATHROOM, TriggerOn.ENTRY) {
             severity = Severity.WARNING
             closureCondition = ClosureCondition.STAFF_OR_SAFE
             reversible = true

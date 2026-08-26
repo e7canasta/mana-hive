@@ -304,6 +304,7 @@ public data class SentinelSignalTrigger(
         is SentinelSignal.UmbrellaEvent -> RecordingContext.TiedToEpisode(signal.episode)
         is SentinelSignal.SuppressedWithRecord -> RecordingContext.Standalone
         is SentinelSignal.DwellPreWarning -> RecordingContext.Standalone
+        is SentinelSignal.ComeBackPreWarning -> RecordingContext.Standalone
     }
 }
 

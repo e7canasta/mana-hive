@@ -3,6 +3,7 @@ package com.manahive.sentinel.batch.output
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.manahive.contracts.sentinel.SentinelSignal
+import com.manahive.contracts.sentinel.stateLabel
 import com.manahive.sentinel.batch.formatOffset
 import com.manahive.sentinel.batch.events.EventOffset
 import java.io.File
@@ -44,7 +45,7 @@ class SignalOutWriter(private val outputFile: File) {
             "EPISODE_OPENED episode=${signal.episode.value} rule=${signal.rule.value} " +
                 "trigger=${signal.trigger} severity=${signal.severity} reversible=${signal.reversible} nvr=${signal.requiresNvr}"
         is SentinelSignal.UmbrellaEvent ->
-            "UMBRELLA_EVENT episode=${signal.episode.value} state=${signal.state} severity=${signal.originalSeverity}"
+            "UMBRELLA_EVENT episode=${signal.episode.value} ${signal.stateLabel()} severity=${signal.originalSeverity}"
         is SentinelSignal.AutoRecovery ->
             "AUTO_RECOVERY episode=${signal.episode.value} reversible=${signal.reversible} confirmation=${signal.requiresConfirmation}"
         is SentinelSignal.EpisodeClosed ->
@@ -54,5 +55,7 @@ class SignalOutWriter(private val outputFile: File) {
             "SUPPRESSED rule=${signal.rule.value} cause=${signal.cause}"
         is SentinelSignal.DwellPreWarning ->
             "DWELL_PRE_WARNING state=${signal.state} elapsed=${signal.elapsed} threshold=${signal.threshold}"
+        is SentinelSignal.ComeBackPreWarning ->
+            "COME_BACK_PRE_WARNING awayFrom=${signal.baseline} elapsed=${signal.elapsed} threshold=${signal.threshold}"
     }
 }

@@ -2,6 +2,7 @@ package com.manahive.sentinel
 
 import com.manahive.contracts.policy.AlertRule
 import com.manahive.contracts.policy.ClosureCondition
+import com.manahive.contracts.policy.TriggerOn
 import com.manahive.contracts.scene.SceneEvent
 import com.manahive.contracts.scene.StateKind
 import com.manahive.contracts.scene.kind
@@ -58,7 +59,10 @@ internal class SentinelEvaluatorImpl(
                 state = result.episodes
             }
             is SceneEvent.DwellExceeded -> {
-                val result = evaluateDwellExceeded(fact, state, now)
+                val kind = fact.state.kind
+                val result = evaluateDeadline(
+                    fact.bed, kind, calibration.dwellRuleFor(kind), TriggerOn.DWELL, state, now,
+                )
                 signals.addAll(result.signals)
                 explanation.addAll(result.explanation)
                 state = result.episodes
@@ -68,7 +72,29 @@ internal class SentinelEvaluatorImpl(
                 signals.addAll(result.signals)
                 explanation.addAll(result.explanation)
             }
-            else -> { /* not triggers for sentinel */ }
+            is SceneEvent.ComeBackExceeded -> {
+                val baseline = fact.baseline.kind
+                val result = evaluateDeadline(
+                    fact.bed, baseline, calibration.comeBackRuleFor(baseline), TriggerOn.COME_BACK, state, now,
+                )
+                signals.addAll(result.signals)
+                explanation.addAll(result.explanation)
+                state = result.episodes
+            }
+            is SceneEvent.ComeBackWarning -> {
+                val result = evaluateComeBackWarning(fact, state, now)
+                signals.addAll(result.signals)
+                explanation.addAll(result.explanation)
+            }
+
+            // ── No-ops: these facts do not open or affect episodes ─────
+            is SceneEvent.NightOpened -> noOp(fact, "night lifecycle — not an episode trigger", state)
+            is SceneEvent.SceneStateChanged -> noOp(fact, "scene state change — harbor's concern, not sentinel's", state)
+            is SceneEvent.SceneDwellWarning -> noOp(fact, "scene dwell warning — not yet judged by sentinel", state)
+            is SceneEvent.SceneDwellExceeded -> noOp(fact, "scene dwell exceeded — not yet judged by sentinel", state)
+            is SceneEvent.SignalLost -> noOp(fact, "sensor silence — See SPEC-06: plausibly an episode, not yet implemented", state)
+            is SceneEvent.SignalRecovered -> noOp(fact, "sensor recovered — no action needed", state)
+            is SceneEvent.NightClosed -> noOp(fact, "night lifecycle — not an episode trigger", state)
         }
 
         return Explained(
@@ -120,7 +146,7 @@ internal class SentinelEvaluatorImpl(
 
         // Escalating is acting, so it obeys the same rule as opening: only a rule
         // the director marked as immediate may fire on a transition. A timed rule
-        // for this state escalates when its deadline elapses, in evaluateDwellExceeded
+        // for this state escalates when its deadline elapses, in evaluateDeadline
         // — walking into the bathroom is not yet "spending too long in the bathroom".
         val entryRule = calibration.transitionRuleFor(state)
         if (entryRule != null && entryRule.severity.ordinal > open.severity.ordinal) {
@@ -189,48 +215,61 @@ internal class SentinelEvaluatorImpl(
         )
     }
 
-    // ── Dwell exceeded ─────────────────────────────────────────────────
+    // ── Elapsed deadlines: dwell and come-back ─────────────────────────
 
-    private fun evaluateDwellExceeded(
-        fact: SceneEvent.DwellExceeded,
+    /**
+     * A deadline the director set has elapsed for [state].
+     *
+     * Dwell ("lleva mucho en el baño") and come-back ("no volvió a la cama")
+     * ask opposite questions of the clock, but once the deadline passes they
+     * are judged identically: open an episode if none is running, escalate if
+     * this rule is louder than the one running, otherwise report under the
+     * umbrella. [rule] is the only thing that differs — which family of the
+     * calibration was consulted — so it arrives already looked up.
+     */
+    private fun evaluateDeadline(
+        bed: BedId,
+        state: StateKind,
+        rule: AlertRule?,
+        triggerOn: TriggerOn,
         episodes: EpisodeLedger,
         now: Instant,
     ): EvalResult {
-        val state = fact.state.kind
-        val open = episodes.openForBed(fact.bed)
-
-        if (open == null) {
-            // DwellExceeded → look for DWELL rules only
-            val rule = calibration.dwellRuleFor(state)
-                ?: return EvalResult(episodes = episodes)
-            return openEpisode(fact.bed, rule, now, episodes)
-        }
+        val open = episodes.openForBed(bed)
+            ?: return rule
+                ?.let { openEpisode(bed, it, now, episodes) }
+                ?: EvalResult(episodes = episodes)
 
         // The deadline elapsed, so a timed rule may now escalate — this is the
         // moment the transition path deliberately refused to act on. Without it
-        // a DWELL rule could never raise the severity of an open episode, and
+        // a timed rule could never raise the severity of an open episode, and
         // escalation would be reachable only through immediate rules.
-        val dwellRule = calibration.dwellRuleFor(state)
-        if (dwellRule != null && dwellRule.severity.ordinal > open.severity.ordinal) {
-            return handleEscalation(fact.bed, state, dwellRule, open, episodes, now)
+        if (rule != null && rule.severity.ordinal > open.severity.ordinal) {
+            return handleEscalation(bed, state, rule, open, episodes, now)
         }
 
-        val notifiable = calibration.notifiableStatesFor(open.trigger)
-        val isNotifiable = state in notifiable || calibration.isWatched(state)
-        if (isNotifiable) {
-            val signal = SentinelSignal.UmbrellaEvent(
-                bed = fact.bed,
-                resident = calibration.residentId,
-                at = now,
-                rulesFingerprint = calibration.fingerprint,
-                episode = open.id,
-                state = state,
-                originalSeverity = open.severity,
-            )
-            return EvalResult(episodes = episodes, signals = listOf(signal))
-        }
+        // `rule != null` is what makes come-back reportable at all: isWatched()
+        // deliberately excludes come-back rules (they watch an absence, not the
+        // state), so without this clause a come-back only surfaced under an
+        // umbrella when some unrelated dwell rule happened to watch the same
+        // state. For dwell the clause is a no-op — a dwell rule is always
+        // watched — so this widens nothing but come-back.
+        val isNotifiable = rule != null ||
+            state in calibration.notifiableStatesFor(open.trigger) ||
+            calibration.isWatched(state)
+        if (!isNotifiable) return EvalResult(episodes = episodes)
 
-        return EvalResult(episodes = episodes)
+        val signal = SentinelSignal.UmbrellaEvent(
+            bed = bed,
+            resident = calibration.residentId,
+            at = now,
+            rulesFingerprint = calibration.fingerprint,
+            episode = open.id,
+            state = state,
+            triggerOn = triggerOn,
+            originalSeverity = open.severity,
+        )
+        return EvalResult(episodes = episodes, signals = listOf(signal))
     }
 
     // ── Dwell warning (informational, no episode) ─────────────────────
@@ -262,6 +301,49 @@ internal class SentinelEvaluatorImpl(
             ),
         )
     }
+
+    // ── ComeBack warning (informational, no episode) ─────────────────
+
+    private fun evaluateComeBackWarning(
+        fact: SceneEvent.ComeBackWarning,
+        episodes: EpisodeLedger,
+        now: Instant,
+    ): EvalResult {
+        val elapsed = java.time.Duration.between(fact.since, now)
+        val signal = SentinelSignal.ComeBackPreWarning(
+            bed = fact.bed,
+            resident = calibration.residentId,
+            at = now,
+            rulesFingerprint = calibration.fingerprint,
+            baseline = fact.baseline.kind,
+            elapsed = elapsed,
+            threshold = fact.threshold,
+        )
+        return EvalResult(
+            episodes = episodes,
+            signals = listOf(signal),
+            explanation = listOf(
+                ExplanationStep(
+                    rule = "comeback-warning",
+                    observed = "away from ${fact.baseline.kind} for $elapsed (threshold: ${fact.threshold})",
+                    conclusion = "pre-warning: resident may not return to baseline",
+                ),
+            ),
+        )
+    }
+
+    // ── No-op helper ────────────────────────────────────────────────
+
+    private fun noOp(fact: SceneEvent, reason: String, episodes: EpisodeLedger): EvalResult = EvalResult(
+        episodes = episodes,
+        explanation = listOf(
+            ExplanationStep(
+                rule = "no-op",
+                observed = "${fact::class.simpleName} at ${fact.bed.value}",
+                conclusion = reason,
+            ),
+        ),
+    )
 
     // ── Safe state / Close / Recover ───────────────────────────────────
 
@@ -427,6 +509,8 @@ internal class SentinelEvaluatorImpl(
             rulesFingerprint = calibration.fingerprint,
             episode = open.id,
             state = state,
+            // A transition put him IN this state — that is the ENTRY reading.
+            triggerOn = TriggerOn.ENTRY,
             originalSeverity = originalSeverity,
         )
 
@@ -503,22 +587,6 @@ internal class SentinelEvaluatorImpl(
                 rule = "no-rule",
                 observed = "transition to $state",
                 conclusion = "no matching rule, no action",
-            ),
-        ),
-    )
-
-    private fun suppressedResult(
-        rule: AlertRule,
-        state: StateKind,
-        reason: String,
-        episodes: EpisodeLedger,
-    ): EvalResult = EvalResult(
-        episodes = episodes,
-        explanation = listOf(
-            ExplanationStep(
-                rule = rule.id.value,
-                observed = "transition to $state",
-                conclusion = reason,
             ),
         ),
     )

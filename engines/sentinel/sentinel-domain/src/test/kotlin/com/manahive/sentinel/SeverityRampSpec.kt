@@ -39,18 +39,14 @@ class SeverityRampSpec : BehaviorSpec({
         resident(resident)
 
         // Se para → aviso.
-        rule("r-standing-entry") {
-            trigger = StateKind.STANDING
-            triggerOn = TriggerOn.ENTRY
+        rule("r-standing-entry", StateKind.STANDING, TriggerOn.ENTRY) {
             severity = Severity.WARNING
             closureCondition = ClosureCondition.SAFE_ONLY
             umbrellaEvents(StateKind.IN_ROOM)
         }
 
         // Sigue parado a los 10 minutos → crítico.
-        rule("r-standing-dwell") {
-            trigger = StateKind.STANDING
-            triggerOn = TriggerOn.DWELL
+        rule("r-standing-dwell", StateKind.STANDING, TriggerOn.DWELL) {
             severity = Severity.CRITICAL
             closureCondition = ClosureCondition.STAFF_AND_SAFE
             umbrellaEvents(StateKind.IN_BATHROOM)
@@ -121,15 +117,11 @@ class SeverityRampSpec : BehaviorSpec({
     Given("un estado vigilado SÓLO por plazo, con un episodio abierto de menor severidad") {
         val cal = sentinelCalibration {
             resident(resident)
-            rule("r-sitting-entry") {
-                trigger = StateKind.SITTING_IN_BED
-                triggerOn = TriggerOn.ENTRY
+            rule("r-sitting-entry", StateKind.SITTING_IN_BED, TriggerOn.ENTRY) {
                 severity = Severity.WARNING
                 closureCondition = ClosureCondition.SAFE_ONLY
             }
-            rule("r-bathroom-dwell") {
-                trigger = StateKind.IN_BATHROOM
-                triggerOn = TriggerOn.DWELL
+            rule("r-bathroom-dwell", StateKind.IN_BATHROOM, TriggerOn.DWELL) {
                 severity = Severity.CRITICAL
                 closureCondition = ClosureCondition.STAFF_AND_SAFE
             }

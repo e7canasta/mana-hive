@@ -104,15 +104,13 @@ fun main(args: Array<String>) {
     // Sentinel calibration
     val sentinelCal = sentinelCalibration {
         resident("resident-default")
-        rule("r-sitting") {
-            trigger = StateKind.SITTING_IN_BED
+        rule("r-sitting", StateKind.SITTING_IN_BED, TriggerOn.DWELL) {
             severity = Severity.WARNING
             closureCondition = ClosureCondition.STAFF_OR_SAFE
             reversible = true
             requiresConfirmation = false
         }
-        rule("r-dwell-bathroom") {
-            trigger = StateKind.IN_BATHROOM
+        rule("r-dwell-bathroom", StateKind.IN_BATHROOM, TriggerOn.DWELL) {
             severity = Severity.WARNING
             reversible = true
             requiresConfirmation = false

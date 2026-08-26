@@ -226,6 +226,8 @@ public class ComeBackThresholdsBuilder {
     public val LYING: ComeBackEntry get() = ComeBackEntry(StateKind.LYING)
     public val STANDING: ComeBackEntry get() = ComeBackEntry(StateKind.STANDING)
 
+    public fun state(baseline: StateKind): ComeBackEntry = ComeBackEntry(baseline)
+
     public fun build(): Map<StateKind, DwellThreshold> = thresholds.toMap()
 }
 

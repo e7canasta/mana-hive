@@ -3,6 +3,7 @@ package com.manahive.harbor.batch
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.manahive.contracts.sentinel.SentinelSignal
 import com.manahive.contracts.policy.Severity
+import com.manahive.contracts.policy.TriggerOn
 import com.manahive.contracts.scene.StateKind
 import com.manahive.contracts.sentinel.ClosureCause
 import com.manahive.contracts.sentinel.SuppressionCause
@@ -121,6 +122,11 @@ object SignalParser {
             rulesFingerprint = json.get("rulesFingerprint")?.asText() ?: "",
             episode = EpisodeId(json.get("episode").asText()),
             state = StateKind.valueOf(json.get("state").asText()),
+            // Ausente en lineas escritas antes de que UmbrellaEvent distinguiera
+            // familias: esas sólo podían venir de una transición o un dwell, y en
+            // ambas el residente ESTA en el estado. DWELL preserva esa lectura.
+            triggerOn = json.get("triggerOn")?.asText()?.let { TriggerOn.valueOf(it) }
+                ?: TriggerOn.DWELL,
             originalSeverity = Severity.valueOf(json.get("originalSeverity").asText()),
         )
     }

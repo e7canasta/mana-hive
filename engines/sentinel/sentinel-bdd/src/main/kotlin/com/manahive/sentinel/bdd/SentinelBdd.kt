@@ -1,5 +1,7 @@
 package com.manahive.sentinel.bdd
 
+import com.manahive.blueprint.BlueprintOutcome
+
 import com.manahive.contracts.policy.Severity
 import com.manahive.contracts.scene.PersonState
 import com.manahive.contracts.scene.SceneEvent
@@ -262,6 +264,13 @@ class SentinelScenarioBuilder(private val ctx: SentinelContext) {
                 ScenarioCheck(desc, passed = true)
             } catch (e: AssertionError) {
                 ScenarioCheck(desc, passed = false, error = e.message)
+            } catch (e: IllegalStateException) {
+                // Las aserciones de arriba usan check(), que lanza
+                // IllegalStateException, no AssertionError. Sin esta rama una
+                // sola aserción roja aborta el blueprint entero con un stack
+                // trace en vez de reportarse como ❌ — que es exactamente como
+                // este blueprint estuvo roto sin que se viera qué falló.
+                ScenarioCheck(desc, passed = false, error = e.message)
             }
         }
 
@@ -300,6 +309,7 @@ data class SentinelScenarioResult(
             if (check.error != null) println("     ${check.error}")
         }
         println()
+        BlueprintOutcome.record(name, checks.map { it.description to it.passed })
     }
 }
 

@@ -1,9 +1,11 @@
 package com.manahive.serialization
 
 import com.manahive.contracts.policy.Severity
+import com.manahive.contracts.policy.TriggerOn
 import com.manahive.contracts.scene.StateKind
 import com.manahive.contracts.sentinel.ClosureCause
 import com.manahive.contracts.sentinel.SentinelSignal
+import com.manahive.contracts.sentinel.stateLabel
 import com.manahive.contracts.sentinel.SignalType
 import com.manahive.contracts.sentinel.SuppressionCause
 import com.manahive.contracts.sentinel.toMap
@@ -97,6 +99,8 @@ object SentinelSignalSerializer {
                     rulesFingerprint = rulesFingerprint,
                     episode = episode,
                     state = state,
+                    triggerOn = node.get("triggerOn")?.asText()?.let { TriggerOn.valueOf(it) }
+                        ?: TriggerOn.DWELL,
                     originalSeverity = originalSeverity,
                 )
             }
@@ -133,6 +137,21 @@ object SentinelSignalSerializer {
                     threshold = threshold,
                 )
             }
+            SignalType.COME_BACK_PRE_WARNING -> {
+                val baseline = StateKind.valueOf(node.get("baseline").asText())
+                val elapsed = Duration.parse(node.get("elapsed").asText())
+                val threshold = Duration.parse(node.get("threshold").asText())
+
+                SentinelSignal.ComeBackPreWarning(
+                    bed = bed,
+                    resident = resident,
+                    at = at,
+                    rulesFingerprint = rulesFingerprint,
+                    baseline = baseline,
+                    elapsed = elapsed,
+                    threshold = threshold,
+                )
+            }
         }
     }
 
@@ -150,11 +169,13 @@ object SentinelSignalSerializer {
         is SentinelSignal.AutoRecovery ->
             "reversible=${signal.reversible} requiresConfirmation=${signal.requiresConfirmation}"
         is SentinelSignal.UmbrellaEvent ->
-            "state=${signal.state} severity=${signal.originalSeverity}"
+            "${signal.stateLabel()} severity=${signal.originalSeverity}"
         is SentinelSignal.SuppressedWithRecord ->
             "rule=${signal.rule.value} cause=${signal.cause}"
         is SentinelSignal.DwellPreWarning ->
             "state=${signal.state} elapsed=${signal.elapsed} threshold=${signal.threshold}"
+        is SentinelSignal.ComeBackPreWarning ->
+            "awayFrom=${signal.baseline} elapsed=${signal.elapsed} threshold=${signal.threshold}"
     }
 
     private fun formatDuration(d: Duration): String {

@@ -55,10 +55,12 @@ public enum class Severity { INFO, WARNING, CRITICAL }
  * How a rule is triggered. Determines which SceneEvent opens the episode:
  * - ENTRY: opens on TransitionDetected (for states that need no wait, e.g. BED_EDGE in CRITICAL)
  * - DWELL: opens on DwellExceeded (for states with a time threshold)
+ * - COME_BACK: opens on ComeBackExceeded (time away from baseline, e.g. not returning to bed)
  */
 public enum class TriggerOn {
     ENTRY,
     DWELL,
+    COME_BACK,
 }
 
 /**

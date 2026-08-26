@@ -31,4 +31,20 @@ public sealed interface PolicyOverride {
         public val state: StateKind,
         public val value: DwellThreshold,
     ) : PolicyOverride
+
+    /**
+     * Override a come-back threshold for a specific baseline state.
+     *
+     * [severity] and [closureCondition] are nullable on purpose: null means the
+     * director did not speak about them, and the catalog's own values stand.
+     * Collapsing null into a default here would silently downgrade a CRITICAL
+     * catalog rule to WARNING the moment someone retimed it.
+     */
+    public data class ComeBackOverride(
+        override val ruleId: RuleId,
+        public val baseline: StateKind,
+        public val value: DwellThreshold,
+        public val severity: Severity? = null,
+        public val closureCondition: ClosureCondition? = null,
+    ) : PolicyOverride
 }

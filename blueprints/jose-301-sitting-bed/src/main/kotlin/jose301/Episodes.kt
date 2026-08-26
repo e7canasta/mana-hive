@@ -34,9 +34,15 @@ val e3: Episode = jose.bathroomJourney(
     backInBed = "5h03m",
 )
 
+// e4 y e6 llevan `2s` de separación entre acostado y sentado a propósito.
+// Antes las dos observaciones caían en el MISMO instante: la hysteresis de
+// LYING → SITTING_IN_BED (BED_TRANSITION, 1500 ms en TransitionTable) suprimía
+// la transición y el episodio no ocurría — dos de las seis noches de José eran
+// silenciosamente inertes. Los 2s la superan; si BED_TRANSITION sube de 2000 ms
+// vuelven a serlo, y el blueprint pasa a esperar 1 transición en vez de 3.
 val e4: Episode = jose.sittingEpisode(
     inBed = "5h50m",
-    sitting = "5h50m",
+    sitting = "5h50m2s",
     backInBed = "5h54m",
 )
 
@@ -50,6 +56,6 @@ val e5: Episode = jose.bathroomJourney(
 
 val e6: Episode = jose.sittingEpisode(
     inBed = "8h35m",
-    sitting = "8h35m",
+    sitting = "8h35m2s",
     backInBed = "8h38m",
 )

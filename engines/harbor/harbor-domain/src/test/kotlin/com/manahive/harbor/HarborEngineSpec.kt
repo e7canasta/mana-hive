@@ -214,6 +214,7 @@ class HarborEngineSpec : BehaviorSpec({
             rulesFingerprint = "test-fingerprint",
             episode = episode,
             state = StateKind.STANDING,
+            triggerOn = com.manahive.contracts.policy.TriggerOn.ENTRY,
             originalSeverity = Severity.WARNING,
         )
 

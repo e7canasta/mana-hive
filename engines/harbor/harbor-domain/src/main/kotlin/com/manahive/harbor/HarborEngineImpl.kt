@@ -39,6 +39,7 @@ internal class HarborEngineImpl(
             is SentinelSignal.UmbrellaEvent -> handleUmbrellaEvent(signal, state)
             is SentinelSignal.SuppressedWithRecord -> handleSuppressed(signal, state)
             is SentinelSignal.DwellPreWarning -> handleDwellPreWarning(signal, state)
+            is SentinelSignal.ComeBackPreWarning -> handleComeBackPreWarning(signal, state)
         }
 
         return Explained(
@@ -223,6 +224,24 @@ internal class HarborEngineImpl(
         explanation = listOf(ExplanationStep(
             rule = "dwell-pre-warning",
             observed = "dwell ${signal.state} for ${signal.elapsed} (threshold: ${signal.threshold})",
+            conclusion = "pre-warning: informational, no notice created",
+        )),
+    )
+
+    /**
+     * The mirror of [handleDwellPreWarning], and it must read as the mirror:
+     * this one is about a resident who is NOT in the state named. Saying
+     * "dwell LYING" about someone who has not come back to bed is not a
+     * wording nit — it is the opposite of what happened.
+     */
+    private fun handleComeBackPreWarning(
+        signal: SentinelSignal.ComeBackPreWarning,
+        state: HarborState,
+    ): EvalResult = EvalResult(
+        state = state,
+        explanation = listOf(ExplanationStep(
+            rule = "comeback-pre-warning",
+            observed = "away from ${signal.baseline} for ${signal.elapsed} (threshold: ${signal.threshold})",
             conclusion = "pre-warning: informational, no notice created",
         )),
     )
