@@ -99,7 +99,8 @@ internal class SentinelEvaluatorImpl(
         episodes: EpisodeLedger,
         now: Instant,
     ): EvalResult {
-        val rule = calibration.ruleFor(state)
+        // TransitionDetected → look for ENTRY rules only
+        val rule = calibration.transitionRuleFor(state)
             ?: return noRuleResult(state, episodes)
 
         // Sentinel ALWAYS opens episodes — is notification budget Harbor's concern
@@ -117,12 +118,23 @@ internal class SentinelEvaluatorImpl(
             return handleSafeState(fact.bed, open, episodes, now)
         }
 
-        val newRule = calibration.ruleFor(state)
-        if (newRule != null && newRule.severity.ordinal > open.severity.ordinal) {
-            return handleEscalation(fact.bed, state, newRule, open, episodes, now)
+        // Escalating is acting, so it obeys the same rule as opening: only a rule
+        // the director marked as immediate may fire on a transition. A timed rule
+        // for this state escalates when its deadline elapses, in evaluateDwellExceeded
+        // — walking into the bathroom is not yet "spending too long in the bathroom".
+        val entryRule = calibration.transitionRuleFor(state)
+        if (entryRule != null && entryRule.severity.ordinal > open.severity.ordinal) {
+            return handleEscalation(fact.bed, state, entryRule, open, episodes, now)
         }
 
-        return handleUmbrellaEvent(fact.bed, state, newRule, open, episodes, now)
+        // Notifiability is a different question from escalation: a state with a
+        // timed rule is still worth reporting under the umbrella, it just is not
+        // yet grounds to raise the severity.
+        // For reporting we take the entry rule if there is one, else any rule
+        // watching the state — the umbrella event only needs to know the state is
+        // watched and at what severity it would have been reported.
+        val reportedRule = entryRule ?: calibration.rulesForState(state).firstOrNull()
+        return handleUmbrellaEvent(fact.bed, state, reportedRule, open, episodes, now)
     }
 
     // ── Staff presence ─────────────────────────────────────────────────
@@ -188,13 +200,23 @@ internal class SentinelEvaluatorImpl(
         val open = episodes.openForBed(fact.bed)
 
         if (open == null) {
-            val rule = calibration.ruleFor(state)
+            // DwellExceeded → look for DWELL rules only
+            val rule = calibration.dwellRuleFor(state)
                 ?: return EvalResult(episodes = episodes)
             return openEpisode(fact.bed, rule, now, episodes)
         }
 
+        // The deadline elapsed, so a timed rule may now escalate — this is the
+        // moment the transition path deliberately refused to act on. Without it
+        // a DWELL rule could never raise the severity of an open episode, and
+        // escalation would be reachable only through immediate rules.
+        val dwellRule = calibration.dwellRuleFor(state)
+        if (dwellRule != null && dwellRule.severity.ordinal > open.severity.ordinal) {
+            return handleEscalation(fact.bed, state, dwellRule, open, episodes, now)
+        }
+
         val notifiable = calibration.notifiableStatesFor(open.trigger)
-        val isNotifiable = state in notifiable || calibration.ruleFor(state) != null
+        val isNotifiable = state in notifiable || calibration.isWatched(state)
         if (isNotifiable) {
             val signal = SentinelSignal.UmbrellaEvent(
                 bed = fact.bed,

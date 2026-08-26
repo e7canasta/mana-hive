@@ -34,5 +34,7 @@ object SentinelSignalWriter {
             "UMBRELLA_EVENT state=${signal.state} severity=${signal.originalSeverity}"
         is SentinelSignal.SuppressedWithRecord ->
             "SUPPRESSED cause=${signal.cause}"
+        is SentinelSignal.DwellPreWarning ->
+            "DWELL_PRE_WARNING state=${signal.state} elapsed=${signal.elapsed} threshold=${signal.threshold}"
     }
 }

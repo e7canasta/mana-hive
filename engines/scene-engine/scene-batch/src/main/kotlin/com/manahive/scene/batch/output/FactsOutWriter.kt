@@ -71,6 +71,8 @@ class FactsOutWriter(private val outputFile: File) {
             "SIGNAL_LOST monitor=${fact.monitor.value}"
         is SceneEvent.StaffPresenceDetected ->
             "STAFF_PRESENCE staff=${fact.staff?.value}"
+        is SceneEvent.StaffLeftDetected ->
+            "STAFF_LEFT"
 
         // ── Lifecycle Facts ────────────────────────────────
         is SceneEvent.NightOpened ->

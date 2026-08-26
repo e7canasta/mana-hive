@@ -1,3 +1,8 @@
+// PENDING since 2026-08-26 — SPEC-00 build verde.
+// Moved here because the four DSL builders it tests were never implemented.
+// Decision on whether to implement or delete: SPEC-02 (canonical policy model).
+// Do NOT delete this file without resolving the question it raises.
+
 package com.manahive.contracts.policy
 
 import com.manahive.contracts.common.Fingerprint

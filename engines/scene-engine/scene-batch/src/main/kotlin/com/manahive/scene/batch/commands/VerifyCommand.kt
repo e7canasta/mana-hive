@@ -234,6 +234,10 @@ class VerifyCommand {
                 fact is SceneEvent.StaffPresenceDetected
             }
 
+            "STAFF_LEFT" -> {
+                fact is SceneEvent.StaffLeftDetected
+            }
+
             "NIGHT_OPENED" -> {
                 fact is SceneEvent.NightOpened
             }
@@ -272,6 +276,8 @@ class VerifyCommand {
             "SCENE_DWELL_EXCEEDED ${fact.field}"
         is SceneEvent.StaffPresenceDetected ->
             "STAFF_PRESENCE"
+        is SceneEvent.StaffLeftDetected ->
+            "STAFF_LEFT"
         is SceneEvent.NightOpened ->
             "NIGHT_OPENED"
         is SceneEvent.NightClosed ->
@@ -347,6 +353,7 @@ class VerifyCommand {
                 from = parts.getOrNull(1),
             )
             "STAFF_PRESENCE" -> ExpectedFact(type = "STAFF_PRESENCE")
+            "STAFF_LEFT" -> ExpectedFact(type = "STAFF_LEFT")
             "NIGHT_OPENED" -> ExpectedFact(type = "NIGHT_OPENED")
             "NIGHT_CLOSED" -> ExpectedFact(type = "NIGHT_CLOSED")
             "DISCARD" -> ExpectedFact(type = "DISCARD")

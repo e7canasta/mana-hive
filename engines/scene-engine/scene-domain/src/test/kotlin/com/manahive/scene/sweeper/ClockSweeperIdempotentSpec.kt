@@ -45,8 +45,8 @@ class ClockSweeperIdempotentSpec : BehaviorSpec({
                         total shouldBe 1
                     }
 
-                    Then("marks tiene 1 sola marca") {
-                        result2.value.marks.emitted.filter { !it.warning } shouldHaveSize 1
+                    Then("marks tiene 1 sola marca DWELL") {
+                        result2.value.marks.emitted.filter { !it.warning && it.kind == DwellMarkKind.DWELL } shouldHaveSize 1
                     }
                 }
             }

@@ -7,6 +7,49 @@
 
 ---
 
+## Estado
+
+| Spec | Estado |
+|---|---|
+| `SPEC-00` Build verde | ✅ **cerrada** — `./gradlew check` pasa |
+| `SPEC-01` Episodio prematuro | ✅ **cerrada** — el episodio se abre al vencer el plazo |
+| `SPEC-02` Política canónica | abierta |
+| `SPEC-03` Los cuatro niveles | abierta |
+| `SPEC-04` Adapters a producción | abierta |
+| `SPEC-05` Cadena ComeBack | abierta |
+| `SPEC-06` Catálogo en el hub + API | abierta |
+| `SPEC-07` Lenguaje y documentación | parcial — punto 1 (README) cerrado con `SPEC-00` |
+
+Lo verificado al cerrar 00 y 01, corriendo el código:
+
+- `./gradlew check` verde sin `--continue` y sin excluir módulos, en una shell sin `LANG`.
+- José: 22 checks en verde. El episodio ahora se abre por `DwellExceeded`, no por `TransitionDetected`.
+- Susan: 18 checks, incluidos **los dos escenarios de dwell que estaban comentados**. La causa real de aquel bloqueo no era el timing del barrido sino una **colisión de claves de marca** entre `checkSignalLost` y `checkDwell`, que usaban la misma `DwellMarkKey`. Se resolvió con un discriminador `DwellMarkKind`. Buen hallazgo: el `TODO` culpaba al síntoma.
+
+Tres defectos encontrados **durante la revisión de la implementación**, ya corregidos:
+
+1. **`TriggerOn.ENTRY` era inalcanzable.** `buildAlertRule` traía `triggerOn: TriggerOn = TriggerOn.DWELL` y ningún llamador lo sobreescribía, así que `transitionRules` quedaba siempre vacío y la rama de transición de Sentinel estaba muerta. El sistema pasó de "todo dispara al entrar" a "nada puede disparar al entrar" — una sobrecorrección. Se agregó `alertOnEntry()` al DSL, se quitó el default y se cubrió con tests.
+2. **`alertAfter` sin `warningAfter` reventaba el resolver.** En el catálogo, `warning` caía por defecto en `alertAfter`, violando el invariante `warning < exceeded` de `DwellThreshold`. El camino de override sí tenía el fallback a la mitad; el del catálogo no. Un director que escribe sólo "avísenme a los 15 minutos" — la forma natural y documentada — hacía crashear la resolución.
+3. **`triggerOn` no sobrevivía la serialización.** Un catálogo con una regla `ENTRY` escrito a TOML volvía como `DWELL`: el residente crítico dejaba de ser avisado al pisar el borde de la cama, en silencio. Se cableó en `CatalogSerializer` y `CatalogCodec`, con aserción en el roundtrip.
+
+**La deuda de `SPEC-01` quedó cerrada, no diferida.** Al mirarla de cerca no era fragilidad futura: era **el mismo defecto sobreviviendo en el camino del paraguas**. `evaluateUnderUmbrella` escalaba con `ruleFor(state)`, la unión — así que con un episodio ya abierto, entrar a un estado con regla temporizada de mayor severidad escalaba **en la transición**, ignorando el plazo. El arreglo de `SPEC-01` había entrado en `evaluateNewEpisode` y no en el camino hermano.
+
+Y había un hueco simétrico: con un episodio abierto, `evaluateDwellExceeded` sólo emitía `UmbrellaEvent`. Nunca escalaba. Combinado con lo anterior, **una regla temporizada no podía escalar nada, jamás**.
+
+Tres cambios:
+
+1. **Escalar obedece el mismo criterio que abrir.** En la transición sólo actúa una regla `ENTRY`; la temporizada espera su plazo.
+2. **Vencido el plazo, la regla temporizada puede escalar.** Es el momento que la transición se negó deliberadamente a aprovechar.
+3. **`rulesByTrigger` → `rulesByState: Map<StateKind, List<AlertRule>>`.** Era un `Map<StateKind, AlertRule>` construido con `associateBy`: si un estado tenía regla de entrada y de plazo, una se perdía en silencio.
+
+El punto 3 salió de un fixture de test que declaraba `ENTRY` y `DWELL` sobre `STANDING`. La primera reacción fue prohibir la combinación con un `require`. Es la decisión equivocada: **la rampa de severidad es clínicamente legítima** — *"avisen cuando se pare; si sigue parado a los diez minutos, es crítico"* — y el motor no debe prohibir lo que sólo es todavía inexpresable. La restricción vive en el DSL del director, donde está el vocabulario, no en la estructura de datos del motor.
+
+**Limitación registrada:** el director todavía no puede pedir esa rampa. `ResidentStateRule` tiene un solo campo `severity`, y `alertOnEntry()` y `alertAfter()` son excluyentes en `DagDsl`. El motor la sostiene; la vocabulario no la expresa. Cuando aparezca la necesidad clínica, el cambio es en el DSL, no en Sentinel.
+
+`SentinelCalibration.ruleFor` se eliminó: al terminar no le quedaban llamadores.
+
+---
+
 ## 0. Cómo leer esto
 
 Este documento no repite lo que dice el código. Dice **qué está roto, por qué importa clínicamente, y en qué orden hay que tocarlo**. Cada punto tiene una spec hermana (`SPEC-NN-*.md`) que un agente de código puede tomar y ejecutar de forma aislada.
@@ -83,6 +126,8 @@ Esto es exactamente la queja de la enfermera de guardia que motiva el producto: 
 | Estado | `PolicyService` devuelve layers vacías y loguea `not production ready` | resuelve de verdad |
 
 Son dos respuestas incompatibles a la misma pregunta. Peor: **`WatchLevel` tiene tres valores y ninguno es el vocabulario del director**, que son cuatro y están documentados en `NIVELES-MONITOREO.md` y `DECISION-TREE.md`. El término `ENHANCED` no lo pronuncia nadie en la residencia.
+
+Y la fragmentación ya llegó a la superficie pública: `hub-service/api/` expone **cuatro controladores de política** — `/api/policies`, `/api/policies/raw`, `/api/semantic-buckets`, `/api/catalog` — con **tres vocabularios distintos** para el mismo dominio, y **todos de sólo lectura**: no hay un solo `@PostMapping`, `@PutMapping` ni `@DeleteMapping` en ninguno. El director no puede cambiar nada por API.
 
 → **`SPEC-02`** (decisión) y **`SPEC-03`** (los cuatro niveles)
 

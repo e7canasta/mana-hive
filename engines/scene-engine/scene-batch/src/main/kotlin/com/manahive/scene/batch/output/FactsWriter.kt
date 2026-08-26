@@ -130,6 +130,11 @@ class FactsWriter(private val outputFile: File) {
                 base["night"] = fact.night.value
                 base["staff"] = fact.staff?.value
             }
+            is SceneEvent.StaffLeftDetected -> {
+                base["type"] = "StaffLeftDetected"
+                base["bed"] = fact.bed.value
+                base["night"] = fact.night.value
+            }
 
             // ── Lifecycle Facts ────────────────────────────
             is SceneEvent.NightOpened -> {

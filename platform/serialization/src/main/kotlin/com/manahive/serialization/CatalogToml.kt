@@ -34,6 +34,12 @@ data class CatalogToml(
 data class StateRuleToml(
     val warningAfter: String? = null,
     val alertAfter: String? = null,
+    /**
+     * "ENTRY" | "DWELL". Absent means DWELL — the safe reading, since a rule that
+     * does not say it fires on entry must not fire on entry. Never infer it from
+     * the presence of alertAfter: that inference is what SPEC-01 removed.
+     */
+    val triggerOn: String? = null,
     val severity: String? = null,
     val closure: String? = null,
 )

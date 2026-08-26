@@ -2,6 +2,7 @@ package com.manahive.sentinel
 
 import com.manahive.contracts.policy.ClosureCondition
 import com.manahive.contracts.policy.Severity
+import com.manahive.contracts.policy.TriggerOn
 import com.manahive.contracts.scene.PersonState
 import com.manahive.contracts.scene.SceneEvent
 import com.manahive.contracts.scene.StateKind
@@ -41,6 +42,7 @@ class SentinelEvaluatorSpec : BehaviorSpec({
 
         rule("r-sitting") {
             trigger = StateKind.SITTING_IN_BED
+            triggerOn = TriggerOn.ENTRY
             severity = Severity.WARNING
             closureCondition = ClosureCondition.SAFE_ONLY
             reversible = true
@@ -48,6 +50,7 @@ class SentinelEvaluatorSpec : BehaviorSpec({
 
         rule("r-bed-edge") {
             trigger = StateKind.BED_EDGE
+            triggerOn = TriggerOn.ENTRY
             severity = Severity.CRITICAL
             closureCondition = ClosureCondition.STAFF_AND_SAFE
             reversible = false
@@ -57,14 +60,24 @@ class SentinelEvaluatorSpec : BehaviorSpec({
 
         rule("r-standing") {
             trigger = StateKind.STANDING
+            triggerOn = TriggerOn.ENTRY
             severity = Severity.WARNING
             closureCondition = ClosureCondition.SAFE_ONLY
             reversible = true
             umbrellaEvents(StateKind.SITTING_IN_BED)
         }
 
+        rule("r-standing-dwell") {
+            trigger = StateKind.STANDING
+            triggerOn = TriggerOn.DWELL
+            severity = Severity.WARNING
+            closureCondition = ClosureCondition.SAFE_ONLY
+            reversible = true
+        }
+
         rule("r-staff-or-safe") {
             trigger = StateKind.IN_BATHROOM
+            triggerOn = TriggerOn.ENTRY
             severity = Severity.WARNING
             closureCondition = ClosureCondition.STAFF_OR_SAFE
             reversible = true

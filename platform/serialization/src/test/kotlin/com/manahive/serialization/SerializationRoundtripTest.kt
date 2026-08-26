@@ -11,6 +11,7 @@ import com.manahive.contracts.scene.StateKind
 import com.manahive.contracts.policy.DagCatalog
 import com.manahive.contracts.policy.CatalogVersion
 import com.manahive.contracts.policy.ResidentStateRule
+import com.manahive.contracts.policy.TriggerOn
 import com.manahive.contracts.policy.TransitionKey
 import com.manahive.contracts.policy.DagTransitionRule
 import com.manahive.contracts.policy.RoomStateRule
@@ -210,6 +211,17 @@ class SerializationRoundtripTest : FunSpec({
                     severity = Severity.WARNING,
                     closureCondition = ClosureCondition.SAFE_ONLY,
                 ),
+                // SPEC-01: una regla de entrada inmediata. Si el roundtrip la
+                // devuelve como DWELL, el residente crítico deja de ser avisado
+                // al pisar el borde de la cama — y nada falla ruidosamente.
+                StateKind.BED_EDGE to ResidentStateRule(
+                    state = StateKind.BED_EDGE,
+                    warningAfter = null,
+                    alertAfter = null,
+                    triggerOn = TriggerOn.ENTRY,
+                    severity = Severity.CRITICAL,
+                    closureCondition = ClosureCondition.STAFF_AND_SAFE,
+                ),
             ),
             transitions = mapOf(
                 TransitionKey(StateKind.LYING, StateKind.STANDING) to DagTransitionRule(
@@ -234,8 +246,10 @@ class SerializationRoundtripTest : FunSpec({
         result.isSuccess shouldBe true
         val restored = result.getOrNull()!!
         restored.version.value shouldBe "2.1.0"
-        restored.residentStates.size shouldBe 2
+        restored.residentStates.size shouldBe 3
         restored.residentStates[StateKind.SITTING_IN_BED]?.alertAfter shouldBe Duration.ofMinutes(45)
+        restored.residentStates[StateKind.SITTING_IN_BED]?.triggerOn shouldBe TriggerOn.DWELL
+        restored.residentStates[StateKind.BED_EDGE]?.triggerOn shouldBe TriggerOn.ENTRY
         restored.transitions.size shouldBe 1
         restored.transitions[TransitionKey(StateKind.LYING, StateKind.STANDING)]?.hysteresis shouldBe Duration.ofMillis(2000)
     }

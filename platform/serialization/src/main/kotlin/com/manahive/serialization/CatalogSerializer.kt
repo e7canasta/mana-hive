@@ -31,6 +31,7 @@ object CatalogSerializer {
                 state.name.lowercase() to StateRuleToml(
                     warningAfter = rule.warningAfter?.toString(),
                     alertAfter = rule.alertAfter?.toString(),
+                    triggerOn = rule.triggerOn.name,
                     severity = rule.severity.name,
                     closure = rule.closureCondition.name,
                 )
@@ -66,6 +67,7 @@ object CatalogSerializer {
                     state = state,
                     warningAfter = rule.warningAfter?.let { Duration.parse(it) },
                     alertAfter = rule.alertAfter?.let { Duration.parse(it) },
+                    triggerOn = rule.triggerOn?.let { TriggerOn.valueOf(it) } ?: TriggerOn.DWELL,
                     severity = rule.severity?.let { Severity.valueOf(it) } ?: Severity.INFO,
                     closureCondition = rule.closure?.let { ClosureCondition.valueOf(it) } ?: ClosureCondition.SAFE_ONLY,
                 )

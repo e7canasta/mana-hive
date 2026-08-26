@@ -25,6 +25,7 @@ object CatalogCodec : FileCodec<DagCatalog> {
                 state.name.lowercase() to StateRuleToml(
                     warningAfter = rule.warningAfter?.toString(),
                     alertAfter = rule.alertAfter?.toString(),
+                    triggerOn = rule.triggerOn.name,
                     severity = rule.severity.name,
                     closure = rule.closureCondition.name,
                 )
@@ -59,6 +60,7 @@ object CatalogCodec : FileCodec<DagCatalog> {
                 state = state,
                 warningAfter = rule.warningAfter?.let { Duration.parse(it) },
                 alertAfter = rule.alertAfter?.let { Duration.parse(it) },
+                triggerOn = rule.triggerOn?.let { try { TriggerOn.valueOf(it) } catch (_: Exception) { null } } ?: TriggerOn.DWELL,
                 severity = rule.severity?.let { try { Severity.valueOf(it) } catch (_: Exception) { null } } ?: Severity.INFO,
                 closureCondition = rule.closure?.let { try { ClosureCondition.valueOf(it) } catch (_: Exception) { null } } ?: ClosureCondition.SAFE_ONLY,
             )

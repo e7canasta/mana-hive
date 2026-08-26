@@ -4,7 +4,9 @@ import com.manahive.contracts.policy.Severity
 import com.manahive.contracts.scene.StateKind
 import com.manahive.contracts.sentinel.ClosureCause
 import com.manahive.contracts.sentinel.SentinelSignal
+import com.manahive.contracts.sentinel.SignalType
 import com.manahive.contracts.sentinel.SuppressionCause
+import com.manahive.contracts.sentinel.toMap
 import com.manahive.kernel.*
 import java.time.Duration
 import java.time.Instant
@@ -21,68 +23,20 @@ import java.time.Instant
  */
 object SentinelSignalCodec : Codec<SentinelSignal> {
 
-    override fun encode(obj: SentinelSignal): String {
-        val map = buildMap<String, Any> {
-            put("type", obj::class.simpleName ?: "Unknown")
-            put("at", obj.at.toString())
-            put("bed", obj.bed.value)
-            put("rulesFingerprint", obj.rulesFingerprint)
+    private val mapper = com.fasterxml.jackson.module.kotlin.jacksonObjectMapper()
 
-            when (obj) {
-                is SentinelSignal.EpisodeOpened -> {
-                    put("resident", obj.resident?.value ?: "unknown")
-                    put("episode", obj.episode.value)
-                    put("rule", obj.rule.value)
-                    put("trigger", obj.trigger.name)
-                    put("severity", obj.severity.name)
-                    put("reversible", obj.reversible)
-                    put("requiresNvr", obj.requiresNvr)
-                    obj.confirmationWindow?.let { put("confirmationWindow", it.toString()) }
-                }
-                is SentinelSignal.EpisodeClosed -> {
-                    put("resident", obj.resident?.value ?: "unknown")
-                    put("episode", obj.episode.value)
-                    put("cause", obj.cause.name)
-                    obj.gapDuration?.let { put("gapDuration", it.toString()) }
-                }
-                is SentinelSignal.AutoRecovery -> {
-                    put("resident", obj.resident?.value ?: "unknown")
-                    put("episode", obj.episode.value)
-                    put("reversible", obj.reversible)
-                    put("requiresConfirmation", obj.requiresConfirmation)
-                }
-                is SentinelSignal.UmbrellaEvent -> {
-                    put("resident", obj.resident?.value ?: "unknown")
-                    put("episode", obj.episode.value)
-                    put("state", obj.state.name)
-                    put("originalSeverity", obj.originalSeverity.name)
-                }
-                is SentinelSignal.SuppressedWithRecord -> {
-                    put("resident", obj.resident?.value ?: "unknown")
-                    put("rule", obj.rule.value)
-                    put("cause", obj.cause.name)
-                    put("evidenceStream", obj.evidence.stream)
-                    put("evidenceSeq", obj.evidence.seq)
-                }
-                is SentinelSignal.DwellPreWarning -> {
-                    put("resident", obj.resident?.value ?: "unknown")
-                    put("state", obj.state.name)
-                    put("elapsed", obj.elapsed.toString())
-                    put("threshold", obj.threshold.toString())
-                }
-            }
-        }
-
-        return com.fasterxml.jackson.module.kotlin.jacksonObjectMapper()
-            .writerWithDefaultPrettyPrinter()
-            .writeValueAsString(map)
-    }
+    override fun encode(obj: SentinelSignal): String =
+        mapper.writerWithDefaultPrettyPrinter().writeValueAsString(obj.toMap())
 
     override fun decode(text: String): SerializationResult<SentinelSignal> = serialization {
-        val mapper = com.fasterxml.jackson.module.kotlin.jacksonObjectMapper()
         val node = mapper.readTree(text)
-        val type = node.get("type")?.asText()
+        val typeRaw = node.get("type")?.asText()
             ?: throw SerializationException(SerializationError.MissingField("type", "SentinelSignal"))
+        val type = try {
+            SignalType.valueOf(typeRaw)
+        } catch (_: IllegalArgumentException) {
+            throw SerializationException(SerializationError.InvalidState(typeRaw, SignalType.entries.map { it.name }.toSet()))
+        }
         val at = Instant.parse(node.get("at").asText())
         val bed = BedId(node.get("bed").asText())
         val rulesFingerprint = node.get("rulesFingerprint").asText()
@@ -90,7 +44,7 @@ object SentinelSignalCodec : Codec<SentinelSignal> {
             ?.let { ResidentId(it) }
 
         when (type) {
-            "EpisodeOpened" -> {
+            SignalType.EPISODE_OPENED -> {
                 val episode = EpisodeId(node.get("episode").asText())
                 val rule = RuleId(node.get("rule").asText())
                 val triggerResult = StateKindInput.parseStateKind(node.get("trigger").asText())
@@ -118,7 +72,7 @@ object SentinelSignalCodec : Codec<SentinelSignal> {
                     }
                 }.getOrThrow()
             }
-            "EpisodeClosed" -> {
+            SignalType.EPISODE_CLOSED -> {
                 val episode = EpisodeId(node.get("episode").asText())
                 val causeResult = parseClosureCause(node.get("cause").asText())
                 val gapDuration = node.get("gapDuration")?.asText()?.let { Duration.parse(it) }
@@ -135,7 +89,7 @@ object SentinelSignalCodec : Codec<SentinelSignal> {
                     )
                 }.getOrThrow()
             }
-            "AutoRecovery" -> {
+            SignalType.AUTO_RECOVERY -> {
                 val episode = EpisodeId(node.get("episode").asText())
                 val reversible = node.get("reversible").asBoolean()
                 val requiresConfirmation = node.get("requiresConfirmation").asBoolean()
@@ -150,7 +104,7 @@ object SentinelSignalCodec : Codec<SentinelSignal> {
                     requiresConfirmation = requiresConfirmation,
                 )
             }
-            "UmbrellaEvent" -> {
+            SignalType.UMBRELLA_EVENT -> {
                 val episode = EpisodeId(node.get("episode").asText())
                 val stateResult = StateKindInput.parseStateKind(node.get("state").asText())
                 val severityResult = parseSeverity(node.get("originalSeverity").asText())
@@ -169,7 +123,7 @@ object SentinelSignalCodec : Codec<SentinelSignal> {
                     }
                 }.getOrThrow()
             }
-            "SuppressedWithRecord" -> {
+            SignalType.SUPPRESSED_WITH_RECORD -> {
                 val rule = RuleId(node.get("rule").asText())
                 val causeResult = parseSuppressionCause(node.get("cause").asText())
                 val evidence = EventRef(
@@ -189,10 +143,21 @@ object SentinelSignalCodec : Codec<SentinelSignal> {
                     )
                 }.getOrThrow()
             }
-            else -> throw SerializationException(SerializationError.InvalidState(type, setOf(
-                "EpisodeOpened", "EpisodeClosed", "AutoRecovery",
-                "UmbrellaEvent", "SuppressedWithRecord"
-            )))
+            SignalType.DWELL_PRE_WARNING -> {
+                val state = StateKind.valueOf(node.get("state").asText())
+                val elapsed = Duration.parse(node.get("elapsed").asText())
+                val threshold = Duration.parse(node.get("threshold").asText())
+
+                SentinelSignal.DwellPreWarning(
+                    bed = bed,
+                    resident = resident,
+                    at = at,
+                    rulesFingerprint = rulesFingerprint,
+                    state = state,
+                    elapsed = elapsed,
+                    threshold = threshold,
+                )
+            }
         }
     }
 
@@ -216,7 +181,7 @@ object SentinelSignalCodec : Codec<SentinelSignal> {
             SerializationResult.Success(Severity.valueOf(name))
         } catch (_: IllegalArgumentException) {
             SerializationResult.Failure(
-                SerializationError.InvalidState(name, Severity.values().map { it.name }.toSet())
+                SerializationError.InvalidState(name, Severity.entries.map { it.name }.toSet())
             )
         }
     }
@@ -226,7 +191,7 @@ object SentinelSignalCodec : Codec<SentinelSignal> {
             SerializationResult.Success(ClosureCause.valueOf(name))
         } catch (_: IllegalArgumentException) {
             SerializationResult.Failure(
-                SerializationError.InvalidState(name, ClosureCause.values().map { it.name }.toSet())
+                SerializationError.InvalidState(name, ClosureCause.entries.map { it.name }.toSet())
             )
         }
     }
@@ -236,7 +201,7 @@ object SentinelSignalCodec : Codec<SentinelSignal> {
             SerializationResult.Success(SuppressionCause.valueOf(name))
         } catch (_: IllegalArgumentException) {
             SerializationResult.Failure(
-                SerializationError.InvalidState(name, SuppressionCause.values().map { it.name }.toSet())
+                SerializationError.InvalidState(name, SuppressionCause.entries.map { it.name }.toSet())
             )
         }
     }

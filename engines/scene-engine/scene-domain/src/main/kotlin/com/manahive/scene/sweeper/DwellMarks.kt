@@ -12,12 +12,16 @@ public data class DwellMarks(public val emitted: Set<DwellMarkKey>) {
     public operator fun plus(other: DwellMarks): DwellMarks = DwellMarks(emitted + other.emitted)
 }
 
+/** Discriminator for mark key origin — prevents collision between dwell and signal-lost marks. */
+public enum class DwellMarkKind { DWELL, SIGNAL_LOST }
+
 /** Dwell mark key for person state. */
 public data class DwellMarkKey(
     public val bed: BedId,
     public val state: StateKind,
     public val since: Instant,
     public val warning: Boolean,
+    public val kind: DwellMarkKind = DwellMarkKind.DWELL,
 ) {
     init {
         require(since != Instant.MAX) { "DwellMarkKey.since must be a real timestamp" }

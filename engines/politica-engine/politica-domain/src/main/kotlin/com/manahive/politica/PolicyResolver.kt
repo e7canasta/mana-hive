@@ -21,6 +21,7 @@ import com.manahive.contracts.policy.Template
 import com.manahive.contracts.policy.TemplateId
 import com.manahive.contracts.policy.TransitionKey
 import com.manahive.contracts.policy.TransitionWindow
+import com.manahive.contracts.policy.TriggerOn
 import com.manahive.contracts.scene.StateKind
 import com.manahive.kernel.RuleId
 import java.time.Duration
@@ -110,7 +111,14 @@ public object PolicyResolver {
         profile: AlarmProfile,
     ): Map<StateKind, DwellThreshold> {
         val base = catalog.residentStates.mapNotNull { (state, rule) ->
-            rule.alertAfter?.let { state to DwellThreshold(warning = rule.warningAfter ?: it, exceeded = it) }
+            rule.alertAfter?.let { exceeded ->
+                // When the director gives only a deadline ("avísenme a los 15 minutos"),
+                // the silent pre-warning lands at half of it — the same rule the override
+                // path applies. Defaulting warning to `exceeded` instead would violate
+                // DwellThreshold's warning < exceeded invariant and crash the resolver.
+                val warning = rule.warningAfter ?: exceeded.dividedBy(2)
+                state to DwellThreshold(warning = warning, exceeded = exceeded)
+            }
         }.toMap()
         return applyOverrides<PolicyOverride.DwellOverride, StateKind, DwellThreshold>(base, profile.overrides) { it.state to it.value }
     }
@@ -129,11 +137,14 @@ public object PolicyResolver {
         val dwellOverrides = profile.overrides.values.filterIsInstance<PolicyOverride.DwellOverride>()
 
         val catalogRules = catalog.residentStates.mapNotNull { (state, rule) ->
-            rule.alertAfter ?: return@mapNotNull null
+            if (!rule.alerts) return@mapNotNull null
             buildAlertRule(
                 state = state,
                 severity = rule.severity,
                 closureCondition = rule.closureCondition,
+                // The catalog decides how the rule fires: alertOnEntry() → ENTRY,
+                // alertAfter() → DWELL. Never inferred here.
+                triggerOn = rule.triggerOn,
             )
         }
 
@@ -143,6 +154,8 @@ public object PolicyResolver {
                 state = override.state,
                 severity = Severity.WARNING,
                 closureCondition = ClosureCondition.STAFF_OR_SAFE,
+                // A DwellOverride is, by its own name, a time threshold.
+                triggerOn = TriggerOn.DWELL,
             )
         }
 
@@ -152,15 +165,21 @@ public object PolicyResolver {
     /**
      * Build an AlertRule with sensible defaults for configurable fields.
      *
+     * [triggerOn] has NO default on purpose: every call site must state how the
+     * rule fires. A silent default is exactly how the "episode opens on entry"
+     * defect got in (see docs/roadmap/SPEC-01).
+     *
      * Fowler: "Extract Method" — single point of truth for AlertRule construction.
      */
     private fun buildAlertRule(
         state: StateKind,
         severity: Severity,
         closureCondition: ClosureCondition,
+        triggerOn: TriggerOn,
     ): AlertRule = AlertRule(
         id = RuleId("alert-${state.name.lowercase()}"),
         trigger = state,
+        triggerOn = triggerOn,
         severity = severity,
         closureCondition = closureCondition,
         reversible = true,

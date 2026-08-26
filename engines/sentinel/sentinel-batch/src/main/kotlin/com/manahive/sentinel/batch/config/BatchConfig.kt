@@ -3,6 +3,7 @@ package com.manahive.sentinel.batch.config
 import com.manahive.contracts.policy.AlertRule
 import com.manahive.contracts.policy.ClosureCondition
 import com.manahive.contracts.policy.Severity
+import com.manahive.contracts.policy.TriggerOn
 import com.manahive.contracts.scene.StateKind
 import com.manahive.kernel.BedId
 import com.manahive.kernel.NightId
@@ -49,10 +50,16 @@ data class BatchConfig(
     /** Creates a [SentinelCalibration] from this config. */
     fun toSentinelCalibration(): SentinelCalibration {
         val alertRules = rules.map { it.toAlertRule() }
-        val byTrigger = alertRules.associateBy { it.trigger }
         return SentinelCalibration(
             residentId = residentId,
-            rulesByTrigger = byTrigger,
+            rulesByState = alertRules.groupBy { it.trigger },
+            transitionRules = alertRules
+                .filter { it.triggerOn == TriggerOn.ENTRY }
+                .associateBy { it.trigger },
+            dwellRules = alertRules
+                .filter { it.triggerOn == TriggerOn.DWELL }
+                .associateBy { it.trigger },
+            sceneStateRules = emptyMap(),
             ruleIds = alertRules.map { it.id }.toSet(),
             fingerprint = alertRules.joinToString(",") { it.id.value },
         )
@@ -68,6 +75,7 @@ data class ResidentConfig(
 data class RuleConfig(
     val id: String,
     val trigger: StateKind,
+    val triggerOn: TriggerOn = TriggerOn.DWELL,
     val severity: Severity = Severity.WARNING,
     val closure: ClosureCondition = ClosureCondition.SAFE_ONLY,
     val reversible: Boolean = true,
@@ -79,6 +87,7 @@ data class RuleConfig(
     fun toAlertRule(): AlertRule = AlertRule(
         id = RuleId(id),
         trigger = trigger,
+        triggerOn = triggerOn,
         severity = severity,
         closureCondition = closure,
         reversible = reversible,

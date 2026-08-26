@@ -52,5 +52,7 @@ class SignalOutWriter(private val outputFile: File) {
                 (signal.gapDuration?.let { " gap=$it" } ?: "")
         is SentinelSignal.SuppressedWithRecord ->
             "SUPPRESSED rule=${signal.rule.value} cause=${signal.cause}"
+        is SentinelSignal.DwellPreWarning ->
+            "DWELL_PRE_WARNING state=${signal.state} elapsed=${signal.elapsed} threshold=${signal.threshold}"
     }
 }

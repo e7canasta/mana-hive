@@ -71,7 +71,20 @@ Reemplazar el cuerpo actual por: leer capas → `toAlarmProfile` → resolver co
 
 ### 3 · La API
 
-`hub-service`, sobre `PolicyCatalogController` (que ya existe).
+**Antes de escribir nada: la superficie REST ya existe, y está fragmentada.** `hub-service/api/` tiene cuatro controladores de política, todos **de sólo lectura** — no hay un solo `@PostMapping`, `@PutMapping` ni `@DeleteMapping`:
+
+| Controlador | Ruta base | Vocabulario que expone |
+|---|---|---|
+| `PolicyController` | `/api/policies` | políticas por residente |
+| `RawPolicyController` | `/api/policies/raw` | política cruda |
+| `SemanticBucketController` | `/api/semantic-buckets` | buckets semánticos |
+| `PolicyCatalogController` | `/api/catalog` | eventos, dimensiones, categorías |
+
+Son **tres vocabularios distintos** para el mismo dominio (política, política cruda, bucket semántico), heredados del modelo que `SPEC-02` retira. La tarea no es "crear una API": es **consolidar y agregar escritura**.
+
+Primer paso, entonces: decidir para cada uno de los cuatro si sobrevive, se fusiona o se retira, a la luz de `AD-1`. Documentarlo en el commit. Un endpoint que expone un modelo retirado es deuda que alguien va a consumir.
+
+Superficie objetivo:
 
 | Método | Ruta | Para qué |
 |---|---|---|
@@ -115,6 +128,7 @@ Prueba de que funciona: dos resoluciones con catálogos de versión distinta deb
 8. Test de integración de punta a punta: cambiar el nivel de un residente por la API → el motor recibe la calibración nueva.
 9. `LANG=C.UTF-8 ./gradlew check` verde.
 10. `docs/POLITICA-GUIDE.md` ya no lista estos puntos como *Gap identificado*.
+11. Los cuatro controladores existentes quedan resueltos: cada uno sobrevive, se fusiona o se retira, con la decisión escrita. No queda ninguno exponiendo un modelo que `SPEC-02` retiró.
 
 ## Fuera de alcance
 

@@ -32,6 +32,7 @@ public data class EffectiveRules(
 public data class AlertRule(
     public val id: RuleId,
     public val trigger: StateKind,
+    public val triggerOn: TriggerOn,
     public val severity: Severity,
     public val closureCondition: ClosureCondition,
     public val reversible: Boolean,
@@ -49,6 +50,16 @@ public data class AlertRule(
  * - CRITICAL: dispatch immediately, NVR recording
  */
 public enum class Severity { INFO, WARNING, CRITICAL }
+
+/**
+ * How a rule is triggered. Determines which SceneEvent opens the episode:
+ * - ENTRY: opens on TransitionDetected (for states that need no wait, e.g. BED_EDGE in CRITICAL)
+ * - DWELL: opens on DwellExceeded (for states with a time threshold)
+ */
+public enum class TriggerOn {
+    ENTRY,
+    DWELL,
+}
 
 /**
  * How an episode closes. The director configures this per resident.

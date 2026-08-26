@@ -67,8 +67,8 @@ class PoliticaScenarioBuilder(private val ctx: PoliticaContext) {
         assertions.add("dwell $state warning=$warning exceeded=$exceeded" to {
             val cal = result!!
             val actual = cal.scene.dwellThresholds[state]
-            check(actual != null) { "No dwell threshold for $state" }
-            check(actual!!.warning == warning) { "Expected warning $warning, got ${actual.warning}" }
+                ?: throw AssertionError("No dwell threshold for $state")
+            check(actual.warning == warning) { "Expected warning $warning, got ${actual.warning}" }
             check(actual.exceeded == exceeded) { "Expected exceeded $exceeded, got ${actual.exceeded}" }
         })
     }

@@ -89,7 +89,7 @@ public class SentinelNatsIngest(
 
         // Get or create EpisodeLedger for this resident
         val ledger = ledgers.getOrPut(residentId) {
-            EpisodeLedger.empty(residentId, calibration.fatigue)
+            EpisodeLedger.empty(residentId)
         }
 
         // Evaluate the fact

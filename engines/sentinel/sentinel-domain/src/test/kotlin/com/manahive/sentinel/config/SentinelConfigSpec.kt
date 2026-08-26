@@ -3,6 +3,7 @@ package com.manahive.sentinel.config
 import com.manahive.contracts.policy.AlertRule
 import com.manahive.contracts.policy.ClosureCondition
 import com.manahive.contracts.policy.Severity
+import com.manahive.contracts.policy.TriggerOn
 import com.manahive.contracts.scene.StateKind
 import com.manahive.kernel.ResidentId
 import com.manahive.kernel.RuleId
@@ -21,6 +22,7 @@ class SentinelConfigSpec : DescribeSpec({
                     AlertRule(
                         id = RuleId("r-fall"),
                         trigger = StateKind.BED_EDGE,
+                        triggerOn = TriggerOn.ENTRY,
                         severity = Severity.CRITICAL,
                         closureCondition = ClosureCondition.STAFF_AND_SAFE,
                         reversible = false,
@@ -73,6 +75,7 @@ class SentinelConfigSpec : DescribeSpec({
                     AlertRule(
                         id = RuleId("r-fall"),
                         trigger = StateKind.BED_EDGE,
+                        triggerOn = TriggerOn.ENTRY,
                         severity = Severity.CRITICAL,
                         closureCondition = ClosureCondition.STAFF_AND_SAFE,
                         reversible = false,
@@ -84,6 +87,7 @@ class SentinelConfigSpec : DescribeSpec({
                     AlertRule(
                         id = RuleId("r-sit"),
                         trigger = StateKind.SITTING_IN_BED,
+                        triggerOn = TriggerOn.DWELL,
                         severity = Severity.WARNING,
                         closureCondition = ClosureCondition.SAFE_ONLY,
                         reversible = true,
@@ -106,6 +110,7 @@ class SentinelConfigSpec : DescribeSpec({
                     AlertRule(
                         id = RuleId("r-fall"),
                         trigger = StateKind.BED_EDGE,
+                        triggerOn = TriggerOn.ENTRY,
                         severity = Severity.CRITICAL,
                         closureCondition = ClosureCondition.STAFF_AND_SAFE,
                         reversible = false,
@@ -128,6 +133,7 @@ class SentinelConfigSpec : DescribeSpec({
                     AlertRule(
                         id = RuleId("r-fall"),
                         trigger = StateKind.BED_EDGE,
+                        triggerOn = TriggerOn.ENTRY,
                         severity = Severity.CRITICAL,
                         closureCondition = ClosureCondition.STAFF_AND_SAFE,
                         reversible = false,

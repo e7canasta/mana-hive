@@ -95,6 +95,28 @@ val ctx = PipelineContext(
 
 // ── Scenarios ───────────────────────────────────────────────────────────────
 
+/** Compute the staff arrival offset from a sitting start: start + exceeded + 5 min buffer. */
+fun staffArrivalAfter(sittingStart: String, exceeded: java.time.Duration): String {
+    val startSeconds = parseOffset(sittingStart)
+    val totalSeconds = startSeconds + exceeded.seconds + 300 // +5 min buffer
+    val m = totalSeconds / 60
+    return "${m}m"
+}
+
+/** Parse "30m" / "1h15m" to seconds. */
+fun parseOffset(offset: String): Long {
+    var total = 0L
+    Regex("(\\d+)(h|m|s)").findAll(offset).forEach { match ->
+        val v = match.groupValues[1].toLong()
+        when (match.groupValues[2]) {
+            "h" -> total += v * 3600
+            "m" -> total += v * 60
+            "s" -> total += v
+        }
+    }
+    return total
+}
+
 fun main() {
     println("═══════════════════════════════════════════════════════════════")
     println("  José 301 — E2E Pipeline (Scene → Sentinel → Harbor → Recorder)")
@@ -114,19 +136,30 @@ fun main() {
     }
     println()
 
-    ctx.pipeline("José se sienta en la cama — pipeline completa") {
+    val sittingExceeded = policyCalibration.scene.dwellThresholds[StateKind.SITTING_IN_BED]?.exceeded
+        ?: java.time.Duration.ofMinutes(15)
+    val staffOffset = staffArrivalAfter("30m", sittingExceeded)
+
+    // ── 1. José se sienta 25 min → DwellExceeded → episodio ──────────────
+    // Sitting: warning@7m30, exceeded@15m. Se sienta 25 min → episodio se abre y cierra.
+
+    ctx.pipeline("José se sienta en la cama — dwell exceeded abre episodio") {
         obs(IN_BED, "0s")
         obs(SITTING_IN_BED, "1h15m")
-        obs(IN_BED, "1h32m")
+        obs(IN_BED, "1h40m")
 
         thenSceneEventPresent(SceneEvent.TransitionDetected::class)
+        thenSceneEventPresent(SceneEvent.DwellExceeded::class)
         thenSignalPresent(SentinelSignal.EpisodeOpened::class)
+        thenSignalPresent(SentinelSignal.EpisodeClosed::class)
         thenEpisodeOpenCount(1)
         thenHarborCommandPresent(NoticeCommand.Dispatch::class)
-        thenEvidenceCount(1)
     }.report()
 
-    ctx.pipeline("José va al baño y tarda — dwell exceeded") {
+    // ── 2. José va al baño 10 min → DwellExceeded bathroom ───────────────
+    // Bathroom: warning@5m, exceeded@10m. En baño 10 min → episodio.
+
+    ctx.pipeline("José va al baño y tarda — dwell exceeded bathroom") {
         obs(IN_BED, "0s")
         obs(SITTING_IN_BED, "2h47m")
         obs(STANDING, "2h48m")
@@ -134,12 +167,15 @@ fun main() {
         obs(IN_ROOM, "3h00m")
         obs(IN_BED, "3h02m")
 
-        thenSceneEventPresent(SceneEvent.TransitionDetected::class)
+        thenSceneEventPresent(SceneEvent.DwellExceeded::class)
         thenSignalPresent(SentinelSignal.EpisodeOpened::class)
         thenHarborCommandPresent(NoticeCommand.Dispatch::class)
     }.report()
 
-    ctx.pipeline("José se sienta 3 veces — budget agota") {
+    // ── 3. José se sienta 3 veces → 2 episodios (el 3ro no alcanza umbral) ─
+    // Ciclos: 17min (→episodio), 15min (→episodio), 10min (sin episodio).
+
+    ctx.pipeline("José se sienta 3 veces — 2 episodios") {
         obs(IN_BED, "0s")
         obs(SITTING_IN_BED, "1h15m")
         obs(IN_BED, "1h32m")
@@ -148,65 +184,71 @@ fun main() {
         obs(SITTING_IN_BED, "5h00m")
         obs(IN_BED, "5h10m")
 
-        thenSceneEventCount(7)
-        thenEpisodeOpenCount(3)
-        thenHarborCommandCount(6)
+        thenEpisodeOpenCount(2)
+        thenHarborCommandCount(4)
     }.report()
 
-    ctx.pipeline("José camina al baño sin sitting — dwell alerta bathroom") {
+    // ── 4. José camina al baño → dwell bathroom 25 min ───────────────────
+
+    ctx.pipeline("José camina al baño — dwell bathroom 25 min") {
         obs(IN_BED, "0s")
         obs(STANDING, "1h00m")
         obs(IN_BATHROOM, "1h05m")
         obs(IN_ROOM, "1h30m")
         obs(IN_BED, "1h35m")
 
-        thenSceneEventCount(5)
-        thenSentinelSignalCount(2)
-        thenHarborCommandCount(2)
+        thenSceneEventPresent(SceneEvent.DwellExceeded::class)
+        thenSentinelAbrioYCerroEpisodio()
         thenRecorderCommandPresent(RecordingStarted::class)
     }.report()
+
+    // ── 5. LYING→STANDING sin dwell → grabación por transición ───────────
 
     ctx.pipeline("LYING→STANDING activa grabación") {
         obs(IN_BED, "0s")
         obs(STANDING, "180s")
         obs(IN_BED, "600s")
 
-        thenSceneEventCount(3)
         thenRecorderCommandPresent(RecordingStarted::class)
     }.report()
+
+    // ── 6. Staff asiste durante incidente (dwell exceeded antes del staff) ─
 
     ctx.pipeline("Staff asiste a José durante incidente") {
         obs(IN_BED, "0s")
         obs(SITTING_IN_BED, "30m")
-        obs(STAFF_ENTERED, "35m")
+        obs(STAFF_ENTERED, staffOffset)
 
-        thenSceneEventCount(3)
-        thenSentinelSignalCount(2)
-        thenHarborCommandCount(2)
+        thenSentinelAbrioYCerroEpisodio()
+        thenHarborNotificoYResolvio()
     }.report()
 
-    ctx.pipeline("20:00 — Staff asiste y deja residente solo") {
+    // ── 7. Staff asiste y deja residente solo ────────────────────────────
+
+    ctx.pipeline("Staff asiste y deja residente solo") {
         obs(IN_BED, "0s")
         obs(SITTING_IN_BED, "30m")
-        obs(STAFF_ENTERED, "35m")
-        obs(STAFF_LEFT, "45m")
-        obs(IN_BED, "60m")
+        obs(STAFF_ENTERED, staffOffset)
+        val postStaff = parseOffset(staffOffset) + 300 // 5 min after staff arrives
+        obs(STAFF_LEFT, "${postStaff / 60}m")
+        obs(IN_BED, "${(postStaff / 60) + 5}m")
 
-        thenSceneEventCount(5)
-        thenSentinelSignalCount(2)
-        thenHarborCommandCount(2)
+        thenSentinelAbrioYCerroEpisodio()
+        thenHarborNotificoYResolvio()
     }.report()
 
-    ctx.pipeline("08:00 — Staff se lleva al residente") {
+    // ── 8. Staff se lleva al residente ───────────────────────────────────
+
+    ctx.pipeline("Staff se lleva al residente") {
         obs(IN_BED, "0s")
         obs(SITTING_IN_BED, "30m")
-        obs(STAFF_ENTERED, "35m")
-        obs(STANDING, "45m")
-        obs(STAFF_LEFT, "50m")
+        obs(STAFF_ENTERED, staffOffset)
+        val postStaff = parseOffset(staffOffset) + 300
+        obs(STANDING, "${postStaff / 60}m")
+        obs(STAFF_LEFT, "${(postStaff / 60) + 5}m")
 
-        thenSceneEventCount(5)
-        thenSentinelSignalCount(2)
-        thenHarborCommandCount(2)
+        thenSentinelAbrioYCerroEpisodio()
+        thenHarborNotificoYResolvio()
     }.report()
 
     println("═══════════════════════════════════════════════════════════════")

@@ -4,7 +4,9 @@ import com.manahive.contracts.policy.Severity
 import com.manahive.contracts.scene.StateKind
 import com.manahive.contracts.sentinel.ClosureCause
 import com.manahive.contracts.sentinel.SentinelSignal
+import com.manahive.contracts.sentinel.SignalType
 import com.manahive.contracts.sentinel.SuppressionCause
+import com.manahive.contracts.sentinel.toMap
 import com.manahive.kernel.*
 import java.time.Duration
 import java.time.Instant
@@ -16,75 +18,21 @@ import java.time.Instant
  */
 object SentinelSignalSerializer {
 
-    fun toJson(signal: SentinelSignal): String {
-        val map = mutableMapOf<String, Any>(
-            "type" to (signal::class.simpleName ?: "Unknown"),
-            "at" to signal.at.toString(),
-            "bed" to signal.bed.value,
-            "rulesFingerprint" to signal.rulesFingerprint,
-        )
+    private val mapper = com.fasterxml.jackson.module.kotlin.jacksonObjectMapper()
 
-        when (signal) {
-            is SentinelSignal.EpisodeOpened -> {
-                map["resident"] = signal.resident?.value ?: "unknown"
-                map["episode"] = signal.episode.value
-                map["rule"] = signal.rule.value
-                map["trigger"] = signal.trigger.name
-                map["severity"] = signal.severity.name
-                map["reversible"] = signal.reversible
-                map["requiresNvr"] = signal.requiresNvr
-                signal.confirmationWindow?.let { map["confirmationWindow"] = it.toString() }
-            }
-            is SentinelSignal.EpisodeClosed -> {
-                map["resident"] = signal.resident?.value ?: "unknown"
-                map["episode"] = signal.episode.value
-                map["cause"] = signal.cause.name
-                signal.gapDuration?.let { map["gapDuration"] = it.toString() }
-            }
-            is SentinelSignal.AutoRecovery -> {
-                map["resident"] = signal.resident?.value ?: "unknown"
-                map["episode"] = signal.episode.value
-                map["reversible"] = signal.reversible
-                map["requiresConfirmation"] = signal.requiresConfirmation
-            }
-            is SentinelSignal.UmbrellaEvent -> {
-                map["resident"] = signal.resident?.value ?: "unknown"
-                map["episode"] = signal.episode.value
-                map["state"] = signal.state.name
-                map["originalSeverity"] = signal.originalSeverity.name
-            }
-            is SentinelSignal.SuppressedWithRecord -> {
-                map["resident"] = signal.resident?.value ?: "unknown"
-                map["rule"] = signal.rule.value
-                map["cause"] = signal.cause.name
-                map["evidenceStream"] = signal.evidence.stream
-                map["evidenceSeq"] = signal.evidence.seq
-            }
-            is SentinelSignal.DwellPreWarning -> {
-                map["resident"] = signal.resident?.value ?: "unknown"
-                map["state"] = signal.state.name
-                map["elapsed"] = signal.elapsed.toString()
-                map["threshold"] = signal.threshold.toString()
-            }
-            }
-        }
-
-        return com.fasterxml.jackson.module.kotlin.jacksonObjectMapper()
-            .writerWithDefaultPrettyPrinter()
-            .writeValueAsString(map)
-    }
+    fun toJson(signal: SentinelSignal): String =
+        mapper.writerWithDefaultPrettyPrinter().writeValueAsString(signal.toMap())
 
     fun fromJson(json: String): SentinelSignal {
-        val mapper = com.fasterxml.jackson.module.kotlin.jacksonObjectMapper()
         val node = mapper.readTree(json)
-        val type = node.get("type").asText()
+        val type = SignalType.valueOf(node.get("type").asText())
         val at = Instant.parse(node.get("at").asText())
         val bed = BedId(node.get("bed").asText())
         val rulesFingerprint = node.get("rulesFingerprint").asText()
         val resident = node.get("resident")?.asText()?.takeIf { it != "unknown" }?.let { ResidentId(it) }
 
         return when (type) {
-            "EpisodeOpened" -> {
+            SignalType.EPISODE_OPENED -> {
                 val episode = EpisodeId(node.get("episode").asText())
                 val rule = RuleId(node.get("rule").asText())
                 val trigger = StateKind.valueOf(node.get("trigger").asText())
@@ -107,7 +55,7 @@ object SentinelSignalSerializer {
                     confirmationWindow = confirmationWindow,
                 )
             }
-            "EpisodeClosed" -> {
+            SignalType.EPISODE_CLOSED -> {
                 val episode = EpisodeId(node.get("episode").asText())
                 val cause = ClosureCause.valueOf(node.get("cause").asText())
                 val gapDuration = node.get("gapDuration")?.asText()?.let { Duration.parse(it) }
@@ -122,7 +70,7 @@ object SentinelSignalSerializer {
                     gapDuration = gapDuration,
                 )
             }
-            "AutoRecovery" -> {
+            SignalType.AUTO_RECOVERY -> {
                 val episode = EpisodeId(node.get("episode").asText())
                 val reversible = node.get("reversible").asBoolean()
                 val requiresConfirmation = node.get("requiresConfirmation").asBoolean()
@@ -137,7 +85,7 @@ object SentinelSignalSerializer {
                     requiresConfirmation = requiresConfirmation,
                 )
             }
-            "UmbrellaEvent" -> {
+            SignalType.UMBRELLA_EVENT -> {
                 val episode = EpisodeId(node.get("episode").asText())
                 val state = StateKind.valueOf(node.get("state").asText())
                 val originalSeverity = Severity.valueOf(node.get("originalSeverity").asText())
@@ -152,7 +100,7 @@ object SentinelSignalSerializer {
                     originalSeverity = originalSeverity,
                 )
             }
-            "SuppressedWithRecord" -> {
+            SignalType.SUPPRESSED_WITH_RECORD -> {
                 val rule = RuleId(node.get("rule").asText())
                 val cause = SuppressionCause.valueOf(node.get("cause").asText())
                 val evidence = EventRef(
@@ -170,15 +118,28 @@ object SentinelSignalSerializer {
                     evidence = evidence,
                 )
             }
-            else -> throw IllegalArgumentException("Unknown SentinelSignal type: $type")
+            SignalType.DWELL_PRE_WARNING -> {
+                val state = StateKind.valueOf(node.get("state").asText())
+                val elapsed = Duration.parse(node.get("elapsed").asText())
+                val threshold = Duration.parse(node.get("threshold").asText())
+
+                SentinelSignal.DwellPreWarning(
+                    bed = bed,
+                    resident = resident,
+                    at = at,
+                    rulesFingerprint = rulesFingerprint,
+                    state = state,
+                    elapsed = elapsed,
+                    threshold = threshold,
+                )
+            }
         }
     }
 
     fun toText(signal: SentinelSignal, startTime: Instant): String {
         val offset = java.time.Duration.between(startTime, signal.at)
-        val type = signal::class.simpleName ?: "Unknown"
         val details = formatDetails(signal)
-        return "t=${formatDuration(offset)}  $type $details"
+        return "t=${formatDuration(offset)}  ${signal.type.name} $details"
     }
 
     private fun formatDetails(signal: SentinelSignal): String = when (signal) {

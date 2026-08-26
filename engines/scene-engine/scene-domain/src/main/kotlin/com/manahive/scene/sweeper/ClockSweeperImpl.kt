@@ -50,15 +50,22 @@ internal class ClockSweeperImpl : ClockSweeper {
             val catalog = twin.calibration?.toDwellCatalog() ?: thresholds
             val twinCtx = ctx.copy(thresholds = catalog)
 
-            val (dwellFacts, dwellMarks) = checkDwell(twin, twinCtx, marks)
+            // Each check receives accumulated marks so they don't collide.
+            // Without this, checkSignalLost could emit a mark that blocks
+            // checkDwell's exceeded in the same sweep iteration.
+            var accumulatedMarks = marks
+
+            val (dwellFacts, dwellMarks) = checkDwell(twin, twinCtx, accumulatedMarks)
             allFacts += dwellFacts
             newPersonMarks += dwellMarks
+            accumulatedMarks = DwellMarks(accumulatedMarks.emitted + dwellMarks)
 
-            val (comeBackFacts, comeBackMarks) = checkComeBack(twin, twinCtx, marks)
+            val (comeBackFacts, comeBackMarks) = checkComeBack(twin, twinCtx, accumulatedMarks)
             allFacts += comeBackFacts
             newPersonMarks += comeBackMarks
+            accumulatedMarks = DwellMarks(accumulatedMarks.emitted + comeBackMarks)
 
-            val (signalFacts, signalMarks) = checkSignalLost(twin, twinCtx, marks)
+            val (signalFacts, signalMarks) = checkSignalLost(twin, twinCtx, accumulatedMarks)
             allFacts += signalFacts
             newPersonMarks += signalMarks
 
@@ -294,7 +301,13 @@ internal class ClockSweeperImpl : ClockSweeper {
             return DwellCheckResult(emptyList(), emptySet())
         }
 
-        val markKey = twin.toDwellMarkKey()
+        val markKey = DwellMarkKey(
+            bed = twin.bed,
+            state = twin.state.kind,
+            since = twin.stateSince,
+            warning = false,
+            kind = DwellMarkKind.SIGNAL_LOST,
+        )
 
         if (marks.emitted.contains(markKey)) {
             return DwellCheckResult(emptyList(), emptySet())

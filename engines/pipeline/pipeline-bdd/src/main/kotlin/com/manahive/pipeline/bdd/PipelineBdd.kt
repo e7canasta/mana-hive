@@ -27,6 +27,8 @@ data class PipelineContext(
     val harborCalibration: HarborCalibration,
     val recorderCalibration: RecordingCalibration,
     val start: Instant,
+    /** Seconds between sweep ticks. Smaller = more precise dwell detection, more events. */
+    val sweepIntervalSeconds: Long = 60,
 )
 
 // ── Stage results ────────────────────────────────────────────────────────────
@@ -372,9 +374,9 @@ class PipelineScenarioBuilder(private val ctx: PipelineContext) {
     // ── Run the full pipeline ─────────────────────────────────────────────────
 
     fun run(): PipelineResult {
-        // ── Stage 1: Scene Engine ────────────────────────────────────────────
+        // ── Stage 1: Scene Engine (with sweep for DwellExceeded) ──────────────
         val sceneEngine = SceneEngine.create(ctx.sceneCalibration)
-        sceneResult = sceneEngine.process(observations)
+        sceneResult = sceneEngine.processWithSweep(observations, ctx.sweepIntervalSeconds)
 
         // ── Stage 2: Sentinel (process each SceneEvent) ──────────────────────
         val sentinel = createSentinelEvaluator(ctx.sentinelCalibration)

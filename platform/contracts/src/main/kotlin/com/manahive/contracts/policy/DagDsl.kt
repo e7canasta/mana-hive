@@ -78,15 +78,30 @@ public class DagResidentStatesBuilder(
 public class DagResidentStateRuleBuilder(private val state: StateKind) {
     private var warningAfter: Duration? = null
     private var alertAfter: Duration? = null
+    private var onEntry: Boolean = false
     private var severity: Severity = Severity.WARNING
     private var closureCondition: ClosureCondition = ClosureCondition.SAFE_ONLY
 
+    /** "Avísenme antes de que se cumpla el plazo." Preaviso silencioso, sin episodio. */
     public fun warningAfter(duration: Duration) {
         warningAfter = duration
     }
 
+    /** "Si se queda en este estado más de X, avísenme." Abre episodio al vencer el plazo. */
     public fun alertAfter(duration: Duration) {
         alertAfter = duration
+    }
+
+    /**
+     * "Avísenme apenas entre en este estado." Abre episodio en la transición,
+     * sin esperar. Para lo que no admite espera — el borde de la cama de un
+     * residente crítico, por ejemplo.
+     *
+     * Excluyente con [alertAfter]: un estado se vigila por tiempo o por entrada,
+     * no por las dos cosas.
+     */
+    public fun alertOnEntry() {
+        onEntry = true
     }
 
     public fun severity(value: Severity) {
@@ -97,22 +112,40 @@ public class DagResidentStateRuleBuilder(private val state: StateKind) {
         closureCondition = value
     }
 
-    internal fun build(): ResidentStateRule = ResidentStateRule(
-        state = state,
-        warningAfter = warningAfter,
-        alertAfter = alertAfter,
-        severity = severity,
-        closureCondition = closureCondition,
-    )
+    internal fun build(): ResidentStateRule {
+        require(!(onEntry && alertAfter != null)) {
+            "$state: alertOnEntry() y alertAfter() son excluyentes — " +
+                "un estado se vigila por entrada o por tiempo, no por las dos cosas"
+        }
+        return ResidentStateRule(
+            state = state,
+            warningAfter = warningAfter,
+            alertAfter = alertAfter,
+            triggerOn = if (onEntry) TriggerOn.ENTRY else TriggerOn.DWELL,
+            severity = severity,
+            closureCondition = closureCondition,
+        )
+    }
 }
 
 public data class ResidentStateRule(
     val state: StateKind,
     val warningAfter: Duration?,
     val alertAfter: Duration?,
+    /**
+     * Con qué hecho se abre el episodio. `DWELL` (por defecto) espera a que Scene
+     * declare vencida la permanencia; `ENTRY` dispara en la transición.
+     *
+     * Una regla sin [alertAfter] y con `DWELL` no produce alerta: es observación
+     * pura, que es lo que el nivel STANDARD significa.
+     */
+    val triggerOn: TriggerOn = TriggerOn.DWELL,
     val severity: Severity,
     val closureCondition: ClosureCondition,
-)
+) {
+    /** ¿Esta regla produce alerta? Observación pura si no. */
+    val alerts: Boolean get() = triggerOn == TriggerOn.ENTRY || alertAfter != null
+}
 
 @DagCatalogDsl
 public class DagRoomStatesBuilder(

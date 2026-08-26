@@ -4,6 +4,7 @@ import com.manahive.contracts.policy.AlertRule
 import com.manahive.contracts.policy.ClosureCondition
 import com.manahive.contracts.policy.EffectiveRules
 import com.manahive.contracts.policy.Severity
+import com.manahive.contracts.policy.TriggerOn
 import com.manahive.contracts.scene.StateKind
 import com.manahive.kernel.ResidentId
 import com.manahive.kernel.RuleId
@@ -24,11 +25,25 @@ import java.time.Duration
  */
 public data class SentinelCalibration(
     public val residentId: ResidentId,
-    /** The alert rules, keyed by trigger state for fast lookup. */
-    public val rulesByTrigger: Map<StateKind, AlertRule>,
-    /** Rules for transition events (keyed by target state). */
+    /**
+     * Every rule watching a state, grouped by that state — the union of
+     * [transitionRules] and [dwellRules].
+     *
+     * A list, not a single rule: a state may legitimately be watched both ways.
+     * "Avisen cuando se pare; si sigue parado a los diez minutos, es crítico" is
+     * one state with an ENTRY rule and a DWELL rule of higher severity — a
+     * severity ramp. Collapsing that to one rule per state silently discarded
+     * one of them, which is the defect this shape removes.
+     *
+     * Use it for "is this state watched at all" — umbrella membership and
+     * reporting. To decide whether an episode OPENS or ESCALATES, use
+     * [transitionRuleFor] or [dwellRuleFor]: those answer "does THIS fact justify
+     * acting", which is what the director's deadline is about.
+     */
+    public val rulesByState: Map<StateKind, List<AlertRule>>,
+    /** Rules for transition events (keyed by target state). ENTRY rules only. */
     public val transitionRules: Map<StateKind, AlertRule>,
-    /** Rules for dwell events (keyed by state). */
+    /** Rules for dwell events (keyed by state). DWELL rules only. */
     public val dwellRules: Map<StateKind, AlertRule>,
     /** Rules for scene state events (keyed by field). */
     public val sceneStateRules: Map<String, AlertRule>,
@@ -42,21 +57,33 @@ public data class SentinelCalibration(
          * Build a [SentinelCalibration] from effective rules.
          */
         public fun from(rules: EffectiveRules): SentinelCalibration {
-            val byTrigger = rules.rules.associateBy { it.trigger }
+            val transition = rules.rules.filter { it.triggerOn == TriggerOn.ENTRY }.associateBy { it.trigger }
+            val dwell = rules.rules.filter { it.triggerOn == TriggerOn.DWELL }.associateBy { it.trigger }
             return SentinelCalibration(
                 residentId = rules.residentId,
-                rulesByTrigger = byTrigger,
-                transitionRules = byTrigger,
-                dwellRules = byTrigger,
+                rulesByState = rules.rules.groupBy { it.trigger },
+                transitionRules = transition,
+                dwellRules = dwell,
                 sceneStateRules = emptyMap(),
                 ruleIds = rules.rules.map { it.id }.toSet(),
                 fingerprint = rules.fingerprint,
             )
         }
+
     }
 
-    /** Find the rule that matches a trigger state (legacy method). */
-    public fun ruleFor(trigger: StateKind): AlertRule? = rulesByTrigger[trigger]
+    /**
+     * Every rule watching a state, whatever fact triggers each one.
+     *
+     * Answers "is this state watched at all" — for umbrella membership and for
+     * reporting. It must NOT be used to decide whether to open or escalate an
+     * episode: that depends on which fact arrived. Use [transitionRuleFor] or
+     * [dwellRuleFor] there.
+     */
+    public fun rulesForState(state: StateKind): List<AlertRule> = rulesByState[state].orEmpty()
+
+    /** Is this state watched at all, by either family? */
+    public fun isWatched(state: StateKind): Boolean = rulesByState.containsKey(state)
 
     /** Find the rule for a transition event. */
     public fun transitionRuleFor(targetState: StateKind): AlertRule? = transitionRules[targetState]
@@ -67,11 +94,16 @@ public data class SentinelCalibration(
     /** Find the rule for a scene state event. */
     public fun sceneStateRuleFor(field: String): AlertRule? = sceneStateRules[field]
 
-    /** Find the notifiable states for a given trigger (umbrella events). */
-    public fun notifiableStatesFor(trigger: StateKind): Set<StateKind> {
-        val rule = ruleFor(trigger)
-        return rule?.umbrellaEvents ?: emptySet()
-    }
+    /**
+     * Find the notifiable states for a given trigger (umbrella events).
+     *
+     * Unions the umbrella sets of every rule watching the state: if either the
+     * entry rule or the dwell rule says a state is notifiable under this episode,
+     * it is. Umbrella membership is a property of the state, independent of which
+     * fact opened the episode.
+     */
+    public fun notifiableStatesFor(trigger: StateKind): Set<StateKind> =
+        rulesForState(trigger).flatMapTo(mutableSetOf()) { it.umbrellaEvents }
 }
 
 // ── DSL ──────────────────────────────────────────────────────────────────────
@@ -127,12 +159,13 @@ public class SentinelCalibrationBuilder {
     internal fun build(): SentinelCalibration {
         val id = requireNotNull(residentId) { "resident() must be called" }
         val builtRules = rules.values.map { it.build() }
-        val byTrigger = builtRules.associateBy { it.trigger }
+        val transition = builtRules.filter { it.triggerOn == TriggerOn.ENTRY }.associateBy { it.trigger }
+        val dwell = builtRules.filter { it.triggerOn == TriggerOn.DWELL }.associateBy { it.trigger }
         return SentinelCalibration(
             residentId = id,
-            rulesByTrigger = byTrigger,
-            transitionRules = byTrigger,
-            dwellRules = byTrigger,
+            rulesByState = builtRules.groupBy { it.trigger },
+            transitionRules = transition,
+            dwellRules = dwell,
             sceneStateRules = emptyMap(),
             ruleIds = builtRules.map { it.id }.toSet(),
             fingerprint = builtRules.joinToString(",") { it.id.value },
@@ -143,6 +176,7 @@ public class SentinelCalibrationBuilder {
 @SentinelDsl
 public class AlertRuleBuilder(private val ruleId: RuleId) {
     public var trigger: StateKind = StateKind.LYING
+    public var triggerOn: TriggerOn = TriggerOn.DWELL
     public var severity: Severity = Severity.WARNING
     public var closureCondition: ClosureCondition = ClosureCondition.SAFE_ONLY
     public var reversible: Boolean = true
@@ -158,6 +192,7 @@ public class AlertRuleBuilder(private val ruleId: RuleId) {
     internal fun build(): AlertRule = AlertRule(
         id = ruleId,
         trigger = trigger,
+        triggerOn = triggerOn,
         severity = severity,
         closureCondition = closureCondition,
         reversible = reversible,
