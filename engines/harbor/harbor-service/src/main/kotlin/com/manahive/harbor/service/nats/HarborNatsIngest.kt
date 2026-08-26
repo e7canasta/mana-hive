@@ -83,7 +83,7 @@ public class HarborNatsIngest(
             return
         }
 
-        val now = Instant.now()
+        val now = signal.at
 
         synchronized(registryLock) {
             val explained = engine.evaluate(signal, registry, now)

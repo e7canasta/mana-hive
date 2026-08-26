@@ -96,7 +96,7 @@ public class RecorderNatsIngest(
             return
         }
 
-        val now = Instant.now()
+        val now = trigger.at
         val explained = engine.evaluate(trigger, ledger, now)
         val verdict = explained.value
 

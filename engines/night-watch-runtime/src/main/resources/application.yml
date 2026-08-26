@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: night-watch-runtime
+  main:
+    banner-mode: off
+
+server:
+  port: 8081
+
+nats:
+  url: nats://localhost:4222
+
+logging:
+  level:
+    com.manahive.runtime: INFO
+    org.springframework: INFO

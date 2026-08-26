@@ -269,3 +269,56 @@ Cada punto queda como **límite conocido y escrito**, no como algo disimulado.
 
 Los pasos 1 y 2 se pueden hacer en paralelo y no tocan el despliegue. Recién el
 5 cambia lo que corre.
+
+---
+
+### Lo verificado al cerrar `SPEC-08`
+
+`check` verde, **500 tests**, **10 blueprints** en exit 0, y el circuito completo
+corriendo contra un `nats-server -js` real:
+
+```
+PUT /api/policies/jose/watch-level {FALL_RISK}   → HTTP 200
+  → hub.policy.change.v1
+  → runtime: "Alta de jose en nivel FALL_RISK"
+observaciones → PERCEPTION
+  → SCENE 2563 b  →  SENTINEL 711 b (EPISODE_OPENED)  →  Harbor Dispatch
+```
+
+El `ResidentRuntime` está bien resuelto: `observedAt` para interpretar,
+`Instant.now()` sólo en el barrido, `@Scheduled(30s)`, y `synchronized(rt)` en
+observación y tick — escritor único por residente sin maquinaria de concurrencia.
+
+Seis defectos encontrados **al revisarlo corriendo**, ya corregidos:
+
+1. **El blueprint no probaba el runtime.** Usaba dos `PipelineContext`
+   separados, así que "ledgers separados" era cierto por construcción *del
+   test*. Reescrito contra un único `NightWatchRuntime` con los dos residentes
+   adentro: el mismo estímulo —los dos sentados 25 minutos— produce episodio en
+   José (umbral 15 min) y nada en Elena (umbral 45 min).
+2. **El escenario de ComeBack no afirmaba ComeBack.** Se llamaba
+   *"ComeBackExceeded"*, emitía cero señales, y el único check era
+   `TransitionDetected present`. Ahora lo afirma, y pasa.
+3. **El presupuesto de notificación estaba inerte.** `NotificationBudget.track`
+   hacía `budgets[severity] ?: return this` y el estado arranca con el mapa
+   vacío: el contador no se movía nunca. Y `canDeliver` se le preguntaba a
+   `calibration.budget`, que tiene `dispatched = 0` fijo porque es
+   configuración. **La fatiga —la razón de ser de Harbor— no suprimía nada.**
+4. **`NightWatchService` no era un bean.** Sin `@Component`, sin
+   `@Import(NatsClientConfiguration)` y sin `@EnableScheduling`: arrancaba,
+   parecía sano, y no consumía nada ni barría nunca.
+5. **El nivel del director no llegaba.** Se parseaba de `catalogVersion`
+   ("2.1.0") en vez de `templateId`, y `valueOf` sobre el label no matchea
+   nunca: todos caían a STANDARD en silencio. El director ponía FALL_RISK y el
+   motor vigilaba con otras reglas.
+6. **El runtime no publicaba nada.** Sólo se suscribía, así que los hechos y
+   señales no llegaban al hub y el System of Record quedaba vacío.
+
+#### Lo que queda abierto
+
+- **Egress de alarmas y grabación.** El runtime publica hechos y señales; el
+  mapeo `NoticeCommand → AlarmEvent` que hacía harbor **inventa** `RuleId` y
+  `EpisodeId` con UUIDs random. Hay que arreglar el mapeo antes de cablearlo:
+  replicarlo sería empeorarlo.
+- Los cuatro `*-service` de motor siguen en el repo, sin desplegarse.
+- Ingesta no durable y arranque dependiente de NATS: ver `SPEC-08`.

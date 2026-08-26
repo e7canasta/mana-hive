@@ -72,11 +72,14 @@ internal class HarborEngineImpl(
         val notice = Notice.from(signal)
 
         // Check budget before dispatch (CRITICAL is never suppressed)
-        if (!calibration.budget.canDeliver(signal.severity)) {
+        // El tope lo define la calibración; la cuenta la lleva el ESTADO. Antes se
+        // preguntaba a `calibration.budget`, que tiene `dispatched = 0` fijo porque
+        // es configuración: nunca podía estar excedido.
+        if (!state.budget.canDeliver(signal.severity)) {
             return EvalResult(
                 state = state.copy(
                     registry = state.registry.add(notice),
-                ).withFatigueTrack(signal.severity),
+                ).withFatigueTrack(signal.severity, calibration.budget.maxFor(signal.severity)),
                 commands = emptyList(),
                 explanation = listOf(ExplanationStep(
                     rule = "budget",
@@ -96,7 +99,7 @@ internal class HarborEngineImpl(
         return EvalResult(
             state = state.copy(
                 registry = state.registry.add(notice),
-            ).withFatigueTrack(signal.severity),
+            ).withFatigueTrack(signal.severity, calibration.budget.maxFor(signal.severity)),
             commands = listOf(dispatchCommand),
             explanation = listOf(ExplanationStep(
                 rule = "episode-opened",

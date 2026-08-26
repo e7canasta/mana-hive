@@ -1,7 +1,6 @@
 package com.manahive.hub.config
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.manahive.contracts.ledger.LedgerPort
 import com.manahive.contracts.ledger.WatermarkPort
 import com.manahive.contracts.policy.PolicyCatalog
@@ -17,6 +16,7 @@ import com.manahive.hub.policy.InMemoryPolicyLayerStore
 import com.manahive.hub.policy.InMemoryRawPolicyStore
 import com.manahive.hub.policy.InMemorySemanticBucketStore
 import com.manahive.messaging.NatsClientConfiguration
+import com.manahive.messaging.NatsObjectMapper
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Import
@@ -41,7 +41,16 @@ public class HubInfrastructureConfiguration {
 
     @Bean
     @Primary
-    public fun objectMapper(): ObjectMapper = jacksonObjectMapper()
+    /**
+     * El mismo mapper que usa el bus, no uno propio.
+     *
+     * Este bean era un `jacksonObjectMapper()` pelado, sin `JavaTimeModule`, y
+     * `NatsIngestListener` lo recibe inyectado: **todo** lo que llegaba del bus
+     * moría con *"Java 8 date/time type Instant not supported"*, porque cada
+     * `EventEnvelope` lleva un `occurredAt`. El hub es el System of Record y no
+     * estaba grabando nada; el error quedaba en un log que nadie miraba.
+     */
+    public fun objectMapper(): ObjectMapper = NatsObjectMapper.mapper
 
     // ── Ledger ────────────────────────────────────────────────────────────
 

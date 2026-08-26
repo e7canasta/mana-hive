@@ -84,7 +84,7 @@ public class SentinelNatsIngest(
             return
         }
 
-        val now = Instant.now()
+        val now = fact.at
         val residentId = calibration.residentId
 
         // Get or create EpisodeLedger for this resident

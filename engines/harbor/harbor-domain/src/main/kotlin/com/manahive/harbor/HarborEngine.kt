@@ -53,8 +53,8 @@ public data class HarborState(
     public val budget: NotificationBudget = NotificationBudget(),
 ) {
     /** Track a dispatched notification for budget purposes. */
-    public fun withFatigueTrack(severity: Severity): HarborState =
-        copy(budget = budget.track(severity))
+    public fun withFatigueTrack(severity: Severity, maxPerShift: Int): HarborState =
+        copy(budget = budget.track(severity, maxPerShift))
 }
 
 /**

@@ -119,7 +119,7 @@ public class SceneNatsIngest(
             return
         }
 
-        val now = Instant.now()
+        val now = observation.observedAt
         val bed = observation.bed
 
         // Get or create DigitalTwin for this bed (thread-safe via ConcurrentHashMap.compute)

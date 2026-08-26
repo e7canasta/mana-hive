@@ -21,11 +21,23 @@ public data class NotificationBudget(
         return budgets[severity]?.exceeded != true
     }
 
-    /** Track a dispatched notification. Returns a new instance with incremented counter. */
-    public fun track(severity: Severity): NotificationBudget {
+    /** El tope configurado para esta severidad. Sin entrada = sin tope. */
+    public fun maxFor(severity: Severity): Int =
+        budgets[severity]?.maxPerShift ?: Int.MAX_VALUE
+
+    /**
+     * Registra un aviso despachado.
+     *
+     * [maxPerShift] viene de la calibración, porque el estado arranca con el
+     * mapa vacío y hay que sembrar la entrada la primera vez. Antes esto hacía
+     * `budgets[severity] ?: return this`: como el estado siempre empezaba
+     * vacío, **el contador no se movía nunca** y el presupuesto no suprimía
+     * nada. La fatiga —que es la razón de ser de Harbor— estaba inerte.
+     */
+    public fun track(severity: Severity, maxPerShift: Int): NotificationBudget {
         if (severity == Severity.CRITICAL) return this
-        val budget = budgets[severity] ?: return this
-        return copy(budgets = budgets + (severity to budget.increment()))
+        val entry = budgets[severity] ?: BudgetEntry(dispatched = 0, maxPerShift = maxPerShift)
+        return copy(budgets = budgets + (severity to entry.increment()))
     }
 }
 
