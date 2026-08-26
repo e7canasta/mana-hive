@@ -1,0 +1,32 @@
+# Scenario: José — Slow Return
+# José sits up and takes a long time to return (> 15min inverse dwell exceeded).
+# Inverse dwell mine planted at t=3s (departure from LYING).
+# ReturnDwellWarning fires at t=10min3s (10min since departure).
+# ReturnDwellExceeded fires at t=15min3s (15min since departure).
+# José finally returns to LYING at t=20min.
+
+scene:
+  bed: "bed-2"
+  night: "night-1"
+  resident: "jose"
+  monitor: "m1"
+
+calibration:
+  transitions: RELEASE_2
+  confidence:
+    BED_EDGE: 0.8
+    STANDING: 0.7
+    SITTING_IN_BED: 0.7
+    IN_BATHROOM: 0.7
+  dwell:
+    SITTING_IN_BED: { warning: 4m, exceeded: 5m }
+    IN_BATHROOM: { warning: 3m, exceeded: 4m }
+  comeBack:
+    LYING: { warning: 10m, exceeded: 15m }
+  heartbeat:
+    timeout: 90s
+
+events:
+  source: "events.dat"
+  output: "output"
+  start: "2024-01-01T02:00:00Z"

@@ -1,0 +1,9 @@
+# Signal lost test
+# heartbeat timeout=90s
+# lastHeartbeat updated when observation processed
+# At t=4s: lastHeartbeat=03:00:04
+# At t=2m: now=03:02:04, timeSince=120s > 90s -> SIGNAL_LOST
+t=0s    OBS IN_BED confidence=0.95       # -> DISCARD (duplicate)
+t=2s    OBS BED_EDGE confidence=0.90     # -> TRANSITION LYING -> BED_EDGE
+t=4s    OBS STANDING confidence=0.90     # -> TRANSITION BED_EDGE -> STANDING
+t=2m0s  OBS STANDING confidence=0.95     # -> DISCARD + SIGNAL_LOST

@@ -1,0 +1,3 @@
+t=2s      SCENE_CHANGED staff 0 → 1                         # ← evento 3
+t=4s      TRANSITION LYING → BED_EDGE                       # ← evento 4
+t=6s      SCENE_CHANGED staff 1 → 0                         # ← evento 5

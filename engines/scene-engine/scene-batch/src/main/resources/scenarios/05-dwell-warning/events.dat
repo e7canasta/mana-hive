@@ -1,0 +1,6 @@
+# Dwell warning test
+# STANDING: warning=4m, exceeded=5m
+t=0s    OBS IN_BED confidence=0.95       # -> DISCARD (duplicate)
+t=2s    OBS BED_EDGE confidence=0.90     # -> TRANSITION LYING -> BED_EDGE
+t=4s    OBS STANDING confidence=0.90     # -> TRANSITION BED_EDGE -> STANDING
+t=4m0s  OBS STANDING confidence=0.95     # -> DISCARD + DWELL_WARNING (4m >= 4m warning)

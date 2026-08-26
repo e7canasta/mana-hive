@@ -1,0 +1,60 @@
+{
+  "ts" : "2026-08-24T06:57:57.359957890Z",
+  "level" : "INFO",
+  "msg" : "batch verify started",
+  "config" : "/home/visiona/workspace/mana-hive/engines/scene-engine/scene-batch/src/main/resources/scenarios/01-confidence-filter/run.yaml",
+  "events" : 5,
+  "expected" : 2,
+  "start" : "2024-01-01T03:00:00Z"
+}
+{
+  "ts" : "2026-08-24T06:57:57.380266086Z",
+  "level" : "WARN",
+  "msg" : "observation discarded",
+  "event" : 3,
+  "offset" : "0s",
+  "kind" : "IN_BED",
+  "cause" : "DUPLICATE",
+  "subject" : "duplicate state LYING"
+}
+{
+  "ts" : "2026-08-24T06:57:57.387005313Z",
+  "level" : "WARN",
+  "msg" : "observation discarded",
+  "event" : 4,
+  "offset" : "2s",
+  "kind" : "BED_EDGE",
+  "cause" : "CONFIDENCE_TOO_LOW",
+  "subject" : "confidence 0.7 < Confidence(value=0.8)"
+}
+{
+  "ts" : "2026-08-24T06:57:57.416318167Z",
+  "level" : "INFO",
+  "msg" : "interpreter fact",
+  "event" : 5,
+  "type" : "TransitionDetected"
+}
+{
+  "ts" : "2026-08-24T06:57:57.417857832Z",
+  "level" : "WARN",
+  "msg" : "observation discarded",
+  "event" : 6,
+  "offset" : "6s",
+  "kind" : "STANDING",
+  "cause" : "CONFIDENCE_TOO_LOW",
+  "subject" : "confidence 0.6 < Confidence(value=0.7)"
+}
+{
+  "ts" : "2026-08-24T06:57:57.418494106Z",
+  "level" : "INFO",
+  "msg" : "interpreter fact",
+  "event" : 7,
+  "type" : "TransitionDetected"
+}
+{
+  "ts" : "2026-08-24T06:57:57.420500584Z",
+  "level" : "INFO",
+  "msg" : "batch verify completed",
+  "passed" : 2,
+  "failed" : 0
+}

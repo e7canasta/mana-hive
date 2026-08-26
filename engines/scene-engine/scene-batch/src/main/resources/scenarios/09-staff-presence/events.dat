@@ -1,0 +1,5 @@
+# Staff presence test
+t=0s    OBS IN_BED confidence=0.95       # -> DISCARD (duplicate)
+t=2s    OBS STAFF_ENTERED confidence=0.90  # -> SCENE_CHANGED staff (NotPresent -> Present)
+t=4s    OBS BED_EDGE confidence=0.90     # -> TRANSITION LYING -> BED_EDGE
+t=6s    OBS STAFF_LEFT confidence=0.90   # -> SCENE_CHANGED staff (Present -> NotPresent)

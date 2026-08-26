@@ -1,0 +1,174 @@
+{
+  "t" : "3s",
+  "event" : 8,
+  "type" : "TransitionDetected",
+  "bed" : "bed-2",
+  "night" : "night-1",
+  "from" : "LYING",
+  "to" : "SITTING_IN_BED"
+}
+{
+  "t" : "5m3s",
+  "event" : 9,
+  "type" : "DwellExceeded",
+  "bed" : "bed-2",
+  "night" : "night-1",
+  "state" : "SITTING_IN_BED",
+  "threshold" : "PT5M",
+  "since" : "2024-01-01T02:00:03Z"
+}
+{
+  "t" : "5m3s",
+  "event" : 9,
+  "type" : "TransitionDetected",
+  "bed" : "bed-2",
+  "night" : "night-1",
+  "from" : "SITTING_IN_BED",
+  "to" : "LYING"
+}
+{
+  "t" : "1h30m3s",
+  "event" : 12,
+  "type" : "TransitionDetected",
+  "bed" : "bed-2",
+  "night" : "night-1",
+  "from" : "LYING",
+  "to" : "SITTING_IN_BED"
+}
+{
+  "t" : "1h30m6s",
+  "event" : 13,
+  "type" : "TransitionDetected",
+  "bed" : "bed-2",
+  "night" : "night-1",
+  "from" : "SITTING_IN_BED",
+  "to" : "STANDING"
+}
+{
+  "t" : "1h30m9s",
+  "event" : 14,
+  "type" : "TransitionDetected",
+  "bed" : "bed-2",
+  "night" : "night-1",
+  "from" : "STANDING",
+  "to" : "IN_BATHROOM"
+}
+{
+  "t" : "1h32m9s",
+  "event" : 15,
+  "type" : "TransitionDetected",
+  "bed" : "bed-2",
+  "night" : "night-1",
+  "from" : "IN_BATHROOM",
+  "to" : "STANDING"
+}
+{
+  "t" : "1h32m12s",
+  "event" : 16,
+  "type" : "TransitionDetected",
+  "bed" : "bed-2",
+  "night" : "night-1",
+  "from" : "STANDING",
+  "to" : "BED_EDGE"
+}
+{
+  "t" : "1h32m15s",
+  "event" : 17,
+  "type" : "TransitionDetected",
+  "bed" : "bed-2",
+  "night" : "night-1",
+  "from" : "BED_EDGE",
+  "to" : "SITTING_IN_BED"
+}
+{
+  "t" : "1h32m18s",
+  "event" : 18,
+  "type" : "TransitionDetected",
+  "bed" : "bed-2",
+  "night" : "night-1",
+  "from" : "SITTING_IN_BED",
+  "to" : "LYING"
+}
+{
+  "t" : "3h3s",
+  "event" : 21,
+  "type" : "TransitionDetected",
+  "bed" : "bed-2",
+  "night" : "night-1",
+  "from" : "LYING",
+  "to" : "SITTING_IN_BED"
+}
+{
+  "t" : "3h6s",
+  "event" : 22,
+  "type" : "TransitionDetected",
+  "bed" : "bed-2",
+  "night" : "night-1",
+  "from" : "SITTING_IN_BED",
+  "to" : "STANDING"
+}
+{
+  "t" : "3h9s",
+  "event" : 23,
+  "type" : "TransitionDetected",
+  "bed" : "bed-2",
+  "night" : "night-1",
+  "from" : "STANDING",
+  "to" : "IN_BATHROOM"
+}
+{
+  "t" : "3h3m9s",
+  "event" : 25,
+  "type" : "DwellWarning",
+  "bed" : "bed-2",
+  "night" : "night-1",
+  "state" : "IN_BATHROOM",
+  "threshold" : "PT4M",
+  "since" : "2024-01-01T05:00:09Z"
+}
+{
+  "t" : "3h4m9s",
+  "event" : 26,
+  "type" : "DwellExceeded",
+  "bed" : "bed-2",
+  "night" : "night-1",
+  "state" : "IN_BATHROOM",
+  "threshold" : "PT4M",
+  "since" : "2024-01-01T05:00:09Z"
+}
+{
+  "t" : "3h5m9s",
+  "event" : 27,
+  "type" : "TransitionDetected",
+  "bed" : "bed-2",
+  "night" : "night-1",
+  "from" : "IN_BATHROOM",
+  "to" : "STANDING"
+}
+{
+  "t" : "3h5m12s",
+  "event" : 28,
+  "type" : "TransitionDetected",
+  "bed" : "bed-2",
+  "night" : "night-1",
+  "from" : "STANDING",
+  "to" : "BED_EDGE"
+}
+{
+  "t" : "3h5m15s",
+  "event" : 29,
+  "type" : "TransitionDetected",
+  "bed" : "bed-2",
+  "night" : "night-1",
+  "from" : "BED_EDGE",
+  "to" : "SITTING_IN_BED"
+}
+{
+  "t" : "3h5m18s",
+  "event" : 30,
+  "type" : "TransitionDetected",
+  "bed" : "bed-2",
+  "night" : "night-1",
+  "from" : "SITTING_IN_BED",
+  "to" : "LYING"
+}

@@ -1,0 +1,109 @@
+{
+  "ts" : "2026-08-24T06:58:27.106083694Z",
+  "level" : "INFO",
+  "msg" : "batch verify started",
+  "config" : "/home/visiona/workspace/mana-hive/engines/scene-engine/scene-batch/src/main/resources/scenarios/jose-bathroom-long/run.yaml",
+  "events" : 10,
+  "expected" : 9,
+  "start" : "2024-01-01T02:00:00Z"
+}
+{
+  "ts" : "2026-08-24T06:58:27.122198021Z",
+  "level" : "WARN",
+  "msg" : "observation discarded",
+  "event" : 3,
+  "offset" : "0s",
+  "kind" : "IN_BED",
+  "cause" : "DUPLICATE",
+  "subject" : "duplicate state LYING"
+}
+{
+  "ts" : "2026-08-24T06:58:27.155388835Z",
+  "level" : "INFO",
+  "msg" : "interpreter fact",
+  "event" : 4,
+  "type" : "TransitionDetected"
+}
+{
+  "ts" : "2026-08-24T06:58:27.160028951Z",
+  "level" : "INFO",
+  "msg" : "interpreter fact",
+  "event" : 5,
+  "type" : "TransitionDetected"
+}
+{
+  "ts" : "2026-08-24T06:58:27.160737972Z",
+  "level" : "INFO",
+  "msg" : "interpreter fact",
+  "event" : 6,
+  "type" : "TransitionDetected"
+}
+{
+  "ts" : "2026-08-24T06:58:27.161359997Z",
+  "level" : "INFO",
+  "msg" : "sweeper fact",
+  "event" : 8,
+  "type" : "DwellWarning"
+}
+{
+  "ts" : "2026-08-24T06:58:27.161601112Z",
+  "level" : "WARN",
+  "msg" : "observation discarded",
+  "event" : 8,
+  "offset" : "3m9s",
+  "kind" : "IN_BATHROOM",
+  "cause" : "DUPLICATE",
+  "subject" : "duplicate state IN_BATHROOM"
+}
+{
+  "ts" : "2026-08-24T06:58:27.162294280Z",
+  "level" : "INFO",
+  "msg" : "sweeper fact",
+  "event" : 9,
+  "type" : "DwellExceeded"
+}
+{
+  "ts" : "2026-08-24T06:58:27.162546756Z",
+  "level" : "WARN",
+  "msg" : "observation discarded",
+  "event" : 9,
+  "offset" : "4m9s",
+  "kind" : "IN_BATHROOM",
+  "cause" : "DUPLICATE",
+  "subject" : "duplicate state IN_BATHROOM"
+}
+{
+  "ts" : "2026-08-24T06:58:27.163224180Z",
+  "level" : "INFO",
+  "msg" : "interpreter fact",
+  "event" : 10,
+  "type" : "TransitionDetected"
+}
+{
+  "ts" : "2026-08-24T06:58:27.163616423Z",
+  "level" : "INFO",
+  "msg" : "interpreter fact",
+  "event" : 11,
+  "type" : "TransitionDetected"
+}
+{
+  "ts" : "2026-08-24T06:58:27.163969026Z",
+  "level" : "INFO",
+  "msg" : "interpreter fact",
+  "event" : 12,
+  "type" : "TransitionDetected"
+}
+{
+  "ts" : "2026-08-24T06:58:27.164396643Z",
+  "level" : "INFO",
+  "msg" : "interpreter fact",
+  "event" : 13,
+  "type" : "TransitionDetected"
+}
+{
+  "ts" : "2026-08-24T06:58:27.166378702Z",
+  "level" : "INFO",
+  "msg" : "batch verify completed",
+  "passed" : 7,
+  "failed" : 0
+}

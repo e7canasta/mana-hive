@@ -1,0 +1,60 @@
+{
+  "ts" : "2026-08-24T06:57:58.425964137Z",
+  "level" : "INFO",
+  "msg" : "batch verify started",
+  "config" : "/home/visiona/workspace/mana-hive/engines/scene-engine/scene-batch/src/main/resources/scenarios/02-hysteresis-block/run.yaml",
+  "events" : 5,
+  "expected" : 2,
+  "start" : "2024-01-01T03:00:00Z"
+}
+{
+  "ts" : "2026-08-24T06:57:58.445475582Z",
+  "level" : "WARN",
+  "msg" : "observation discarded",
+  "event" : 3,
+  "offset" : "0s",
+  "kind" : "IN_BED",
+  "cause" : "DUPLICATE",
+  "subject" : "duplicate state LYING"
+}
+{
+  "ts" : "2026-08-24T06:57:58.450082834Z",
+  "level" : "WARN",
+  "msg" : "observation discarded",
+  "event" : 4,
+  "offset" : "1s",
+  "kind" : "BED_EDGE",
+  "cause" : "HYSTERESIS_NOT_MET",
+  "subject" : "hysteresis PT1S < PT1.5S"
+}
+{
+  "ts" : "2026-08-24T06:57:58.485538549Z",
+  "level" : "INFO",
+  "msg" : "interpreter fact",
+  "event" : 5,
+  "type" : "TransitionDetected"
+}
+{
+  "ts" : "2026-08-24T06:57:58.487133603Z",
+  "level" : "WARN",
+  "msg" : "observation discarded",
+  "event" : 6,
+  "offset" : "4s",
+  "kind" : "STANDING",
+  "cause" : "HYSTERESIS_NOT_MET",
+  "subject" : "hysteresis PT1S < PT1.2S"
+}
+{
+  "ts" : "2026-08-24T06:57:58.487741487Z",
+  "level" : "INFO",
+  "msg" : "interpreter fact",
+  "event" : 7,
+  "type" : "TransitionDetected"
+}
+{
+  "ts" : "2026-08-24T06:57:58.489065527Z",
+  "level" : "INFO",
+  "msg" : "batch verify completed",
+  "passed" : 2,
+  "failed" : 0
+}

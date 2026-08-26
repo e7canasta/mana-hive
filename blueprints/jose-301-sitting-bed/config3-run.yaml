@@ -1,0 +1,32 @@
+# Config 3: Viaje completo + alertas de dwell
+# Notificación: todo lo de Config 2 + alertas si:
+#   - En baño > 5 min (normal dwell)
+#   - Fuera de cama > 15 min (inverse dwell: returnTo LYING)
+#
+# ⚠️  INVERSE DWELL — feature pendiente de implementar
+#     Ver sección "Inverse Dwell" en el README del blueprint
+
+scene:
+  bed: "bed-4"
+  night: "night-jose-301"
+  resident: "jose"
+  monitor: "m1"
+
+calibration:
+  transitions: RELEASE_2
+  confidence:
+    SITTING_IN_BED: 0.8
+    STANDING: 0.7
+    IN_BATHROOM: 0.75
+    IN_ROOM: 0.75
+  dwell:
+    IN_BATHROOM: { warning: 4m, exceeded: 5m }
+    # ⚠️ inverse dwell (pendiente):
+    # LYING: { exceeded: 15m, returnTo: LYING }
+  heartbeat:
+    timeout: 90s
+
+events:
+  source: "events.dat"
+  output: "output-config3"
+  start: "2024-01-15T22:00:00Z"

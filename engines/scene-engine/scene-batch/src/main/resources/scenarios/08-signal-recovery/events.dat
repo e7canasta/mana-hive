@@ -1,0 +1,6 @@
+# Signal recovery test
+t=0s    OBS IN_BED confidence=0.95       # -> DISCARD (duplicate)
+t=2s    OBS BED_EDGE confidence=0.90     # -> TRANSITION LYING -> BED_EDGE
+t=4s    OBS STANDING confidence=0.90     # -> TRANSITION BED_EDGE -> STANDING
+t=2m0s  OBS STANDING confidence=0.95     # -> DISCARD + SIGNAL_LOST
+t=2m2s  OBS IN_HALLWAY confidence=0.88   # -> SIGNAL_RECOVERED + TRANSITION STANDING -> IN_HALLWAY

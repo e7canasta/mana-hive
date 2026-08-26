@@ -1,0 +1,12 @@
+# José slow return: sits up and doesn't return for > 15min
+# LYING -> SITTING_IN_BED (stays 20min) -> LYING
+# Inverse dwell: mine planted at t=3s, warning at 10min, exceeded at 15min
+t=0s      OBS IN_BED confidence=0.95       # DISCARD (duplicate)
+t=3s      OBS SITTING_IN_BED confidence=0.85  # TRANSITION LYING -> SITTING_IN_BED
+# --- José sits for 20 minutes ---
+# Sweeper checks at each event time:
+# t=603s (10min3s): RETURN_DWELL_WARNING LYING (10min since departure)
+# t=903s (15min3s): RETURN_DWELL_EXCEEDED LYING (15min since departure)
+t=603s    OBS SITTING_IN_BED confidence=0.85  # triggers RETURN_DWELL_WARNING
+t=903s    OBS SITTING_IN_BED confidence=0.85  # triggers RETURN_DWELL_EXCEEDED
+t=1203s   OBS IN_BED confidence=0.95       # TRANSITION SITTING_IN_BED -> LYING (mine disarmed)

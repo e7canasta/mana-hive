@@ -1,0 +1,7 @@
+# Hysteresis test
+# LYING -> BED_EDGE requires 1.5s, BED_EDGE -> STANDING requires 1.2s
+t=0s    OBS IN_BED confidence=0.95       # -> DISCARD (duplicate)
+t=1s    OBS BED_EDGE confidence=0.90     # -> DISCARD (hysteresis 1s < 1.5s)
+t=3s    OBS BED_EDGE confidence=0.90     # -> TRANSITION LYING -> BED_EDGE (hyst 3s >= 1.5s)
+t=4s    OBS STANDING confidence=0.90     # -> DISCARD (hysteresis 1s < 1.2s from BED_EDGE)
+t=6s    OBS STANDING confidence=0.90     # -> TRANSITION BED_EDGE -> STANDING (hyst 3s >= 1.2s)

@@ -1,0 +1,70 @@
+{
+  "ts" : "2026-08-24T06:58:00.433627520Z",
+  "level" : "INFO",
+  "msg" : "batch verify started",
+  "config" : "/home/visiona/workspace/mana-hive/engines/scene-engine/scene-batch/src/main/resources/scenarios/04-illegal-transition/run.yaml",
+  "events" : 6,
+  "expected" : 2,
+  "start" : "2024-01-01T03:00:00Z"
+}
+{
+  "ts" : "2026-08-24T06:58:00.448564622Z",
+  "level" : "WARN",
+  "msg" : "observation discarded",
+  "event" : 3,
+  "offset" : "0s",
+  "kind" : "IN_BED",
+  "cause" : "DUPLICATE",
+  "subject" : "duplicate state LYING"
+}
+{
+  "ts" : "2026-08-24T06:58:00.452208830Z",
+  "level" : "WARN",
+  "msg" : "observation discarded",
+  "event" : 4,
+  "offset" : "2s",
+  "kind" : "STANDING",
+  "cause" : "ILLEGAL_TRANSITION",
+  "subject" : "illegal LYING -> STANDING"
+}
+{
+  "ts" : "2026-08-24T06:58:00.453355354Z",
+  "level" : "WARN",
+  "msg" : "observation discarded",
+  "event" : 5,
+  "offset" : "4s",
+  "kind" : "IN_HALLWAY",
+  "cause" : "ILLEGAL_TRANSITION",
+  "subject" : "illegal LYING -> IN_HALLWAY"
+}
+{
+  "ts" : "2026-08-24T06:58:00.453868335Z",
+  "level" : "WARN",
+  "msg" : "observation discarded",
+  "event" : 6,
+  "offset" : "6s",
+  "kind" : "OUTDOOR",
+  "cause" : "ILLEGAL_TRANSITION",
+  "subject" : "illegal LYING -> OUTDOOR"
+}
+{
+  "ts" : "2026-08-24T06:58:00.480390074Z",
+  "level" : "INFO",
+  "msg" : "interpreter fact",
+  "event" : 7,
+  "type" : "TransitionDetected"
+}
+{
+  "ts" : "2026-08-24T06:58:00.481703502Z",
+  "level" : "INFO",
+  "msg" : "interpreter fact",
+  "event" : 8,
+  "type" : "TransitionDetected"
+}
+{
+  "ts" : "2026-08-24T06:58:00.482576692Z",
+  "level" : "INFO",
+  "msg" : "batch verify completed",
+  "passed" : 2,
+  "failed" : 0
+}

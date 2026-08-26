@@ -1,0 +1,2 @@
+t=4s      TRANSITION LYING → BED_EDGE                       # ← evento 5
+t=8s      TRANSITION BED_EDGE → STANDING                    # ← evento 7

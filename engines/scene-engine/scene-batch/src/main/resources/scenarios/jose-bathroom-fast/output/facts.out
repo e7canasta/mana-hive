@@ -1,0 +1,7 @@
+t=3s      TRANSITION LYING → SITTING_IN_BED                 # ← evento 4
+t=6s      TRANSITION SITTING_IN_BED → STANDING              # ← evento 5
+t=9s      TRANSITION STANDING → IN_BATHROOM                 # ← evento 6
+t=2m      TRANSITION IN_BATHROOM → STANDING                 # ← evento 7
+t=2m3s    TRANSITION STANDING → BED_EDGE                    # ← evento 8
+t=2m6s    TRANSITION BED_EDGE → SITTING_IN_BED              # ← evento 9
+t=2m9s    TRANSITION SITTING_IN_BED → LYING                 # ← evento 10

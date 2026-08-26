@@ -1,0 +1,3 @@
+t=2s      TRANSITION LYING → BED_EDGE                       # ← evento 4
+t=4s      TRANSITION BED_EDGE → STANDING                    # ← evento 5
+t=5m      DWELL_WARNING STANDING PT5M                       # ← evento 7

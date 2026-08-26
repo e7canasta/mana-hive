@@ -1,0 +1,32 @@
+# Scenario: José — Full Night
+# Realistic pattern: 3 cycles throughout the night.
+# Cycle 1 (02:00): sits up 5min, no bathroom -> return (no alerts)
+# Cycle 2 (03:30): goes to bathroom, stays 2min -> return (no alerts)
+# Cycle 3 (05:00): goes to bathroom, stays 5min (exceeded) -> return
+# Inverse dwell mine planted at each departure from LYING, disarmed on return.
+
+scene:
+  bed: "bed-2"
+  night: "night-1"
+  resident: "jose"
+  monitor: "m1"
+
+calibration:
+  transitions: RELEASE_2
+  confidence:
+    BED_EDGE: 0.8
+    STANDING: 0.7
+    SITTING_IN_BED: 0.7
+    IN_BATHROOM: 0.7
+  dwell:
+    SITTING_IN_BED: { warning: 4m, exceeded: 5m }
+    IN_BATHROOM: { warning: 3m, exceeded: 4m }
+  comeBack:
+    LYING: { warning: 10m, exceeded: 15m }
+  heartbeat:
+    timeout: 90s
+
+events:
+  source: "events.dat"
+  output: "output"
+  start: "2024-01-01T02:00:00Z"

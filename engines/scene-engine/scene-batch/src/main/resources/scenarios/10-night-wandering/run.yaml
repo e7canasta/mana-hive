@@ -1,0 +1,25 @@
+# Scenario: Night Wandering (Complete Clinical Scenario)
+# Jose gets up, goes to bathroom, stays 4 minutes, returns to bed.
+
+scene:
+  bed: "bed-3"
+  night: "night-1"
+  resident: "jose"
+  monitor: "m1"
+
+calibration:
+  transitions: RELEASE_2
+  confidence:
+    BED_EDGE: 0.8
+    STANDING: 0.7
+    IN_BATHROOM: 0.7
+  dwell:
+    STANDING: { warning: 4m, exceeded: 5m }
+    IN_BATHROOM: { warning: 3m, exceeded: 4m }
+  heartbeat:
+    timeout: 90s
+
+events:
+  source: "events.dat"
+  output: "output"
+  start: "2024-01-01T03:00:00Z"

@@ -1,0 +1,54 @@
+{
+  "ts" : "2026-08-24T06:58:07.214064914Z",
+  "level" : "INFO",
+  "msg" : "batch verify started",
+  "config" : "/home/visiona/workspace/mana-hive/engines/scene-engine/scene-batch/src/main/resources/scenarios/11-return-to-bed/run.yaml",
+  "events" : 5,
+  "expected" : 4,
+  "start" : "2024-01-01T03:00:00Z"
+}
+{
+  "ts" : "2026-08-24T06:58:07.228115787Z",
+  "level" : "WARN",
+  "msg" : "observation discarded",
+  "event" : 2,
+  "offset" : "0s",
+  "kind" : "IN_BED",
+  "cause" : "DUPLICATE",
+  "subject" : "duplicate state LYING"
+}
+{
+  "ts" : "2026-08-24T06:58:07.256345881Z",
+  "level" : "INFO",
+  "msg" : "interpreter fact",
+  "event" : 3,
+  "type" : "TransitionDetected"
+}
+{
+  "ts" : "2026-08-24T06:58:07.258279865Z",
+  "level" : "INFO",
+  "msg" : "interpreter fact",
+  "event" : 4,
+  "type" : "TransitionDetected"
+}
+{
+  "ts" : "2026-08-24T06:58:07.261285312Z",
+  "level" : "INFO",
+  "msg" : "interpreter fact",
+  "event" : 5,
+  "type" : "TransitionDetected"
+}
+{
+  "ts" : "2026-08-24T06:58:07.261856426Z",
+  "level" : "INFO",
+  "msg" : "interpreter fact",
+  "event" : 6,
+  "type" : "TransitionDetected"
+}
+{
+  "ts" : "2026-08-24T06:58:07.263048452Z",
+  "level" : "INFO",
+  "msg" : "batch verify completed",
+  "passed" : 4,
+  "failed" : 0
+}

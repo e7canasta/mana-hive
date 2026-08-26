@@ -1,0 +1,47 @@
+{
+  "ts" : "2026-08-24T06:58:05.117864490Z",
+  "level" : "INFO",
+  "msg" : "batch verify started",
+  "config" : "/home/visiona/workspace/mana-hive/engines/scene-engine/scene-batch/src/main/resources/scenarios/09-staff-presence/run.yaml",
+  "events" : 4,
+  "expected" : 3,
+  "start" : "2024-01-01T03:00:00Z"
+}
+{
+  "ts" : "2026-08-24T06:58:05.141741076Z",
+  "level" : "WARN",
+  "msg" : "observation discarded",
+  "event" : 2,
+  "offset" : "0s",
+  "kind" : "IN_BED",
+  "cause" : "DUPLICATE",
+  "subject" : "duplicate state LYING"
+}
+{
+  "ts" : "2026-08-24T06:58:05.177225996Z",
+  "level" : "INFO",
+  "msg" : "interpreter fact",
+  "event" : 3,
+  "type" : "SceneStateChanged"
+}
+{
+  "ts" : "2026-08-24T06:58:05.180698768Z",
+  "level" : "INFO",
+  "msg" : "interpreter fact",
+  "event" : 4,
+  "type" : "TransitionDetected"
+}
+{
+  "ts" : "2026-08-24T06:58:05.182405667Z",
+  "level" : "INFO",
+  "msg" : "interpreter fact",
+  "event" : 5,
+  "type" : "SceneStateChanged"
+}
+{
+  "ts" : "2026-08-24T06:58:05.183812498Z",
+  "level" : "INFO",
+  "msg" : "batch verify completed",
+  "passed" : 3,
+  "failed" : 0
+}

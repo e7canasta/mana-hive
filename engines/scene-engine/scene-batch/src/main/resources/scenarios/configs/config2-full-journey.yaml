@@ -1,0 +1,17 @@
+# Config2 — Full Journey (all transitions + dwell alerts)
+# Emits facts for all transitions. Standard dwell thresholds for
+# SITTING_IN_BED (warning 4m, exceeded 5m) and IN_BATHROOM (warning 3m, exceeded 4m).
+# No inverse dwell.
+
+calibration:
+  transitions: RELEASE_2
+  confidence:
+    BED_EDGE: 0.8
+    STANDING: 0.7
+    SITTING_IN_BED: 0.7
+    IN_BATHROOM: 0.7
+  dwell:
+    SITTING_IN_BED: { warning: 4m, exceeded: 5m }
+    IN_BATHROOM: { warning: 3m, exceeded: 4m }
+  heartbeat:
+    timeout: 90s

@@ -1,0 +1,2 @@
+t=3s      TRANSITION LYING → SITTING_IN_BED                 # ← evento 4
+t=1m      TRANSITION SITTING_IN_BED → LYING                 # ← evento 5

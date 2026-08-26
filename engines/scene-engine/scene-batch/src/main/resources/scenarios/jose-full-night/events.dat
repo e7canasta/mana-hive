@@ -1,0 +1,30 @@
+# José full night: 3 realistic cycles
+# Cycle 1 (02:00): sits up 5min, no bathroom -> return
+# Cycle 2 (03:30): bathroom 2min -> return
+# Cycle 3 (05:00): bathroom 5min (exceeded) -> return
+
+# === Cycle 1: sits up, no bathroom (5min) ===
+t=0s      OBS IN_BED confidence=0.95       # DISCARD (duplicate)
+t=3s      OBS SITTING_IN_BED confidence=0.85  # TRANSITION LYING -> SITTING_IN_BED
+t=303s    OBS IN_BED confidence=0.95       # TRANSITION SITTING_IN_BED -> LYING (5min sitting)
+
+# === Cycle 2: bathroom, quick return (2min) ===
+t=5403s   OBS SITTING_IN_BED confidence=0.85  # TRANSITION LYING -> SITTING_IN_BED (1.5h later)
+t=5406s   OBS STANDING confidence=0.80     # TRANSITION SITTING_IN_BED -> STANDING
+t=5409s   OBS IN_BATHROOM confidence=0.80  # TRANSITION STANDING -> IN_BATHROOM
+t=5529s   OBS STANDING confidence=0.80     # TRANSITION IN_BATHROOM -> STANDING (2min in bathroom)
+t=5532s   OBS BED_EDGE confidence=0.85     # TRANSITION STANDING -> BED_EDGE
+t=5535s   OBS SITTING_IN_BED confidence=0.85  # TRANSITION BED_EDGE -> SITTING_IN_BED
+t=5538s   OBS IN_BED confidence=0.95       # TRANSITION SITTING_IN_BED -> LYING
+
+# === Cycle 3: bathroom, long stay (5min, exceeded) ===
+t=10803s  OBS SITTING_IN_BED confidence=0.85  # TRANSITION LYING -> SITTING_IN_BED (1.5h later)
+t=10806s  OBS STANDING confidence=0.80     # TRANSITION SITTING_IN_BED -> STANDING
+t=10809s  OBS IN_BATHROOM confidence=0.80  # TRANSITION STANDING -> IN_BATHROOM
+# --- 5 minutes in bathroom (warning at 3min, exceeded at 4min) ---
+t=10989s  OBS IN_BATHROOM confidence=0.80  # DWELL_WARNING IN_BATHROOM (3min)
+t=11049s  OBS IN_BATHROOM confidence=0.80  # DWELL_EXCEEDED IN_BATHROOM (4min)
+t=11109s  OBS STANDING confidence=0.80     # TRANSITION IN_BATHROOM -> STANDING (5min)
+t=11112s  OBS BED_EDGE confidence=0.85     # TRANSITION STANDING -> BED_EDGE
+t=11115s  OBS SITTING_IN_BED confidence=0.85  # TRANSITION BED_EDGE -> SITTING_IN_BED
+t=11118s  OBS IN_BED confidence=0.95       # TRANSITION SITTING_IN_BED -> LYING

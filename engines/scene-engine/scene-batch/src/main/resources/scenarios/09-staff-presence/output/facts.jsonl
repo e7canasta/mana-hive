@@ -1,0 +1,29 @@
+{
+  "t" : "2s",
+  "event" : 3,
+  "type" : "SceneStateChanged",
+  "bed" : "bed-3",
+  "night" : "night-1",
+  "field" : "staff",
+  "from" : "0",
+  "to" : "1"
+}
+{
+  "t" : "4s",
+  "event" : 4,
+  "type" : "TransitionDetected",
+  "bed" : "bed-3",
+  "night" : "night-1",
+  "from" : "LYING",
+  "to" : "BED_EDGE"
+}
+{
+  "t" : "6s",
+  "event" : 5,
+  "type" : "SceneStateChanged",
+  "bed" : "bed-3",
+  "night" : "night-1",
+  "field" : "staff",
+  "from" : "1",
+  "to" : "0"
+}

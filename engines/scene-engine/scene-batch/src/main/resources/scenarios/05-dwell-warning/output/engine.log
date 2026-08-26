@@ -1,0 +1,50 @@
+{
+  "ts" : "2026-08-24T06:58:01.387102380Z",
+  "level" : "INFO",
+  "msg" : "batch verify started",
+  "config" : "/home/visiona/workspace/mana-hive/engines/scene-engine/scene-batch/src/main/resources/scenarios/05-dwell-warning/run.yaml",
+  "events" : 4,
+  "expected" : 2,
+  "start" : "2024-01-01T03:00:00Z"
+}
+{
+  "ts" : "2026-08-24T06:58:01.409158933Z",
+  "level" : "WARN",
+  "msg" : "observation discarded",
+  "event" : 3,
+  "offset" : "0s",
+  "kind" : "IN_BED",
+  "cause" : "DUPLICATE",
+  "subject" : "duplicate state LYING"
+}
+{
+  "ts" : "2026-08-24T06:58:01.455185694Z",
+  "level" : "INFO",
+  "msg" : "interpreter fact",
+  "event" : 4,
+  "type" : "TransitionDetected"
+}
+{
+  "ts" : "2026-08-24T06:58:01.458231214Z",
+  "level" : "INFO",
+  "msg" : "interpreter fact",
+  "event" : 5,
+  "type" : "TransitionDetected"
+}
+{
+  "ts" : "2026-08-24T06:58:01.461984908Z",
+  "level" : "WARN",
+  "msg" : "observation discarded",
+  "event" : 6,
+  "offset" : "4m",
+  "kind" : "STANDING",
+  "cause" : "DUPLICATE",
+  "subject" : "duplicate state STANDING"
+}
+{
+  "ts" : "2026-08-24T06:58:01.468205254Z",
+  "level" : "INFO",
+  "msg" : "batch verify completed",
+  "passed" : 2,
+  "failed" : 0
+}

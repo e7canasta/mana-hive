@@ -1,0 +1,27 @@
+{
+  "t" : "2s",
+  "event" : 3,
+  "type" : "TransitionDetected",
+  "bed" : "bed-3",
+  "night" : "night-1",
+  "from" : "LYING",
+  "to" : "BED_EDGE"
+}
+{
+  "t" : "4s",
+  "event" : 4,
+  "type" : "TransitionDetected",
+  "bed" : "bed-3",
+  "night" : "night-1",
+  "from" : "BED_EDGE",
+  "to" : "STANDING"
+}
+{
+  "t" : "2m2s",
+  "event" : 6,
+  "type" : "TransitionDetected",
+  "bed" : "bed-3",
+  "night" : "night-1",
+  "from" : "STANDING",
+  "to" : "IN_HALLWAY"
+}

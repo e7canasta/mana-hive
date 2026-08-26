@@ -1,0 +1,6 @@
+# Return to bed: Maria gets up and returns fast
+t=0s      OBS IN_BED confidence=0.95       # -> DISCARD (duplicate)
+t=2s      OBS BED_EDGE confidence=0.90     # -> TRANSITION LYING -> BED_EDGE
+t=4s      OBS STANDING confidence=0.90     # -> TRANSITION BED_EDGE -> STANDING
+t=6s      OBS BED_EDGE confidence=0.90     # -> TRANSITION STANDING -> BED_EDGE
+t=8s      OBS IN_BED confidence=0.95       # -> TRANSITION BED_EDGE -> LYING

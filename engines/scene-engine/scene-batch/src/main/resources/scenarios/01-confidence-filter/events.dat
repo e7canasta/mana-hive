@@ -1,0 +1,7 @@
+# Confidence filter test
+# BED_EDGE requires min 0.8, STANDING requires min 0.7
+t=0s    OBS IN_BED confidence=0.95       # -> DISCARD (duplicate: already LYING)
+t=2s    OBS BED_EDGE confidence=0.70     # -> DISCARD (confidence 0.70 < 0.8)
+t=4s    OBS BED_EDGE confidence=0.85     # -> TRANSITION LYING -> BED_EDGE (passes)
+t=6s    OBS STANDING confidence=0.60     # -> DISCARD (confidence 0.60 < 0.7)
+t=8s    OBS STANDING confidence=0.75     # -> TRANSITION BED_EDGE -> STANDING (passes)

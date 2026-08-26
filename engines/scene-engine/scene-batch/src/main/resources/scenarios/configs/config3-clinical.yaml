@@ -1,0 +1,23 @@
+# Config3 — Clinical Alerts + Inverse Dwell
+# All transitions + standard dwell + inverse dwell (return dwell).
+# Inverse dwell monitors time since leaving baseline state (LYING).
+# If person doesn't return to LYING within threshold, alert fires.
+#
+# Inverse dwell thresholds:
+#   LYING baseline: warning 10m, exceeded 15m (person hasn't returned to bed)
+#   IN_BATHROOM baseline: warning 5m, exceeded 7m (person hasn't returned from bathroom)
+
+calibration:
+  transitions: RELEASE_2
+  confidence:
+    BED_EDGE: 0.8
+    STANDING: 0.7
+    SITTING_IN_BED: 0.7
+    IN_BATHROOM: 0.7
+  dwell:
+    SITTING_IN_BED: { warning: 4m, exceeded: 5m }
+    IN_BATHROOM: { warning: 3m, exceeded: 4m }
+  comeBack:
+    LYING: { warning: 10m, exceeded: 15m }
+  heartbeat:
+    timeout: 90s

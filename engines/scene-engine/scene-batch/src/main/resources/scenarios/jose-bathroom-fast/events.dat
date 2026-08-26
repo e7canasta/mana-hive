@@ -1,0 +1,10 @@
+# José bathroom fast: full journey, quick return (< 3min in bathroom)
+# LYING -> SITTING_IN_BED -> STANDING -> IN_BATHROOM -> STANDING -> BED_EDGE -> SITTING_IN_BED -> LYING
+t=0s      OBS IN_BED confidence=0.95       # DISCARD (duplicate)
+t=3s      OBS SITTING_IN_BED confidence=0.85  # TRANSITION LYING -> SITTING_IN_BED
+t=6s      OBS STANDING confidence=0.80     # TRANSITION SITTING_IN_BED -> STANDING
+t=9s      OBS IN_BATHROOM confidence=0.80  # TRANSITION STANDING -> IN_BATHROOM
+t=120s    OBS STANDING confidence=0.80     # TRANSITION IN_BATHROOM -> STANDING (111s in bathroom, < 3min)
+t=123s    OBS BED_EDGE confidence=0.85     # TRANSITION STANDING -> BED_EDGE
+t=126s    OBS SITTING_IN_BED confidence=0.85  # TRANSITION BED_EDGE -> SITTING_IN_BED
+t=129s    OBS IN_BED confidence=0.95       # TRANSITION SITTING_IN_BED -> LYING

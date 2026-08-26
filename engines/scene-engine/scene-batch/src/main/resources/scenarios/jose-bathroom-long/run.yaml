@@ -1,0 +1,30 @@
+# Scenario: José — Bathroom Long
+# José goes to the bathroom and stays too long (> 4min exceeded threshold).
+# Full journey with IN_BATHROOM DwellExceeded firing.
+# Inverse dwell mine planted on departure from LYING, disarmed on return.
+
+scene:
+  bed: "bed-2"
+  night: "night-1"
+  resident: "jose"
+  monitor: "m1"
+
+calibration:
+  transitions: RELEASE_2
+  confidence:
+    BED_EDGE: 0.8
+    STANDING: 0.7
+    SITTING_IN_BED: 0.7
+    IN_BATHROOM: 0.7
+  dwell:
+    SITTING_IN_BED: { warning: 4m, exceeded: 5m }
+    IN_BATHROOM: { warning: 3m, exceeded: 4m }
+  comeBack:
+    LYING: { warning: 10m, exceeded: 15m }
+  heartbeat:
+    timeout: 90s
+
+events:
+  source: "events.dat"
+  output: "output"
+  start: "2024-01-01T02:00:00Z"

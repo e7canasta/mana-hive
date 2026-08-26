@@ -1,0 +1,11 @@
+# Night wandering: Jose gets up, goes to bathroom, returns
+# IN_BATHROOM: warning=3m, exceeded=4m
+t=0s      OBS IN_BED confidence=0.95       # -> DISCARD (duplicate)
+t=2s      OBS BED_EDGE confidence=0.88     # -> TRANSITION LYING -> BED_EDGE
+t=4s      OBS STANDING confidence=0.85     # -> TRANSITION BED_EDGE -> STANDING
+t=6s      OBS IN_BATHROOM confidence=0.82  # -> TRANSITION STANDING -> IN_BATHROOM
+t=3m0s    OBS IN_BATHROOM confidence=0.90  # -> DISCARD + DWELL_WARNING (3m >= 3m)
+t=4m0s    OBS IN_BATHROOM confidence=0.90  # -> DISCARD + DWELL_EXCEEDED (4m >= 4m)
+t=6m0s    OBS STANDING confidence=0.85     # -> TRANSITION IN_BATHROOM -> STANDING
+t=6m2s    OBS BED_EDGE confidence=0.88     # -> TRANSITION STANDING -> BED_EDGE
+t=6m4s    OBS IN_BED confidence=0.95       # -> TRANSITION BED_EDGE -> LYING (hyst 2s >= 1s)

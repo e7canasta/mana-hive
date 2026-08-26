@@ -1,0 +1,18 @@
+{
+  "t" : "3s",
+  "event" : 4,
+  "type" : "TransitionDetected",
+  "bed" : "bed-2",
+  "night" : "night-1",
+  "from" : "LYING",
+  "to" : "SITTING_IN_BED"
+}
+{
+  "t" : "1m",
+  "event" : 5,
+  "type" : "TransitionDetected",
+  "bed" : "bed-2",
+  "night" : "night-1",
+  "from" : "SITTING_IN_BED",
+  "to" : "LYING"
+}

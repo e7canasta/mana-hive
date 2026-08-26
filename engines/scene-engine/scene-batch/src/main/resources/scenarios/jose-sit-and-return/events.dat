@@ -1,0 +1,5 @@
+# José sits up and returns: LYING -> SITTING_IN_BED -> LYING
+# Quick cycle, no bathroom visit. Mine planted on departure, disarmed on return.
+t=0s      OBS IN_BED confidence=0.95       # DISCARD (duplicate)
+t=3s      OBS SITTING_IN_BED confidence=0.85  # TRANSITION LYING -> SITTING_IN_BED
+t=60s     OBS IN_BED confidence=0.95       # TRANSITION SITTING_IN_BED -> LYING

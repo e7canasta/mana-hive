@@ -1,0 +1,3 @@
+t=2s      SCENE_CHANGED staff
+t=4s      TRANSITION LYING -> BED_EDGE
+t=6s      SCENE_CHANGED staff

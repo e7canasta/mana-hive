@@ -1,0 +1,8 @@
+t=2s      TRANSITION LYING → BED_EDGE                       # ← evento 4
+t=4s      TRANSITION BED_EDGE → STANDING                    # ← evento 5
+t=6s      TRANSITION STANDING → IN_BATHROOM                 # ← evento 6
+t=4m      DWELL_WARNING IN_BATHROOM PT4M                    # ← evento 8
+t=6m      DWELL_EXCEEDED IN_BATHROOM PT4M                   # ← evento 9
+t=6m      TRANSITION IN_BATHROOM → STANDING                 # ← evento 9
+t=6m2s    TRANSITION STANDING → BED_EDGE                    # ← evento 10
+t=6m4s    TRANSITION BED_EDGE → LYING                       # ← evento 11

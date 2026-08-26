@@ -1,0 +1,8 @@
+# Illegal transition test
+# LYING can only go to: SITTING_IN_BED, ATTEMPTING_EXIT, BED_EDGE
+t=0s    OBS IN_BED confidence=0.95       # -> DISCARD (duplicate)
+t=2s    OBS STANDING confidence=0.90     # -> DISCARD (LYING -> STANDING illegal)
+t=4s    OBS IN_HALLWAY confidence=0.90   # -> DISCARD (LYING -> IN_HALLWAY illegal)
+t=6s    OBS OUTDOOR confidence=0.90      # -> DISCARD (LYING -> OUTDOOR illegal)
+t=8s    OBS BED_EDGE confidence=0.90     # -> TRANSITION LYING -> BED_EDGE (legal)
+t=10s   OBS IN_BED confidence=0.95       # -> TRANSITION BED_EDGE -> LYING (legal, hyst 2s >= 1s)

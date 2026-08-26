@@ -1,0 +1,13 @@
+# José bathroom long: stays in bathroom > 4min (exceeded threshold)
+# LYING -> SITTING_IN_BED -> STANDING -> IN_BATHROOM (5min) -> STANDING -> BED_EDGE -> SITTING_IN_BED -> LYING
+t=0s      OBS IN_BED confidence=0.95       # DISCARD (duplicate)
+t=3s      OBS SITTING_IN_BED confidence=0.85  # TRANSITION LYING -> SITTING_IN_BED
+t=6s      OBS STANDING confidence=0.80     # TRANSITION SITTING_IN_BED -> STANDING
+t=9s      OBS IN_BATHROOM confidence=0.80  # TRANSITION STANDING -> IN_BATHROOM
+# --- 5 minutes in bathroom (warning at 3min, exceeded at 4min) ---
+t=189s    OBS IN_BATHROOM confidence=0.80  # DWELL_WARNING IN_BATHROOM (3min in bathroom)
+t=249s    OBS IN_BATHROOM confidence=0.80  # DWELL_EXCEEDED IN_BATHROOM (4min in bathroom)
+t=309s    OBS STANDING confidence=0.80     # TRANSITION IN_BATHROOM -> STANDING (5min in bathroom)
+t=312s    OBS BED_EDGE confidence=0.85     # TRANSITION STANDING -> BED_EDGE
+t=315s    OBS SITTING_IN_BED confidence=0.85  # TRANSITION BED_EDGE -> SITTING_IN_BED
+t=318s    OBS IN_BED confidence=0.95       # TRANSITION SITTING_IN_BED -> LYING

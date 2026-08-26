@@ -1,0 +1,24 @@
+# Scenario: Illegal Transition
+# Verifies that transitions not in the DAG are rejected.
+# LYING can only go to: SITTING_IN_BED, ATTEMPTING_EXIT, BED_EDGE
+
+scene:
+  bed: "bed-3"
+  night: "night-1"
+  resident: "maria"
+  monitor: "m1"
+
+calibration:
+  transitions: RELEASE_2
+  confidence:
+    BED_EDGE: 0.8
+    STANDING: 0.7
+  dwell:
+    STANDING: { warning: 4m, exceeded: 5m }
+  heartbeat:
+    timeout: 90s
+
+events:
+  source: "events.dat"
+  output: "output"
+  start: "2024-01-01T03:00:00Z"

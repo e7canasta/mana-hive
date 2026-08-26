@@ -1,0 +1,3 @@
+t=2s      TRANSITION LYING → BED_EDGE                       # ← evento 3
+t=4s      TRANSITION BED_EDGE → STANDING                    # ← evento 4
+t=2m2s    TRANSITION STANDING → IN_HALLWAY                  # ← evento 6

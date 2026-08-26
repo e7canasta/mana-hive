@@ -1,0 +1,7 @@
+# Pipeline batch input: events.dat
+# Format: t=<offset> OBS <kind> confidence=<value>
+
+# José se sienta en la cama
+t=0s OBS IN_BED confidence=0.95
+t=1h15m OBS SITTING_IN_BED confidence=0.92
+t=1h32m OBS IN_BED confidence=0.95

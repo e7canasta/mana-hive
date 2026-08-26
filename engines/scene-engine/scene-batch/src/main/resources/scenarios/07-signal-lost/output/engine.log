@@ -1,0 +1,50 @@
+{
+  "ts" : "2026-08-24T06:58:03.169301089Z",
+  "level" : "INFO",
+  "msg" : "batch verify started",
+  "config" : "/home/visiona/workspace/mana-hive/engines/scene-engine/scene-batch/src/main/resources/scenarios/07-signal-lost/run.yaml",
+  "events" : 4,
+  "expected" : 2,
+  "start" : "2024-01-01T03:00:00Z"
+}
+{
+  "ts" : "2026-08-24T06:58:03.184856223Z",
+  "level" : "WARN",
+  "msg" : "observation discarded",
+  "event" : 6,
+  "offset" : "0s",
+  "kind" : "IN_BED",
+  "cause" : "DUPLICATE",
+  "subject" : "duplicate state LYING"
+}
+{
+  "ts" : "2026-08-24T06:58:03.214552533Z",
+  "level" : "INFO",
+  "msg" : "interpreter fact",
+  "event" : 7,
+  "type" : "TransitionDetected"
+}
+{
+  "ts" : "2026-08-24T06:58:03.216312279Z",
+  "level" : "INFO",
+  "msg" : "interpreter fact",
+  "event" : 8,
+  "type" : "TransitionDetected"
+}
+{
+  "ts" : "2026-08-24T06:58:03.218372019Z",
+  "level" : "WARN",
+  "msg" : "observation discarded",
+  "event" : 9,
+  "offset" : "2m",
+  "kind" : "STANDING",
+  "cause" : "DUPLICATE",
+  "subject" : "duplicate state STANDING"
+}
+{
+  "ts" : "2026-08-24T06:58:03.219723041Z",
+  "level" : "INFO",
+  "msg" : "batch verify completed",
+  "passed" : 2,
+  "failed" : 0
+}

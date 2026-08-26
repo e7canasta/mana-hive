@@ -1,0 +1,73 @@
+{
+  "ts" : "2026-08-24T06:57:59.592681187Z",
+  "level" : "INFO",
+  "msg" : "batch verify started",
+  "config" : "/home/visiona/workspace/mana-hive/engines/scene-engine/scene-batch/src/main/resources/scenarios/03-duplicate-discard/run.yaml",
+  "events" : 6,
+  "expected" : 1,
+  "start" : "2024-01-01T03:00:00Z"
+}
+{
+  "ts" : "2026-08-24T06:57:59.608918236Z",
+  "level" : "WARN",
+  "msg" : "observation discarded",
+  "event" : 2,
+  "offset" : "0s",
+  "kind" : "IN_BED",
+  "cause" : "DUPLICATE",
+  "subject" : "duplicate state LYING"
+}
+{
+  "ts" : "2026-08-24T06:57:59.611785984Z",
+  "level" : "WARN",
+  "msg" : "observation discarded",
+  "event" : 3,
+  "offset" : "2s",
+  "kind" : "IN_BED",
+  "cause" : "DUPLICATE",
+  "subject" : "duplicate state LYING"
+}
+{
+  "ts" : "2026-08-24T06:57:59.612117149Z",
+  "level" : "WARN",
+  "msg" : "observation discarded",
+  "event" : 4,
+  "offset" : "4s",
+  "kind" : "IN_BED",
+  "cause" : "DUPLICATE",
+  "subject" : "duplicate state LYING"
+}
+{
+  "ts" : "2026-08-24T06:57:59.647485574Z",
+  "level" : "INFO",
+  "msg" : "interpreter fact",
+  "event" : 5,
+  "type" : "TransitionDetected"
+}
+{
+  "ts" : "2026-08-24T06:57:59.649073830Z",
+  "level" : "WARN",
+  "msg" : "observation discarded",
+  "event" : 6,
+  "offset" : "8s",
+  "kind" : "BED_EDGE",
+  "cause" : "DUPLICATE",
+  "subject" : "duplicate state BED_EDGE"
+}
+{
+  "ts" : "2026-08-24T06:57:59.649616885Z",
+  "level" : "WARN",
+  "msg" : "observation discarded",
+  "event" : 7,
+  "offset" : "10s",
+  "kind" : "BED_EDGE",
+  "cause" : "DUPLICATE",
+  "subject" : "duplicate state BED_EDGE"
+}
+{
+  "ts" : "2026-08-24T06:57:59.651218008Z",
+  "level" : "INFO",
+  "msg" : "batch verify completed",
+  "passed" : 1,
+  "failed" : 0
+}

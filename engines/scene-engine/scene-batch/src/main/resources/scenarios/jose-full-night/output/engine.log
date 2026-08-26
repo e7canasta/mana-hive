@@ -1,0 +1,179 @@
+{
+  "ts" : "2026-08-24T06:58:28.906670886Z",
+  "level" : "INFO",
+  "msg" : "batch verify started",
+  "config" : "/home/visiona/workspace/mana-hive/engines/scene-engine/scene-batch/src/main/resources/scenarios/jose-full-night/run.yaml",
+  "events" : 19,
+  "expected" : 19,
+  "start" : "2024-01-01T02:00:00Z"
+}
+{
+  "ts" : "2026-08-24T06:58:28.923378523Z",
+  "level" : "WARN",
+  "msg" : "observation discarded",
+  "event" : 7,
+  "offset" : "0s",
+  "kind" : "IN_BED",
+  "cause" : "DUPLICATE",
+  "subject" : "duplicate state LYING"
+}
+{
+  "ts" : "2026-08-24T06:58:28.954567462Z",
+  "level" : "INFO",
+  "msg" : "interpreter fact",
+  "event" : 8,
+  "type" : "TransitionDetected"
+}
+{
+  "ts" : "2026-08-24T06:58:28.958160512Z",
+  "level" : "INFO",
+  "msg" : "sweeper fact",
+  "event" : 9,
+  "type" : "DwellExceeded"
+}
+{
+  "ts" : "2026-08-24T06:58:28.958644602Z",
+  "level" : "INFO",
+  "msg" : "interpreter fact",
+  "event" : 9,
+  "type" : "TransitionDetected"
+}
+{
+  "ts" : "2026-08-24T06:58:28.959095910Z",
+  "level" : "INFO",
+  "msg" : "interpreter fact",
+  "event" : 12,
+  "type" : "TransitionDetected"
+}
+{
+  "ts" : "2026-08-24T06:58:28.959843907Z",
+  "level" : "INFO",
+  "msg" : "interpreter fact",
+  "event" : 13,
+  "type" : "TransitionDetected"
+}
+{
+  "ts" : "2026-08-24T06:58:28.960518557Z",
+  "level" : "INFO",
+  "msg" : "interpreter fact",
+  "event" : 14,
+  "type" : "TransitionDetected"
+}
+{
+  "ts" : "2026-08-24T06:58:28.960964818Z",
+  "level" : "INFO",
+  "msg" : "interpreter fact",
+  "event" : 15,
+  "type" : "TransitionDetected"
+}
+{
+  "ts" : "2026-08-24T06:58:28.961327978Z",
+  "level" : "INFO",
+  "msg" : "interpreter fact",
+  "event" : 16,
+  "type" : "TransitionDetected"
+}
+{
+  "ts" : "2026-08-24T06:58:28.961737318Z",
+  "level" : "INFO",
+  "msg" : "interpreter fact",
+  "event" : 17,
+  "type" : "TransitionDetected"
+}
+{
+  "ts" : "2026-08-24T06:58:28.962903995Z",
+  "level" : "INFO",
+  "msg" : "interpreter fact",
+  "event" : 18,
+  "type" : "TransitionDetected"
+}
+{
+  "ts" : "2026-08-24T06:58:28.963728302Z",
+  "level" : "INFO",
+  "msg" : "interpreter fact",
+  "event" : 21,
+  "type" : "TransitionDetected"
+}
+{
+  "ts" : "2026-08-24T06:58:28.963995682Z",
+  "level" : "INFO",
+  "msg" : "interpreter fact",
+  "event" : 22,
+  "type" : "TransitionDetected"
+}
+{
+  "ts" : "2026-08-24T06:58:28.964208153Z",
+  "level" : "INFO",
+  "msg" : "interpreter fact",
+  "event" : 23,
+  "type" : "TransitionDetected"
+}
+{
+  "ts" : "2026-08-24T06:58:28.964644342Z",
+  "level" : "INFO",
+  "msg" : "sweeper fact",
+  "event" : 25,
+  "type" : "DwellWarning"
+}
+{
+  "ts" : "2026-08-24T06:58:28.964866916Z",
+  "level" : "WARN",
+  "msg" : "observation discarded",
+  "event" : 25,
+  "offset" : "3h3m9s",
+  "kind" : "IN_BATHROOM",
+  "cause" : "DUPLICATE",
+  "subject" : "duplicate state IN_BATHROOM"
+}
+{
+  "ts" : "2026-08-24T06:58:28.965308040Z",
+  "level" : "INFO",
+  "msg" : "sweeper fact",
+  "event" : 26,
+  "type" : "DwellExceeded"
+}
+{
+  "ts" : "2026-08-24T06:58:28.965520607Z",
+  "level" : "WARN",
+  "msg" : "observation discarded",
+  "event" : 26,
+  "offset" : "3h4m9s",
+  "kind" : "IN_BATHROOM",
+  "cause" : "DUPLICATE",
+  "subject" : "duplicate state IN_BATHROOM"
+}
+{
+  "ts" : "2026-08-24T06:58:28.966109696Z",
+  "level" : "INFO",
+  "msg" : "interpreter fact",
+  "event" : 27,
+  "type" : "TransitionDetected"
+}
+{
+  "ts" : "2026-08-24T06:58:28.966736193Z",
+  "level" : "INFO",
+  "msg" : "interpreter fact",
+  "event" : 28,
+  "type" : "TransitionDetected"
+}
+{
+  "ts" : "2026-08-24T06:58:28.967118830Z",
+  "level" : "INFO",
+  "msg" : "interpreter fact",
+  "event" : 29,
+  "type" : "TransitionDetected"
+}
+{
+  "ts" : "2026-08-24T06:58:28.967481239Z",
+  "level" : "INFO",
+  "msg" : "interpreter fact",
+  "event" : 30,
+  "type" : "TransitionDetected"
+}
+{
+  "ts" : "2026-08-24T06:58:28.969294394Z",
+  "level" : "INFO",
+  "msg" : "batch verify completed",
+  "passed" : 16,
+  "failed" : 0
+}

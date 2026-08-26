@@ -1,0 +1,13 @@
+# Config1 — Simple (notify on SITTING_IN_BED only)
+# Minimal config: only emits facts for SITTING_IN_BED transitions.
+# No dwell alerts, no inverse dwell.
+
+calibration:
+  transitions: RELEASE_2
+  confidence:
+    BED_EDGE: 0.8
+    STANDING: 0.7
+    SITTING_IN_BED: 0.7
+  dwell: {}
+  heartbeat:
+    timeout: 90s
