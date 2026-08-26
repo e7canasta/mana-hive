@@ -616,7 +616,7 @@ We need hands. How do we actually wake someone up? How do we orchestrate the phy
 
 This brings us to the final realtime stage of the pipeline, the harbor engine.
 
-Internally in the codebase, the harbor engine is referred to as Vigia, which translates from Latin and Spanish roots to watchmen or lookout.
+Internally in the codebase, the harbor engine is referred to as Harbor, which translates from Latin and Spanish roots to watchmen or lookout.
 
 It is the ultimate dispatcher. It sits at the boundary between the digital domain and the human world. It consumes those abstract Sentinel signal events and translates them into highly concrete notice command instructions.
 

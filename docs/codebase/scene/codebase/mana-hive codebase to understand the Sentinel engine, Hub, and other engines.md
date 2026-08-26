@@ -2,7 +2,7 @@ Here is a comprehensive summary of the mana-hive codebase architecture.
 Explore the mana-hive codebase to understand the Sentinel engine, Hub, and other engines:
 
 1. Find all .kt files under engines/sentinel/
-2. Find all .kt files under engines/harbor/ or engines/vigia/ (alert delivery)
+2. Find all .kt files under engines/harbor/ or engines/harbor/ (alert delivery)
 3. Find all .kt files under hub/
 4. Find all .kt files under platform/messaging/ (NATS connectivity)
 5. Find any DDD patterns, bounded context definitions, or aggregate roots
@@ -27,7 +27,7 @@ mana-hive/
   engines/
     scene-engine/     -- DigitalTwin, SceneInterpreter, ClockSweeper
     sentinel/         -- SentinelEvaluator, EpisodeLedger, FatigueBudget
-    harbor/           -- HarborEngine, NoticeRouter, NoticeLifecycle (a.k.a. "vigia")
+    harbor/           -- HarborEngine, NoticeRouter, NoticeLifecycle (a.k.a. "harbor")
     politica-engine/  -- ResidentPolicy, PolicyResolver, SemanticBucket
     recorder/         -- RecorderEngine, RecordingLedger, EvidenceRecord
   simulator/          -- night-scenario DSL + scenario bank
@@ -65,9 +65,9 @@ CLI tools: `RunCommand`, `VerifyCommand`, `DiffCommand` for offline testing. `Si
 
 ---
 
-## 2. Harbor Engine (`../../../../engines/harbor`) -- a.k.a. "Vigia"
+## 2. Harbor Engine (`../../../../engines/harbor`) -- a.k.a. "Harbor"
 
-**20 .kt files** across three modules. No `engines/vigia/` directory exists -- the README mentions "vigia" but the actual code module is `harbor/`. The Spring Boot application class is still named `VigiaApplication` (in package `com.manahive.vigia.service`), confirming harbor IS the vigia.
+**20 .kt files** across three modules. No `engines/harbor/` directory exists -- the README mentions "harbor" but the actual code module is `harbor/`. The Spring Boot application class is still named `HarborApplication` (in package `com.manahive.harbor.service`), confirming harbor IS the harbor.
 
 ### Domain Layer (`harbor-domain/`)
 
@@ -85,7 +85,7 @@ CLI tools: `RunCommand`, `VerifyCommand`, `DiffCommand` for offline testing. `Si
 
 | File | Role |
 |------|------|
-| `/home/visiona/workspace/mana-hive/engines/harbor/harbor-service/src/main/kotlin/com/manahive/harbor/service/VigiaApplication.kt` | Spring Boot shell. Wires `HarborCalibration` bean and `HarborEngine` bean. Subscribes to `sentinel.signal.v1.>`. |
+| `/home/visiona/workspace/mana-hive/engines/harbor/harbor-service/src/main/kotlin/com/manahive/harbor/service/HarborApplication.kt` | Spring Boot shell. Wires `HarborCalibration` bean and `HarborEngine` bean. Subscribes to `sentinel.signal.v1.>`. |
 | `/home/visiona/workspace/mana-hive/engines/harbor/harbor-service/src/main/kotlin/com/manahive/harbor/service/nats/HarborNatsIngest.kt` | Subscribes to sentinel signals. |
 | `/home/visiona/workspace/mana-hive/engines/harbor/harbor-service/src/main/kotlin/com/manahive/harbor/service/nats/HarborNatsEgress.kt` | Publishes to `alarm.event.v1.<alert>`. |
 
@@ -240,7 +240,7 @@ sentinel (SentinelEvaluator + EpisodeLedger)
     |
     | sentinel.signal.v1.<bed>  (EpisodeOpened, UmbrellaEvent, AutoRecovery, EpisodeClosed, SuppressedWithRecord)
     v
-harbor/vigia (HarborEngine + NoticeRouter + NoticeLifecycle)
+harbor/harbor (HarborEngine + NoticeRouter + NoticeLifecycle)
     |
     | alarm.event.v1.<alert>
     v

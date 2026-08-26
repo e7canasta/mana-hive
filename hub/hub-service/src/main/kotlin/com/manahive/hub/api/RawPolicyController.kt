@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController
  * Fowler: "Adapter" — translates HTTP requests to port method calls.
  * Vernon: "Driving Adapter" — the primary adapter for the use case.
  */
+@Deprecated("Superseded by /api/policies/{id} — raw policy is a SPEC-02 artifact. Remove after consumers migrate.")
 @RestController
 @RequestMapping("/api/policies/raw")
 public class RawPolicyController(

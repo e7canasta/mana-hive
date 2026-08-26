@@ -1,0 +1,76 @@
+package com.manahive.hub.config
+
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.manahive.contracts.ledger.LedgerPort
+import com.manahive.contracts.ledger.WatermarkPort
+import com.manahive.contracts.policy.PolicyCatalog
+import com.manahive.contracts.policy.RawPolicyStore
+import com.manahive.contracts.policy.SemanticBucketStore
+import com.manahive.hub.ledger.EventStore
+import com.manahive.hub.ledger.InMemoryLedger
+import com.manahive.hub.ledger.InMemoryWatermarkStore
+import com.manahive.hub.ledger.StreamCatalog
+import com.manahive.hub.ledger.WatermarkCatalog
+import com.manahive.hub.policy.InMemoryPolicyCatalog
+import com.manahive.hub.policy.InMemoryPolicyLayerStore
+import com.manahive.hub.policy.InMemoryRawPolicyStore
+import com.manahive.hub.policy.InMemorySemanticBucketStore
+import com.manahive.messaging.NatsClientConfiguration
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Import
+import org.springframework.context.annotation.Primary
+
+/**
+ * Declares the in-memory beans that the hub needs to boot.
+ *
+ * Every interface the controllers and listeners inject is satisfied here with
+ * its in-memory counterpart. For production, swap these for database-backed
+ * implementations — the ports don't change.
+ *
+ * La conexión al bus y sus streams vienen de [NatsClientConfiguration], que es
+ * la misma que importan los cinco motores: un solo lugar donde se decide cómo
+ * se conecta este sistema. Los tests la apagan con `nats.enabled=false`.
+ */
+@Configuration
+@Import(NatsClientConfiguration::class)
+public class HubInfrastructureConfiguration {
+
+    // ── Jackson ────────────────────────────────────────────────────────────
+
+    @Bean
+    @Primary
+    public fun objectMapper(): ObjectMapper = jacksonObjectMapper()
+
+    // ── Ledger ────────────────────────────────────────────────────────────
+
+    @Bean
+    public fun ledger(): LedgerPort = InMemoryLedger()
+
+    @Bean
+    public fun watermarkStore(): WatermarkPort = InMemoryWatermarkStore()
+
+    @Bean
+    public fun eventStore(ledger: LedgerPort): EventStore = EventStore(ledger)
+
+    @Bean
+    public fun streamCatalog(): StreamCatalog = StreamCatalog.DEFAULT
+
+    @Bean
+    public fun watermarkCatalog(): WatermarkCatalog = WatermarkCatalog.DEFAULT
+
+    // ── Policy stores ─────────────────────────────────────────────────────
+
+    @Bean
+    public fun policyLayerStore(): InMemoryPolicyLayerStore = InMemoryPolicyLayerStore()
+
+    @Bean
+    public fun rawPolicyStore(): RawPolicyStore = InMemoryRawPolicyStore()
+
+    @Bean
+    public fun semanticBucketStore(): SemanticBucketStore = InMemorySemanticBucketStore()
+
+    @Bean
+    public fun policyCatalog(): PolicyCatalog = InMemoryPolicyCatalog()
+}

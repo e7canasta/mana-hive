@@ -14,6 +14,7 @@ public object Subjects {
     public fun sentinelSignal(bed: BedId): String = "sentinel.signal.v1.${bed.value}"
     public fun alarmEvent(alert: AlertId): String = "alarm.event.v1.${alert.value}"
     public fun effectiveRules(resident: ResidentId): String = "hub.policy.effective-rules.v1.${resident.value}"
+    public fun policyChangeDetected(): String = "hub.policy.change.v1"
     public fun recordingCommand(bed: BedId): String = "recorder.command.v1.${bed.value}"
     public fun evidenceRecord(bed: BedId): String = "evidence.record.v1.${bed.value}"
 

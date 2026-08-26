@@ -14,15 +14,14 @@
 > - Falta conectar el catálogo real al PoliticaApplication
 > - Falta API REST para crear/modificar templates desde el Hub
 
-Verificado, sigue siendo cierto. `hub/hub-service/.../policy/PolicyService.kt:34-47`:
+Verificado, **ya no es cierto**. Tras `SPEC-02`–`SPEC-05`, `PolicyService` lee capas, las pliega
+con `toAlarmProfile`, resuelve con `catalogFor(nivel)` y devuelve `Explained`. Un residente
+sin capas tira `NoPolicyForResident` en vez de caer a un STANDARD silencioso. Los criterios
+1 y 2 ya se cumplen. `CatalogVersion` ya entra en la huella (criterio 5).
 
-```kotlin
-// TODO: In real implementation, fetch PolicyLayers from event-sourced history
-log.warn("Using hardcoded default PolicyLayers for resident {} — not production ready", ...)
-val layers = PolicyLayers(level = WatchLevel.STANDARD, template = LevelTemplate(id = "default", rules = emptyList()), adjustments = emptyList(), windows = emptyList())
-```
-
-Todo residente que pase por el hub resuelve a **plantilla vacía en nivel STANDARD**: sin reglas, sin alertas, siempre.
+`hub-service` ahora arranca: `HubInfrastructureConfiguration` declara los beans in-memory,
+`InMemoryPolicyLayerStore` implementa `PolicyLayerStore`, y un `@SpringBootTest` carga el
+contexto dentro de `./gradlew check`.
 
 ## Lo que cambió respecto de la anotación original
 

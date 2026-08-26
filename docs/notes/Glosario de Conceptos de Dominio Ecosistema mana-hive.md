@@ -21,7 +21,7 @@ En mana-hive, la información no solo se mueve; se transforma. Cada subsistema a
 |Subsistema|Responsabilidad Clave|Entidades de Código Principales|
 |**Scene Engine**|Actúa como un **Digital Twin** (Gemelo Digital). Traduce observaciones ruidosas en estados estables de la escena.|`DigitalTwin`, `SceneInterpreter`, `ClockSweeper`|
 |**Sentinel**|Representa el **Juicio Clínico**. Evalúa los hechos de la escena contra políticas de seguridad para identificar incidentes.|`SentinelEvaluator`, `EpisodeLedger`, `FatigueBudget`|
-|**Harbor (Vigia)**|Gestiona la **Entrega de Alertas**. Controla el ciclo de vida de la notificación y su escalación a dispositivos humanos.|`NoticeLifecycle`, `NoticeRouter`, `HarborEngine`|
+|**Harbor (Harbor)**|Gestiona la **Entrega de Alertas**. Controla el ciclo de vida de la notificación y su escalación a dispositivos humanos.|`NoticeLifecycle`, `NoticeRouter`, `HarborEngine`|
 |**Hub**|Es el **Sistema de Registro (SoR)**. Actúa como el libro mayor (ledger) inmutable de todos los eventos y políticas.|`EventStore`, `LedgerController`, `NatsIngestListener`|
 
 Para que estos motores hablen el mismo idioma sin errores, el sistema utiliza identidades fuertemente tipadas que constituyen el ADN de nuestra plataforma.

@@ -325,7 +325,7 @@ Para que la sesión sirva, el estado real. Nada de esto es especulación — est
 - abierto**Falta el “dwell inverso”.** Hoy el sistema contesta “¿cuánto lleva _en_ este estado?”. Para la pregunta de la enfermera — “avisame si no vuelve a la cama” — hace falta “¿cuánto lleva _fuera_ de este estado?”. Está diseñado y documentado; no está implementado.
 - abierto**Los escenarios de demora de Susan están desactivados.** El barrido de reloj que dispara los avisos por permanencia necesita depuración de tiempos. El caso de la medicación está escrito y comentado, no verde.
 - olor de lenguaje**“Susan” nombra dos cosas.** Es la enfermera de guardia que pide la configuración en un blueprint, y es la residente de la 401 en otro. En un sistema cuyo argumento central es el lenguaje ubicuo, ese choque hay que resolverlo antes de que llegue a un contrato.
-- desfasado**El README describe un módulo que no existe.** Nombra vigia donde el mapa de contextos y el código dicen harbor (Faro), y apunta a documentos en files/ que hoy viven en docs/.
+- desfasado**El README describe un módulo que no existe.** Nombra harbor donde el mapa de contextos y el código dicen harbor (Faro), y apunta a documentos en files/ que hoy viven en docs/.
 
 ## El acuerdo de la sala
 

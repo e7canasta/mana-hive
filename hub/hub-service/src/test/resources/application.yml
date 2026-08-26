@@ -1,0 +1,17 @@
+spring:
+  main:
+    banner-mode: off
+  sql:
+    init:
+      mode: never
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration
+
+nats:
+  enabled: false
+
+logging:
+  level:
+    com.manahive.hub: INFO
+    org.springframework: INFO

@@ -63,8 +63,8 @@
 
 - **Facts de interés:** transiciones + `DwellExceeded`
 - **Dwell normal:** `IN_BATHROOM > 5m` → E3 (31m) y E5 (26m) disparan alerta
-- **Dwell inverso:** `fuera de LYING > 15m` → E1 (17m), E3 (33m), E5 (27m) disparan alerta
-- **Complejidad:** alta — requiere inverse dwell
+- **Come-back:** `fuera de LYING > 15m` → E1 (17m), E3 (33m), E5 (27m) disparan alerta
+- **Complejidad:** alta — requiere come-back
 
 ---
 

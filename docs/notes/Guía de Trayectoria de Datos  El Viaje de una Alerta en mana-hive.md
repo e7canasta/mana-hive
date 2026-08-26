@@ -66,9 +66,9 @@ Si el motor anterior es el traductor, el **Sentinel** es el "juez". Este motor d
 3. **Eventos sombrilla:** Movimientos posteriores se registran como hechos relacionados sin disparar nuevas alarmas.
 4. **Cerrar:** El episodio finaliza por una `ClosureCondition` (retorno a estado seguro o presencia del personal).
 
-## 5. Fase 4: Entrega y Gestión de la Alerta (Harbor / Vigia)
+## 5. Fase 4: Entrega y Gestión de la Alerta (Harbor / Harbor)
 
-El componente **Harbor** (Vigia) gestiona la entrega física de la notificación. Su objetivo es asegurar que la alerta llegue a través de los canales adecuados: **Tablet** (lado de cama), **Push** (móvil) y **Ward Board** (estación de enfermería).
+El componente **Harbor** (Harbor) gestiona la entrega física de la notificación. Su objetivo es asegurar que la alerta llegue a través de los canales adecuados: **Tablet** (lado de cama), **Push** (móvil) y **Ward Board** (estación de enfermería).
 
 **Aplicación al caso "Caída de Residente":** Se despacha una notificación **CRÍTICA**. El sistema monitorea si el cuidador ve el mensaje y cuánto tarda en responder, activando escalaciones automáticas si es necesario.
 
@@ -100,4 +100,4 @@ Este cuadro resume el flujo completo desde el evento físico hasta la resolució
 |**Perception (ia-cell)**|Movimiento físico (03:00)|Traducción a señales digitales brutas|`Observation` (Observación v1)|
 |**Scene Engine**|`Observation` + `CensusSnapshot`|Filtrado, Hysteresis y `RiskGroup`|`SceneFact` (Hecho de Escena)|
 |**Sentinel Engine**|`SceneFact` + `EffectiveRules`|Juicio contra `FatigueBudget` y Ledger|`Incident` (Apertura de Episodio)|
-|**Harbor / Vigia**|`Incident`|Gestión de FSM y ruteo multicanal|`AlarmEvent` (Notificación Activa)|
+|**Harbor / Harbor**|`Incident`|Gestión de FSM y ruteo multicanal|`AlarmEvent` (Notificación Activa)|

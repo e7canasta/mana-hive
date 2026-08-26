@@ -109,7 +109,7 @@ El sistema se organiza en un pipeline de motores especializados donde cada "filt
 
 1. **Scene Engine:** Transforma observaciones ruidosas en estados estables mediante el `SceneInterpreter`. El `ClockSweeper` maneja la lógica temporal (ej. transiciones por ausencia de movimiento).
 2. **Sentinel Engine:** Es el juez clínico. Evalúa los hechos de la escena contra el `EpisodeLedger` del residente. Gestiona el `FatigueBudget` para asegurar que el personal no sea saturado con alertas redundantes.
-3. **Harbor (Vigia):** Gestiona la logística de notificación y el escalamiento basado en tiempos de respuesta.
+3. **Harbor (Harbor):** Gestiona la logística de notificación y el escalamiento basado en tiempos de respuesta.
 
 Cada motor se divide en tres capas: **Pure Domain** (lógica), **Spring Service** (infraestructura) y el **Batch Tool**. El Batch Tool es la pieza clave para la validación offline, permitiendo realizar el "Golden Replay" para certificar que una nueva versión de la lógica clínica mejora la precisión sin introducir regresiones.
 

@@ -19,9 +19,9 @@ The domain model follows Vernon's "Policy Engine" pattern: rules are compiled by
 - Fatigue budget enforcement
 
 **What Sentinel is NOT responsible for:**
-- Delivery (handled by Vigia/Harbor)
-- Confirmation tracking (Vigia/Harbor)
-- Escalation routing (Vigia/Harbor)
+- Delivery (handled by Harbor/Harbor)
+- Confirmation tracking (Harbor/Harbor)
+- Escalation routing (Harbor/Harbor)
 - NVR recording (external)
 
 ---
@@ -296,7 +296,7 @@ Observations -> Scene Engine -> SceneFacts -> Sentinel Engine -> SentinelSignals
 - Sentinel receives `SceneFact` via NATS JetStream subscription (`scene.fact.v1.>`)
 - Sentinel maintains `EpisodeLedger` state per resident (persisted locally, rebuilt from scene stream on cold start)
 - Sentinel consults `EffectiveRules` from the Politica Engine for policy resolution
-- Sentinel's output goes to Vigia/Harbor for delivery (notifications, NVR, staff dispatch)
+- Sentinel's output goes to Harbor/Harbor for delivery (notifications, NVR, staff dispatch)
 - The Scene Engine explicitly states it is "NOT responsible for: deciding whether anything deserves an alarm (sentinel)"
 
 **Parallel architectural pattern:** Both engines follow the same structure:

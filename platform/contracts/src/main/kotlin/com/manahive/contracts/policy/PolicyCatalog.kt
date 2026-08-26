@@ -5,7 +5,10 @@ package com.manahive.contracts.policy
  *
  * This interface is consumed by the hub and implemented by infrastructure.
  * Created to match the existing InMemoryPolicyCatalog implementation.
- * May be revisited in SPEC-02 when the canonical policy model is decided.
+ *
+ * SPEC-02 ya decidió el modelo canónico y esto sobrevivió: describe el
+ * vocabulario —qué eventos y dimensiones existen— y no la política de ningún
+ * residente, así que no es de los tipos que aquella spec retiró.
  */
 public interface PolicyCatalog {
     public fun getAllEvents(): List<EventDescriptor>

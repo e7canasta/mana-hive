@@ -17,8 +17,8 @@
 | `SPEC-03` Los cuatro niveles | ✅ **cerrada** |
 | `SPEC-04` Adapters a producción | ✅ **cerrada** |
 | `SPEC-05` Cadena ComeBack | ✅ **cerrada** — ComeBack de punta a punta: DSL → Politica → Scene → Sentinel |
-| `SPEC-06` Catálogo en el hub + API | abierta |
-| `SPEC-07` Lenguaje y documentación | parcial — punto 1 (README) cerrado con `SPEC-00` |
+| `SPEC-06` Catálogo en el hub + API | ✅ **cerrada** — hub arranca, eventos + fold, API escritura + historial, bus cableado |
+| `SPEC-07` Lenguaje y documentación | ✅ **cerrada** — vigia→harbor, Susan→Elena (ya hecho), ComeBack estandarizado, POLITICA-GUIDE corregido |
 
 Lo verificado al cerrar 00 y 01, corriendo el código:
 
@@ -106,8 +106,107 @@ Queda una decisión pendiente que no me corresponde tomar: **`crates/` sigue ign
 
 **Deuda nueva anotada:** hay **dos** clases `DwellThresholdsBuilder` — una en `calibration/dsl/DwellThresholdsDsl.kt` y otra en `calibration/SceneCalibration.kt:167`, con APIs distintas y cobertura de estados distinta. Es la jerarquía paralela que el comentario del primer archivo dice haber eliminado. Unificarlas antes de que la divergencia esconda otro estado.
 
----
 
+### Lo verificado al cerrar `SPEC-06` y `SPEC-07`
+
+`LANG=C.UTF-8 ./gradlew check` verde, **494 tests**, los nueve blueprints en exit 0. Y esta vez
+*arrancando el servicio*, no sólo cargando un contexto de test:
+
+```
+Started HubApplicationKt in 1.371 seconds   ·   Tomcat started on port 8080
+PUT /api/policies/jose/watch-level  →  HTTP 200
+stream POLICY  →  hub.policy.change.v1 · PolicyChangeDetected · jose
+```
+
+Dos criterios ya se cumplían antes de empezar, porque `SPEC-02`–`SPEC-05` los habían dejado
+hechos: `PolicyService` cableado (1 y 2) y `CatalogVersion` en la huella (7). El documento de la
+spec se corrigió para decirlo en vez de sostener la premisa vieja.
+
+#### El hub no arrancaba, y no era por NATS
+
+`SPEC-06` se cerró con dos `@SpringBootTest` en verde. Pero los dos **excluían justo las dos cosas
+que rompían el arranque real**: `nats.enabled=false` y `DataSourceAutoConfiguration` excluido. Con
+`bootRun`, en el perfil por defecto:
+
+```
+Failed to configure a DataSource: 'url' attribute is not specified
+```
+
+El hub declara `spring-boot-starter-jdbc` y el driver de Postgres, y **no tiene una sola línea de
+JDBC**: todo el almacenamiento es in-memory. Spring se negaba a arrancar por un DataSource que
+nadie usa. La exclusión se movió al `application.yml` principal —donde vale para el servicio, no
+sólo para los tests— y se quitó la anotación de los tests, así que ahora prueban **la misma
+configuración que se envía**. Se quita cuando aparezca el primer repositorio real.
+
+De paso: la exclusión que ya estaba en el yml de tests apuntaba a
+`org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration`, paquete que en esta
+versión de Boot ya no existe — o sea que **era una línea muerta** y el trabajo lo hacía la
+anotación. Corregida al paquete real.
+
+#### El bus no recibía nada, y la escritura contestaba 200
+
+Con el servicio por fin arriba y un `nats-server` local, el primer `PUT` reveló dos defectos
+encadenados que ningún test podía ver, porque toda la suite corría con un publicador doble:
+
+1. **`NatsObjectMapper` no registraba `JavaTimeModule`**, y su comentario decía que era a
+   propósito: *"services that need it should create their own"*. Pero todo hecho que viaja por
+   este bus lleva un `Instant` — `EventEnvelope.occurredAt`, el `at` de cada evento. Esa política
+   garantizaba el fallo: *«Java 8 date/time type not supported»*. Ahora va registrado en el mapper
+   compartido, con fechas ISO-8601 como en el resto del código.
+
+2. **Nadie creaba los streams de JetStream.** `NatsTopology` documenta que *"every service calls
+   `ensure(...)` on startup"* y no tenía **un solo llamador**, así que publicar devolvía
+   *503 No Responders*. Se cableó `ensureAll()` en el arranque del hub.
+
+En los dos casos el egress atrapaba la excepción y la escritura contestaba 200. El director
+cambiaba el nivel de un residente, y los motores nunca se enteraban.
+
+#### Los otros cuatro, corregidos
+
+3. **La configuración probada no era la que se envía.** Con `nats.enabled=false` el publicador real
+   no existe como bean, así que todas las escrituras se ejercitaban con el publicador en null.
+   `PolicyPublishSpec` ocupa ese lugar con un doble; verificado en rojo.
+
+4. **Leer la política requería el bus.** `PolicyService` recibía el publicador como dependencia
+   directa, así que un egress que no se podía crear tiraba abajo `GET /api/policies/{id}`.
+   Consultar qué reglas rigen para alguien es una consulta pura sobre las capas. Ahora llega como
+   `ObjectProvider`.
+
+5. **El `catch` de `publishIfPossible` estaba vacío** y el comentario decía que logueaba. Es el que
+   destapó los dos defectos del bus una vez que empezó a hablar.
+
+6. **Criterio 7 sin test.** `FingerprintSpec` cubre las dos mitades: versiones distintas dan
+   huellas distintas, y la misma versión da la misma huella dos veces.
+
+**Criterio 8, cerrado.** `PolicyBusIntegrationSpec` publica por el egress real, recibe del subject,
+y resuelve una calibración con lo que llegó. Es el único test que ejercita el salto por el bus.
+Se **saltea** —no falla— si no hay NATS escuchando: verificado en las dos direcciones
+(`skipped=0` con el servidor arriba, `skipped=1` sin él). Para correrlo:
+`nats-server -js -sd /tmp/natsdata`.
+
+**Criterio 11, resuelto entero.** `RawPolicyController` y `SemanticBucketController` quedaron
+`@Deprecated` con motivo y condición de retiro; `PolicyController` es el consolidado. El cuarto,
+`PolicyCatalogController`, **sobrevive**: no es un tercer vocabulario para la política de un
+residente, responde *"qué tipos de evento y qué dimensiones existen"*. Es metadata del lenguaje,
+que `AD-1` no tocó. La decisión quedó escrita en el controlador y en el puerto.
+
+#### Lo que queda abierto
+
+- **El hub sigue sin arrancar si NATS no está.** `Nats.connectReconnectOnConnect` elimina la
+  excepción inicial, pero los `@PostConstruct` de ingesta y egress **bloquean** dentro de las
+  llamadas JetStream, así que el servicio queda colgado en vez de fallar con un error claro. Eso
+  es peor, y el intento se revirtió. El arreglo es darles timeout o diferir la suscripción a un
+  callback de conexión, en los seis servicios. Es una spec propia.
+- **El nivel viaja al bus como string.** `PolicyChangeDetected` lleva un `AlarmProfile`, y
+  `AlarmProfile` **no tiene campo de nivel** — pese a que el nivel es justo lo que elige el
+  catálogo. Hoy se recupera del `templateId`, porque el fold hace `LevelTemplate(id = level.label)`.
+  Funciona por convención de strings; `PolicyPublishSpec` y `PolicyBusIntegrationSpec` la fijan
+  para que romperla rompa un test. Agregar el nivel al contrato publicado es una decisión de
+  lenguaje publicado.
+- **Los otros cinco servicios no se arrancaron.** El hub era el único sin `@Configuration`, pero
+  los dos defectos del bus —mapper y streams— son de `platform/messaging` y los comparten todos.
+
+---
 ## 0. Cómo leer esto
 
 Este documento no repite lo que dice el código. Dice **qué está roto, por qué importa clínicamente, y en qué orden hay que tocarlo**. Cada punto tiene una spec hermana (`SPEC-NN-*.md`) que un agente de código puede tomar y ejecutar de forma aislada.
@@ -201,9 +300,9 @@ engines/pipeline/pipeline-bdd/src/main/kotlin/com/manahive/politica/adapters/Pol
 
 → **`SPEC-04`**
 
-### 1.5 La cadena del dwell inverso está cortada en los dos extremos
+### 1.5 La cadena del ComeBack está cortada en los dos extremos
 
-Corrección de un supuesto previo: **el dwell inverso sí está implementado**, bajo el nombre `ComeBack`.
+Corrección de un supuesto previo: **el ComeBack sí está implementado**, bajo el nombre `ComeBack`.
 
 | Eslabón | Estado |
 |---|---|
@@ -218,7 +317,7 @@ Corrección de un supuesto previo: **el dwell inverso sí está implementado**, 
 
 Scene sabe emitir el hecho; el director no lo puede pedir y Vigilancia lo ignora. La pregunta de la enfermera — *"avisame si no vuelve a la cama"* — no tiene camino.
 
-Nota de diseño: `blueprints/jose-301-sitting-bed/README.md` preveía que el dwell inverso fuese **otro `DwellExceeded`** en el stream, precisamente para que Sentinel no tuviera que cambiar. La implementación eligió un tipo de evento propio y no se siguió la consecuencia. Hay que decidir cuál de las dos formas queda.
+Nota de diseño: `blueprints/jose-301-sitting-bed/README.md` preveía que el ComeBack fuese **otro `DwellExceeded`** en el stream, precisamente para que Sentinel no tuviera que cambiar. La implementación eligió un tipo de evento propio y no se siguió la consecuencia. Hay que decidir cuál de las dos formas queda.
 
 → **`SPEC-05`**
 
@@ -249,9 +348,9 @@ Efecto colateral sobre el documento de la sesión: el "0 episodios / 0 notificac
 |---|---|
 | `README.md` desfasado | Nombra el módulo `vigia`, que no existe; el código y `CONTEXT-MAP.md` dicen `harbor` (Faro). Apunta a `files/`; los documentos viven en `docs/`. |
 | Un nombre, dos papeles | **Susan** es la enfermera de guardia en `jose-301-sitting-bed/README.md` y la residente de la 401 en `susan-e2e-standard`. |
-| Un concepto, tres nombres | *dwell inverso* (docs) · *la mina* (metáfora) · `ComeBack` (código). |
+| Un concepto, dos registros | `ComeBack` es el término único en docs y código. *La mina* sobrevive **a propósito** como metáfora explicativa: es la que hace entender el mecanismo a quien no lee Kotlin. Ya no es deuda. |
 | Documentación que miente al alza | `POLITICA-GUIDE.md` describe presupuesto, canales y escalación de Harbor como resueltos por Política; `PolicyResolver` devuelve `emptyMap()` en los dos campos. |
-| Documentación que miente a la baja | `jose-301-sitting-bed/README.md` declara el dwell inverso como pendiente; está implementado. |
+| Documentación que miente a la baja | `jose-301-sitting-bed/README.md` declara el ComeBack como pendiente; está implementado. |
 
 → **`SPEC-07`**
 
@@ -283,7 +382,7 @@ Eso obliga a que la regla diga **con qué hecho** se dispara, no sólo sobre qu�
 
 → `SPEC-01`
 
-### AD-3 · ¿El dwell inverso es un evento propio o un `DwellExceeded` más?
+### AD-3 · ¿El ComeBack es un evento propio o un `DwellExceeded` más?
 
 **Recomendación: se mantiene `ComeBackExceeded` como tipo propio, y Sentinel aprende a juzgarlo.**
 

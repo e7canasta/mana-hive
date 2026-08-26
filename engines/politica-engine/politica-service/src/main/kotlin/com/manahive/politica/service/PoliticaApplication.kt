@@ -1,5 +1,7 @@
 package com.manahive.politica.service
 
+import com.manahive.messaging.NatsClientConfiguration
+import org.springframework.context.annotation.Import
 import com.manahive.politica.DefaultPolicyChangeProcessor
 import com.manahive.politica.PolicyChangeProcessor
 import com.manahive.contracts.policy.DagCatalog
@@ -18,6 +20,7 @@ import org.springframework.context.annotation.Bean
  * Domain logic lives in politica-domain.
  */
 @SpringBootApplication
+@Import(NatsClientConfiguration::class)
 class PoliticaApplication {
 
     @Bean

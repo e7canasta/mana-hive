@@ -8,7 +8,7 @@ Relevant source files
 
 The **mana-hive** platform is a distributed, event-driven night-watch care monitoring system. Its primary mission is to ensure that "the right person reaches the right room in time, with the fewest false alarms possible" while maintaining a complete, machine-reproducible audit trail of every decision made by the system [README.md3-5](https://github.com/kerrvisiona-sudo/hive2/blob/f8142c8f/README.md?plain=1#L3-L5)
 
-The platform transitions from raw sensor data (perception) to high-level clinical incidents (sentinel) and finally to managed human alerts (harbor/vigia), using **NATS JetStream** as the central nervous system and a **Postgres-backed Hub** as the immutable System of Record [README.md14-33](https://github.com/kerrvisiona-sudo/hive2/blob/f8142c8f/README.md?plain=1#L14-L33)
+The platform transitions from raw sensor data (perception) to high-level clinical incidents (sentinel) and finally to managed human alerts (harbor/harbor), using **NATS JetStream** as the central nervous system and a **Postgres-backed Hub** as the immutable System of Record [README.md14-33](https://github.com/kerrvisiona-sudo/hive2/blob/f8142c8f/README.md?plain=1#L14-L33)
 
 ### Core Philosophy
 

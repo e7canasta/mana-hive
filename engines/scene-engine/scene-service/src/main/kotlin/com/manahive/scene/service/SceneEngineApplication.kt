@@ -1,5 +1,7 @@
 package com.manahive.scene.service
 
+import com.manahive.messaging.NatsClientConfiguration
+import org.springframework.context.annotation.Import
 import com.manahive.scene.calibration.SceneCalibration
 import com.manahive.scene.calibration.sceneCalibration
 import com.manahive.scene.interpreter.SceneInterpreter
@@ -20,6 +22,7 @@ import java.time.Duration
  * and the DecisionRecord push to the hub. Domain logic lives in scene-domain.
  */
 @SpringBootApplication
+@Import(NatsClientConfiguration::class)
 class SceneEngineApplication {
 
     @Bean

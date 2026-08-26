@@ -19,7 +19,7 @@ The engines chain together to process the lifecycle of a resident's safety, from
 |---|---|---|---|
 |**Scene Engine**|Digital Twin|`Observation`|`SceneFact`|
 |**Sentinel**|Policy Judgment|`SceneFact`|`SentinelSignal`|
-|**Harbor (Vigia)**|Alert Delivery|`SentinelSignal`|`AlarmEvent`|
+|**Harbor (Harbor)**|Alert Delivery|`SentinelSignal`|`AlarmEvent`|
 |**Politica**|Policy Translation|`PolicyChange`|`CalibrationChanged`|
 |**Recorder**|Evidence Capture|`RecordingTrigger`|`RecordingCommand`|
 
@@ -100,7 +100,7 @@ For details, see [Sentinel Engine](https://deepwiki.com/kerrvisiona-sudo/hive2/
 
 ### Harbor Engine (Alert Delivery)
 
-The **Harbor Engine** (referred to in code as `vigia`) manages the human-facing side of the system. It translates a `SentinelSignal` into a `NoticeCommand`, determining which staff members should receive an alert on which device (Tablet, Ward Board, or Mobile) and managing the escalation if the alert is not acknowledged.
+The **Harbor Engine** (referred to in code as `harbor`) manages the human-facing side of the system. It translates a `SentinelSignal` into a `NoticeCommand`, determining which staff members should receive an alert on which device (Tablet, Ward Board, or Mobile) and managing the escalation if the alert is not acknowledged.
 
 For details, see [Harbor Engine (Alert Delivery)](https://deepwiki.com/kerrvisiona-sudo/hive2/3.3-harbor-engine-\(alert-delivery\)). **Sources:** [README.md19](https://github.com/kerrvisiona-sudo/hive2/blob/f8142c8f/README.md?plain=1#L19-L19) [README.md64-65](https://github.com/kerrvisiona-sudo/hive2/blob/f8142c8f/README.md?plain=1#L64-L65)
 

@@ -20,6 +20,7 @@ spring-boot-plugin = { module = "org.springframework.boot:spring-boot-gradle-plu
 # runtime
 jnats = { module = "io.nats:jnats", version.ref = "jnats" }
 jackson-kotlin = { module = "com.fasterxml.jackson.module:jackson-module-kotlin", version.ref = "jackson" }
+jackson-jsr310 = { module = "com.fasterxml.jackson.datatype:jackson-datatype-jsr310", version.ref = "jackson" }
 ktoml = { module = "com.akuleshov7:ktoml-file-jvm", version.ref = "ktoml" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 postgres = { module = "org.postgresql:postgresql", version.ref = "postgres" }

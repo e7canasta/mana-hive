@@ -61,7 +61,7 @@ Key fields:
 - `since` -- when the person entered the state (= `DigitalTwin.stateSince`)
 - `at` -- when the ClockSweeper detected the threshold was exceeded
 
-Also defined in the same file: `ComeBackWarning` and `ComeBackExceeded` (inverse dwell):
+Also defined in the same file: `ComeBackWarning` and `ComeBackExceeded` (ComeBack):
 
 ```kotlin
 public data class ComeBackWarning(
@@ -195,7 +195,7 @@ public data class DigitalTwin(
     public val sceneSince: Instant = stateSince,
     public val signal: SignalHealth,
     public val calibration: SceneCalibration? = null,
-    public val leftStateAt: Instant? = null,     // <-- KEY: for inverse dwell (ComeBack)
+    public val leftStateAt: Instant? = null,     // <-- KEY: for ComeBack (ComeBack)
     public val baselineState: PersonState = PersonState.Lying,
 )
 ```
@@ -634,7 +634,7 @@ ClockSweeper.sweep() (periodic tick)
     |       if duration >= exceeded --> DwellExceeded
     |       if duration >= warning  --> DwellWarning (unless exceeded already fired)
     |
-    +---> checkComeBack() (inverse dwell)
+    +---> checkComeBack() (ComeBack)
     |       durationSinceLeftBaseline = now - leftStateAt
     |       if duration >= exceeded --> ComeBackExceeded
     |       if duration >= warning  --> ComeBackWarning

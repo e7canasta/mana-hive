@@ -1,4 +1,4 @@
-# SPEC-05 — Cerrar la cadena del dwell inverso (ComeBack)
+# SPEC-05 — Cerrar la cadena del ComeBack (ComeBack)
 
 **Depende de:** `SPEC-02`, y coordina con `SPEC-01` · **Tamaño:** mediano
 **Decisión de arquitectura:** `AD-3` (se mantiene `ComeBackExceeded` como tipo propio)
@@ -7,7 +7,7 @@
 
 ## Corrección de un supuesto
 
-Documentación previa — incluida la sesión con la dirección — declaraba el dwell inverso como *"diseñado y documentado; no implementado"*. **Es falso.** Está implementado, bajo el nombre `ComeBack`. Lo que falta son los dos extremos de la cadena.
+Documentación previa — incluida la sesión con la dirección — declaraba el ComeBack como *"diseñado y documentado; no implementado"*. **Es falso.** Está implementado, bajo el nombre `ComeBack`. Lo que falta son los dos extremos de la cadena.
 
 `blueprints/jose-301-sitting-bed/README.md` sigue afirmando que es un *"Feature Necesario"* pendiente. Corregirlo es parte de esta spec.
 
@@ -38,7 +38,7 @@ grep -rn "comeBack\|ComeBack" --include="*.kt" \
 
 ## La decisión que quedó a medias
 
-`jose-301-sitting-bed/README.md` preveía que el dwell inverso fuese **otro `DwellExceeded`** en el stream, con esta tabla explícita:
+`jose-301-sitting-bed/README.md` preveía que el ComeBack fuese **otro `DwellExceeded`** en el stream, con esta tabla explícita:
 
 > | Componente | Cambia | No Cambia |
 > | `Sentinel` | — | ✅ (ve otro DwellExceeded) |
@@ -110,7 +110,7 @@ El `when (fact)` de `SentinelEvaluatorImpl` es exhaustivo hoy sólo porque el co
 
 ### 5 · El blueprint que lo prueba
 
-`blueprints/jose-301-sitting-bed/` tiene la noche completa de José — 23 observaciones, 7 episodios, con `expected3.out` esperando 28 hechos incluyendo dwell inverso. Es el escenario natural.
+`blueprints/jose-301-sitting-bed/` tiene la noche completa de José — 23 observaciones, 7 episodios, con `expected3.out` esperando 28 hechos incluyendo ComeBack. Es el escenario natural.
 
 Casos que deben quedar cubiertos, tomados del propio README:
 
@@ -133,7 +133,7 @@ El tercero es el que ejercita la idempotencia por marca (`DwellMarkKey` con `lef
 4. Una salida posterior arma una mina nueva.
 5. `ComeBackWarning` no abre episodio.
 6. El `when` de `SentinelEvaluatorImpl` no tiene `else`.
-7. `blueprints/jose-301-sitting-bed/README.md` deja de declarar el dwell inverso como pendiente y describe lo que existe. Ver `SPEC-07`.
+7. `blueprints/jose-301-sitting-bed/README.md` deja de declarar el ComeBack como pendiente y describe lo que existe. Ver `SPEC-07`.
 8. `LANG=C.UTF-8 ./gradlew check` verde.
 
 ## Fuera de alcance

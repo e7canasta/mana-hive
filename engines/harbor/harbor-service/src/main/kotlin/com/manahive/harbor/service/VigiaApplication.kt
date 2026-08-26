@@ -1,5 +1,7 @@
-package com.manahive.vigia.service
+package com.manahive.harbor.service
 
+import com.manahive.messaging.NatsClientConfiguration
+import org.springframework.context.annotation.Import
 import com.manahive.contracts.policy.Severity
 import com.manahive.harbor.Channel
 import com.manahive.harbor.HarborCalibration
@@ -23,6 +25,7 @@ import java.time.Duration
  * an escalation. Decisions live in vigia-domain.
  */
 @SpringBootApplication
+@Import(NatsClientConfiguration::class)
 class VigiaApplication {
 
     @Bean

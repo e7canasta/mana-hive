@@ -58,4 +58,4 @@ _Los siguientes temas requieren una síntesis profunda de los conceptos del sist
 |**SceneFact**|Hecho de alto nivel producido por el Scene Engine que representa estados como "Ocupante Presente" o "Salida de Cama".|
 |**SentinelSignal**|Juicio clínico emitido por el Sentinel que categoriza un evento como Incidente, Ocurrencia o Supresión.|
 |**System of Record (SoR)**|El Hub de Postgres, que actúa como la verdad administrativa definitiva y crónica inmutable de todos los eventos.|
-|**Vigia / Harbor**|Motor responsable de gestionar el ciclo de vida de la entrega de alertas, incluyendo su enrutamiento y escalación.|
+|**Harbor / Harbor**|Motor responsable de gestionar el ciclo de vida de la entrega de alertas, incluyendo su enrutamiento y escalación.|

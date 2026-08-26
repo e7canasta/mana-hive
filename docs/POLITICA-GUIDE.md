@@ -152,10 +152,14 @@ PolicyCalibration (lo que cada engine necesita)
 │    - Budget: 5 warnings por turno                      │
 │    - Channels: PUSH + TABLET                           │
 │    - Escalation: 30min                                 │
+│  > **Objetivo, no implementado.** Harbor devuelve        │
+│  > emptyMap() para channels y escalationTimeouts.       │
 ├─────────────────────────────────────────────────────────┤
 │  Recorder:                                              │
 │    - Trigger: LYING→STANDING → grabar 2min+5min       │
 │    - Trigger: IN_BATHROOM dwell → grabar 3min+10min   │
+│  > **Objetivo, no implementado.** Recorder devuelve      │
+│  > 0 transition windows.                                │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -180,14 +184,14 @@ PolicyCalibration (lo que cada engine necesita)
 
 | # | Escenario | Qué prueba |
 |---|-----------|------------|
-| 1 | José se sienta | Pipeline completa: Scene→Sentinel→Harbor |
+| 1 | José se sienta | Pipeline completa: Scene→Sentinel |
 | 2 | José va al baño y tarda | Dwell exceeded |
-| 3 | José se sienta 3 veces | Budget agota |
+| 3 | José se sienta 3 veces | Come-back exceeded |
 | 4 | Camina al baño sin sitting | Transiciones sin regla |
-| 5 | LYING→STANDING | Recorder graba |
-| 6 | Staff asiste | Episodio cierra con STAFF_OR_SAFE |
-| 7 | 20:00 Staff deja solo | Ciclo completo staff |
-| 8 | 08:00 Staff se lleva | Habitación vacía |
+| 5 | LYING→STANDING | **Objetivo:** Recorder graba |
+| 6 | Staff asiste | **Objetivo:** Episodio cierra con STAFF_OR_SAFE |
+| 7 | 20:00 Staff deja solo | **Objetivo:** Ciclo completo staff |
+| 8 | 08:00 Staff se lleva | **Objetivo:** Habitación vacía |
 
 ### Comandos útiles
 
@@ -210,22 +214,22 @@ PolicyCalibration (lo que cada engine necesita)
 | Archivo | Contenido |
 |---------|-----------|
 | `DagDsl.kt` | DSL para catálogo y perfil DAG-centric |
-| `ProductionDagCatalog.kt` | Catálogo maestro con templates |
+| `ProductionDagCatalog.kt` | Catálogo maestro con templates (en fuentes de test) |
 | `PolicyResolver.kt` | Traduce DAG → calibraciones |
 | `Main.kt` (blueprint) | 8 escenarios E2E |
 | `SentinelEvaluatorImpl.kt` | Lógica de episodios |
 | `EpisodeLedger.kt` | Event sourcing de episodios |
 | `SceneInterpreterImpl.kt` | FSM de estados |
 
-### Gap identificado
+### Gaps cerrados
 
-- `PolicyService` en el Hub está hardcodeado (usa defaults)
-- Falta conectar el catálogo real al PoliticaApplication
-- Falta API REST para crear/modificar templates desde el Hub
+- ✅ `PolicyService` lee capas event-sourced, resuelve con `catalogFor(nivel)` (SPEC-02, SPEC-06)
+- ✅ Catálogo conectado al PoliticaApplication via DAG (SPEC-03)
+- ✅ API REST para escritura de política (SPEC-06)
 
 ### Próximos pasos
 
-1. Conectar `PolicyService` al event-sourced history
-2. Crear API REST para templates
+1. ~~Conectar `PolicyService` al event-sourced history~~ ✅ (SPEC-06)
+2. ~~Crear API REST para templates~~ ✅ (SPEC-06)
 3. Agregar business language assertions a Sentinel BDD
 4. Agregar tests E2E de catálogo → engines

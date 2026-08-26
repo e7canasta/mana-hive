@@ -14,6 +14,17 @@ import org.springframework.web.bind.annotation.RestController
  * Provides endpoints for engines to query event and dimension metadata.
  * This is the HTTP adapter for the PolicyCatalog port.
  *
+ * **SPEC-06, criterio 11 — este controlador SOBREVIVE.**
+ *
+ * De los cuatro de política, dos quedaron `@Deprecated` (`RawPolicyController`,
+ * `SemanticBucketController`) por exponer el modelo que `SPEC-02` retiró, y
+ * `PolicyController` es el consolidado. Éste no es un tercer vocabulario para
+ * la política de un residente: no responde *"qué reglas rigen para José"* sino
+ * *"qué tipos de evento y qué dimensiones existen"*. Es metadata del
+ * vocabulario, que `AD-1` no tocó, y la consumen la UI y los motores para
+ * poblar sus catálogos. Fusionarlo con `/api/policies` mezclaría el catálogo
+ * del lenguaje con la política de una persona.
+ *
  * Fowler: "Adapter" — translates HTTP requests to port method calls.
  * Vernon: "Driving Adapter" — the primary adapter for the use case.
  */
