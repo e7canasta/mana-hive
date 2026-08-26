@@ -10,3 +10,6 @@ crates/
 # NO ignorar gradle/ — ahi viven el wrapper y libs.versions.toml.
 # La cache es .gradle/ (linea 1), que es otra cosa. Sin gradle/ en el
 # repo, un clone limpio no compila: no hay wrapper ni catalogo de versiones.
+.archive
+
+build-logic
