@@ -64,6 +64,7 @@ object PolicyCodec : FileCodec<ResidentProfileConfig> {
                 val stateResult = StateKindInput.parseStateKind(stateName)
                 stateResult.map { state ->
                     state to ProfileStateOverride(
+                        warningAfter = rule.warningAfter?.let { Duration.parse(it) },
                         alertAfter = rule.alertAfter?.let { Duration.parse(it) },
                         severity = rule.severity?.let { try { Severity.valueOf(it) } catch (_: Exception) { null } },
                     )

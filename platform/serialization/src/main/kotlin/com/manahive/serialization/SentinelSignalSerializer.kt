@@ -60,6 +60,13 @@ object SentinelSignalSerializer {
                 map["evidenceStream"] = signal.evidence.stream
                 map["evidenceSeq"] = signal.evidence.seq
             }
+            is SentinelSignal.DwellPreWarning -> {
+                map["resident"] = signal.resident?.value ?: "unknown"
+                map["state"] = signal.state.name
+                map["elapsed"] = signal.elapsed.toString()
+                map["threshold"] = signal.threshold.toString()
+            }
+            }
         }
 
         return com.fasterxml.jackson.module.kotlin.jacksonObjectMapper()
@@ -185,6 +192,8 @@ object SentinelSignalSerializer {
             "state=${signal.state} severity=${signal.originalSeverity}"
         is SentinelSignal.SuppressedWithRecord ->
             "rule=${signal.rule.value} cause=${signal.cause}"
+        is SentinelSignal.DwellPreWarning ->
+            "state=${signal.state} elapsed=${signal.elapsed} threshold=${signal.threshold}"
     }
 
     private fun formatDuration(d: Duration): String {

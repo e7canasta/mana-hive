@@ -64,6 +64,12 @@ object SentinelSignalCodec : Codec<SentinelSignal> {
                     put("evidenceStream", obj.evidence.stream)
                     put("evidenceSeq", obj.evidence.seq)
                 }
+                is SentinelSignal.DwellPreWarning -> {
+                    put("resident", obj.resident?.value ?: "unknown")
+                    put("state", obj.state.name)
+                    put("elapsed", obj.elapsed.toString())
+                    put("threshold", obj.threshold.toString())
+                }
             }
         }
 
@@ -201,6 +207,8 @@ object SentinelSignalCodec : Codec<SentinelSignal> {
             "state=${signal.state} severity=${signal.originalSeverity}"
         is SentinelSignal.SuppressedWithRecord ->
             "rule=${signal.rule.value} cause=${signal.cause}"
+        is SentinelSignal.DwellPreWarning ->
+            "state=${signal.state} elapsed=${signal.elapsed} threshold=${signal.threshold}"
     }
 
     private fun parseSeverity(name: String): SerializationResult<Severity> {

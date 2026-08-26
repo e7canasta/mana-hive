@@ -36,22 +36,34 @@ public class SceneEngine private constructor(
     private val dwellCatalog = calibration.toDwellCatalog()
 
     public companion object {
-        /**
-         * Creates a [SceneEngine] with the given calibration.
-         */
         public fun create(calibration: SceneCalibration): SceneEngine =
             SceneEngine(calibration)
     }
 
     /**
-     * Processes a list of observations sequentially, producing SceneEvents.
-     *
-     * Each observation is fed through the interpreter pipeline.
+     * Processes observations, producing SceneEvents.
      * No sweep is performed between observations.
      */
     public fun process(
         observations: List<ObservedAt>,
         initialTwin: DigitalTwin? = null,
+    ): SceneResult = processOnly(observations, initialTwin)
+
+    /**
+     * Processes observations with periodic sweep between events.
+     * The sweep checks dwell thresholds and signal health.
+     */
+    public fun processWithSweep(
+        observations: List<ObservedAt>,
+        sweepIntervalSeconds: Long = 60,
+        initialTwin: DigitalTwin? = null,
+    ): SceneResult = processWithSweepInternal(observations, sweepIntervalSeconds, initialTwin)
+
+    // ── Internal: process only (no sweep) ───────────────────────────────
+
+    private fun processOnly(
+        observations: List<ObservedAt>,
+        initialTwin: DigitalTwin?,
     ): SceneResult {
         var twin = initialTwin ?: defaultTwin(observations.firstOrNull()?.at ?: Instant.EPOCH)
         val facts = mutableListOf<SceneEvent>()
@@ -65,13 +77,9 @@ public class SceneEngine private constructor(
         return SceneResult(facts, twin)
     }
 
-    /**
-     * Processes observations with periodic sweep between events.
-     *
-     * The sweep checks dwell thresholds and signal health at regular
-     * intervals between observations.
-     */
-    public fun processWithSweep(
+    // ── Internal: process with sweep ────────────────────────────────────
+
+    private fun processWithSweepInternal(
         observations: List<ObservedAt>,
         sweepIntervalSeconds: Long = 60,
         initialTwin: DigitalTwin? = null,

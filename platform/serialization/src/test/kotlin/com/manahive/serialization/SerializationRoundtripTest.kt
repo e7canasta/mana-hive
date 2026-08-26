@@ -257,10 +257,12 @@ class SerializationRoundtripTest : FunSpec({
             ),
             stateOverrides = mapOf(
                 StateKind.SITTING_IN_BED to ProfileStateOverride(
+                    warningAfter = Duration.ofMinutes(10),
                     alertAfter = Duration.ofMinutes(15),
                     severity = Severity.WARNING,
                 ),
                 StateKind.IN_BATHROOM to ProfileStateOverride(
+                    warningAfter = Duration.ofMinutes(5),
                     alertAfter = Duration.ofMinutes(10),
                     severity = Severity.WARNING,
                 ),

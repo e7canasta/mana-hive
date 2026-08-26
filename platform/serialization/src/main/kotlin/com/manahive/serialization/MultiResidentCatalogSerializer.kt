@@ -76,6 +76,7 @@ object MultiResidentCatalogSerializer {
                 ),
                 stateOverrides = config.rules.map { (stateName, rule) ->
                     StateKind.valueOf(stateName.uppercase()) to ProfileStateOverride(
+                        warningAfter = rule.warningAfter?.let { Duration.parse(it) },
                         alertAfter = rule.alertAfter?.let { Duration.parse(it) },
                         severity = rule.severity?.let { Severity.valueOf(it) },
                     )

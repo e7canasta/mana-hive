@@ -267,12 +267,14 @@ public class ResidentProfileBuilder(private val residentId: ResidentId) {
 
         stateOverrides.forEach { (state, override) ->
             if (override.alertAfter != null) {
+                val exceeded = override.alertAfter
+                val warning = override.warningAfter ?: exceeded.dividedBy(2)
                 overrides[RuleId("dwell-${state.name.lowercase()}")] = PolicyOverride.DwellOverride(
                     ruleId = RuleId("dwell-${state.name.lowercase()}"),
                     state = state,
                     value = DwellThreshold(
-                        warning = override.warningAfter ?: override.alertAfter,
-                        exceeded = override.alertAfter,
+                        warning = warning,
+                        exceeded = exceeded,
                     ),
                 )
             }
