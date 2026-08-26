@@ -45,8 +45,8 @@ val susanDwellProfile = buildResidentProfile("susan-dwell") {
 
 // ── Politica Engine resolves ────────────────────────────────────────────────
 
-val policyCalibration = PolicyResolver.resolve(STANDARD_CATALOG, susanProfile.profile)
-val policyCalibrationDwell = PolicyResolver.resolve(STANDARD_CATALOG, susanDwellProfile.profile)
+val policyCalibration = PolicyResolver.resolve(STANDARD_CATALOG, susanProfile.profile).value
+val policyCalibrationDwell = PolicyResolver.resolve(STANDARD_CATALOG, susanDwellProfile.profile).value
 
 // ── Derived Calibrations (from policy result) ───────────────────────────────
 

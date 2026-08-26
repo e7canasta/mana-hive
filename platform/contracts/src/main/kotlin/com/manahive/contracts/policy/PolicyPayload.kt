@@ -42,6 +42,9 @@ public data class CalibrationPayload(
             sentinel = SentinelPolicy(alertRules = emptyMap()),
             harbor = HarborPolicy(defaultChannels = emptyMap(), escalationTimeouts = emptyMap()),
             recorder = RecorderPolicy(transitionWindows = emptyMap()),
+            // The payload carries its own content fingerprint; reuse it rather
+            // than recomputing, so the calibration cites what actually arrived.
+            fingerprint = fingerprint,
         )
 }
 

@@ -1,5 +1,6 @@
 package com.manahive.scene.core
 
+import com.manahive.contracts.common.Fingerprint
 import com.manahive.contracts.policy.ConfidenceConfig
 import com.manahive.contracts.policy.DwellThreshold
 import com.manahive.contracts.policy.HarborPolicy
@@ -44,6 +45,7 @@ class DigitalTwinWithCalibrationSpec : BehaviorSpec({
             sentinel = SentinelPolicy(alertRules = emptyMap()),
             harbor = HarborPolicy(defaultChannels = emptyMap(), escalationTimeouts = emptyMap()),
             recorder = RecorderPolicy(transitionWindows = emptyMap()),
+            fingerprint = Fingerprint("test-fixture"),
         )
 
         And("convertido a SceneCalibration via adaptador") {

@@ -57,7 +57,7 @@ class TriggerSemanticsSpec : BehaviorSpec({
         }
 
         When("resuelvo la política") {
-            val calibracion = PolicyResolver.resolve(catalogo, perfil("jose"))
+            val calibracion = PolicyResolver.resolve(catalogo, perfil("jose")).value
             val regla = calibracion.sentinel.alertRules[StateKind.SITTING_IN_BED]
 
             Then("la regla existe") {
@@ -94,7 +94,7 @@ class TriggerSemanticsSpec : BehaviorSpec({
         }
 
         When("resuelvo la política") {
-            val calibracion = PolicyResolver.resolve(catalogo, perfil("ana"))
+            val calibracion = PolicyResolver.resolve(catalogo, perfil("ana")).value
             val regla = calibracion.sentinel.alertRules[StateKind.BED_EDGE]
 
             Then("la regla existe aunque no tenga plazo") {
@@ -117,7 +117,7 @@ class TriggerSemanticsSpec : BehaviorSpec({
         }
 
         When("resuelvo la política") {
-            val calibracion = PolicyResolver.resolve(catalogo, perfil("susan"))
+            val calibracion = PolicyResolver.resolve(catalogo, perfil("susan")).value
 
             Then("no se produce ninguna regla — observar no es alarmar") {
                 calibracion.sentinel.alertRules[StateKind.SITTING_IN_BED].shouldBeNull()

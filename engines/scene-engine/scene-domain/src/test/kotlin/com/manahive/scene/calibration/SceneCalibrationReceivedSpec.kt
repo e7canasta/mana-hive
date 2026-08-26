@@ -1,5 +1,6 @@
 package com.manahive.scene.calibration
 
+import com.manahive.contracts.common.Fingerprint
 import com.manahive.contracts.policy.ConfidenceConfig
 import com.manahive.contracts.policy.HarborPolicy
 import com.manahive.contracts.policy.PolicyCalibration
@@ -42,6 +43,7 @@ class SceneCalibrationReceivedSpec : BehaviorSpec({
             sentinel = SentinelPolicy(alertRules = emptyMap()),
             harbor = HarborPolicy(defaultChannels = emptyMap(), escalationTimeouts = emptyMap()),
             recorder = RecorderPolicy(transitionWindows = emptyMap()),
+            fingerprint = Fingerprint("test-fixture"),
         )
 
         And("un PolicyCalibration high risk para María") {
@@ -55,6 +57,7 @@ class SceneCalibrationReceivedSpec : BehaviorSpec({
                 sentinel = SentinelPolicy(alertRules = emptyMap()),
                 harbor = HarborPolicy(defaultChannels = emptyMap(), escalationTimeouts = emptyMap()),
                 recorder = RecorderPolicy(transitionWindows = emptyMap()),
+                fingerprint = Fingerprint("test-fixture"),
             )
 
             And("ambos convertidos a SceneCalibration via adaptador") {

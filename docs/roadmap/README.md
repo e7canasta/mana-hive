@@ -13,8 +13,8 @@
 |---|---|
 | `SPEC-00` Build verde | ✅ **cerrada** — `./gradlew check` pasa |
 | `SPEC-01` Episodio prematuro | ✅ **cerrada** — el episodio se abre al vencer el plazo |
-| `SPEC-02` Política canónica | abierta |
-| `SPEC-03` Los cuatro niveles | abierta |
+| `SPEC-02` Política canónica | ✅ **cerrada** — ver [ADR-001](../adr/ADR-001-modelo-de-politica-canonico.md) |
+| `SPEC-03` Los cuatro niveles | parcial — el tipo `WatchLevel` y `CATALOG_BY_LEVEL` se adelantaron en `SPEC-02` |
 | `SPEC-04` Adapters a producción | abierta |
 | `SPEC-05` Cadena ComeBack | abierta |
 | `SPEC-06` Catálogo en el hub + API | abierta |
@@ -47,6 +47,20 @@ El punto 3 salió de un fixture de test que declaraba `ENTRY` y `DWELL` sobre `S
 **Limitación registrada:** el director todavía no puede pedir esa rampa. `ResidentStateRule` tiene un solo campo `severity`, y `alertOnEntry()` y `alertAfter()` son excluyentes en `DagDsl`. El motor la sostiene; la vocabulario no la expresa. Cuando aparezca la necesidad clínica, el cambio es en el DSL, no en Sentinel.
 
 `SentinelCalibration.ruleFor` se eliminó: al terminar no le quedaban llamadores.
+
+### Lo verificado al cerrar `SPEC-02`
+
+`./gradlew check` verde sin `--continue`, **438 tests, 0 fallidos**, José 22 checks y Susan 18. Un solo `PolicyResolver` en el repo, `WatchLevel` con los cuatro valores del director y sólo en `contracts`, sin archivos `.pending`.
+
+Tres decisiones que se apartaron del plan escrito, todas registradas en el ADR:
+
+1. **No se mapeó `WatchLevel` a `RiskLevel`.** Es un error de categoría: `RiskLevel` describe al residente — qué tan frágil es, una entrada; `WatchLevel` describe la decisión clínica. Se cruzan (riesgo alto en STANDARD porque la familia rechazó el monitoreo; riesgo bajo en CRITICAL por post-operatorio). El plan además se contradecía: borraba el nivel y luego seleccionaba catálogo por nivel. Se adelantó de `SPEC-03` el tipo de 4 valores más `CATALOG_BY_LEVEL`, que es lo mínimo sin lo cual `SPEC-02` no cierra.
+
+2. **`ManualAdjustment` y `TimeWindow` se rediseñaron**, contra la instrucción de conservarlos. Guardaban `AlertRule`, que **no tiene umbral de tiempo**: el hub no podía almacenar *"avísenme a los quince minutos"*, que es lo que el director más hace. Ahora guardan `state` + `DwellThreshold`, y `ManualAdjustment` exige `reason` no vacío.
+
+3. **`resolve()` devuelve `Explained<PolicyCalibration>`** y `PolicyCalibration` gana `fingerprint` tipado con el `Fingerprint`/`buildFingerprint` que ya existía en `contracts.common`. Sin lo primero, la procedencia que el hub arma se cortaba en el resolvedor y nunca llegaba a la API.
+
+**Deuda anotada:** `PolicyResolverSpec` y `PoliticaCatalogSpec` ejercitan el resolvedor **legacy** (`AlarmCatalog`). El canónico (`DagCatalog`) tiene cobertura más fina de la que merece. Va a `SPEC-03`.
 
 ---
 

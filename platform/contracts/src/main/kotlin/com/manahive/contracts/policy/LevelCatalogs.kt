@@ -221,3 +221,21 @@ public val CRITICAL_CATALOG: DagCatalog = buildDagCatalog {
         }
     }
 }
+
+/**
+ * Los cuatro niveles del director, indexados por [WatchLevel].
+ *
+ * Es el índice que traduce la decisión clínica ("José es riesgo de caída") al
+ * catálogo que fija sus tiempos. Un nivel sin catálogo es un residente sin
+ * reglas, así que la cobertura total está cubierta por test.
+ */
+public val CATALOG_BY_LEVEL: Map<WatchLevel, DagCatalog> = mapOf(
+    WatchLevel.STANDARD to STANDARD_CATALOG,
+    WatchLevel.NIGHT_WANDERING to NIGHT_WANDERING_CATALOG,
+    WatchLevel.FALL_RISK to FALL_RISK_CATALOG,
+    WatchLevel.CRITICAL to CRITICAL_CATALOG,
+)
+
+/** El catálogo del nivel. Nunca null: [CATALOG_BY_LEVEL] cubre el enum entero. */
+public fun catalogFor(level: WatchLevel): DagCatalog =
+    CATALOG_BY_LEVEL.getValue(level)

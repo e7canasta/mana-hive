@@ -43,7 +43,7 @@ val joseProfile = buildResidentProfile("jose") {
 
 // ── Politica Engine resolves ────────────────────────────────────────────────
 
-val policyCalibration = PolicyResolver.resolve(STANDARD_CATALOG, joseProfile.profile)
+val policyCalibration = PolicyResolver.resolve(STANDARD_CATALOG, joseProfile.profile).value
 
 // ── Derived Calibrations ────────────────────────────────────────────────────
 

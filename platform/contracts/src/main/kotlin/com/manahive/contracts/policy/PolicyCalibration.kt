@@ -1,6 +1,7 @@
 package com.manahive.contracts.policy
 
 import com.manahive.contracts.common.Channel
+import com.manahive.contracts.common.Fingerprint
 import com.manahive.contracts.scene.StateKind
 import com.manahive.kernel.ResidentId
 import java.time.Duration
@@ -22,6 +23,19 @@ public data class PolicyCalibration(
     public val sentinel: SentinelPolicy,
     public val harbor: HarborPolicy,
     public val recorder: RecorderPolicy,
+    /**
+     * Huella de las reglas que produjeron esta calibración.
+     *
+     * Es lo que hace reproducible una decisión: un motor la cita en cada
+     * veredicto, y con ella se puede volver a correr la noche y obtener lo
+     * mismo. Nace acá, donde nace la decisión — calcularla más tarde, en el
+     * borde, la desconecta de lo que realmente se resolvió.
+     *
+     * Dos catálogos de versión distinta deben dar huellas distintas aunque las
+     * reglas resultantes coincidan: la pregunta del inspector es "con qué
+     * reglas se decidió", no "qué reglas se parecen a éstas".
+     */
+    public val fingerprint: Fingerprint,
 )
 
 /**

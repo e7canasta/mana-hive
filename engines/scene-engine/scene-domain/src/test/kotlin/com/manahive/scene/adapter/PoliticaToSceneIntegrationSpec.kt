@@ -1,5 +1,6 @@
 package com.manahive.scene.adapter
 
+import com.manahive.contracts.common.Fingerprint
 import com.manahive.contracts.perception.Observation
 import com.manahive.contracts.perception.ObservationKind
 import com.manahive.kernel.DiscardCause
@@ -65,6 +66,7 @@ class PoliticaToSceneIntegrationSpec : BehaviorSpec({
             sentinel = SentinelPolicy(alertRules = emptyMap()),
             harbor = HarborPolicy(defaultChannels = emptyMap(), escalationTimeouts = emptyMap()),
             recorder = RecorderPolicy(transitionWindows = emptyMap()),
+            fingerprint = Fingerprint("test-fixture"),
         )
 
         When("converting to SceneCalibration via adapter") {
@@ -158,6 +160,7 @@ class PoliticaToSceneIntegrationSpec : BehaviorSpec({
             sentinel = SentinelPolicy(alertRules = emptyMap()),
             harbor = HarborPolicy(defaultChannels = emptyMap(), escalationTimeouts = emptyMap()),
             recorder = RecorderPolicy(transitionWindows = emptyMap()),
+            fingerprint = Fingerprint("test-fixture"),
         )
 
         val josePolicyCalibration = PolicyCalibration(
@@ -175,6 +178,7 @@ class PoliticaToSceneIntegrationSpec : BehaviorSpec({
             sentinel = SentinelPolicy(alertRules = emptyMap()),
             harbor = HarborPolicy(defaultChannels = emptyMap(), escalationTimeouts = emptyMap()),
             recorder = RecorderPolicy(transitionWindows = emptyMap()),
+            fingerprint = Fingerprint("test-fixture"),
         )
 
         When("converting both to SceneCalibrations") {

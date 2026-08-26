@@ -1,6 +1,8 @@
 package com.manahive.politica
 
 import com.manahive.contracts.common.Channel
+import com.manahive.contracts.common.Fingerprint
+import com.manahive.contracts.common.buildFingerprint
 import com.manahive.contracts.policy.AlertRule
 import com.manahive.contracts.policy.AlarmCatalog
 import com.manahive.contracts.policy.AlarmProfile
@@ -23,6 +25,8 @@ import com.manahive.contracts.policy.TransitionKey
 import com.manahive.contracts.policy.TransitionWindow
 import com.manahive.contracts.policy.TriggerOn
 import com.manahive.contracts.scene.StateKind
+import com.manahive.kernel.Explained
+import com.manahive.kernel.ExplanationStep
 import com.manahive.kernel.RuleId
 import java.time.Duration
 
@@ -41,14 +45,19 @@ public object PolicyResolver {
     /**
      * Resolve using DAG-centric catalog (new API).
      * Converts DagCatalog to PolicyCalibration for all downstream engines.
+     *
+     * Returns [Explained] because the precedence it applies — catalog, then
+     * template, then override — is exactly what the director is owed when he
+     * asks "where did that ten minutes come from?". Producing the calibration
+     * without saying which layer won answers half the question.
      */
-    public fun resolve(catalog: DagCatalog, profile: AlarmProfile): PolicyCalibration {
+    public fun resolve(catalog: DagCatalog, profile: AlarmProfile): Explained<PolicyCalibration> {
         val hysteresis = resolveHysteresisFromDag(catalog, profile)
         val dwellThresholds = resolveDwellThresholdsFromDag(catalog, profile)
         val alertRules = resolveAlertRulesFromDag(catalog, profile)
         val transitionWindows = resolveTransitionWindowsFromDag(catalog)
 
-        return PolicyCalibration(
+        val calibration = PolicyCalibration(
             residentId = profile.residentId,
             scene = ScenePolicy(
                 hysteresis = hysteresis,
@@ -64,7 +73,54 @@ public object PolicyResolver {
                 escalationTimeouts = emptyMap(),
             ),
             recorder = RecorderPolicy(transitionWindows = transitionWindows),
+            fingerprint = fingerprintOf(catalog, profile),
         )
+
+        return Explained(value = calibration, explanation = explain(catalog, profile))
+    }
+
+    /**
+     * The fingerprint of the rules that produced a calibration.
+     *
+     * Includes the catalog version even though it does not change the resolved
+     * values on its own: two catalogs of different versions must produce
+     * different fingerprints, because the auditable question is "which rules
+     * decided this", not "which rules look like these".
+     */
+    private fun fingerprintOf(catalog: DagCatalog, profile: AlarmProfile): Fingerprint =
+        buildFingerprint(
+            "catalog" to catalog.version.value,
+            "resident" to profile.residentId.value,
+            "template" to (profile.templateId?.value ?: "none"),
+            "risk" to profile.riskLevel,
+            "mobility" to profile.mobilityAid,
+            "overrides" to profile.overrides.keys.map { it.value }.sorted().joinToString("+"),
+        )
+
+    /** One step per layer that actually contributed, in precedence order. */
+    private fun explain(catalog: DagCatalog, profile: AlarmProfile): List<ExplanationStep> {
+        val steps = mutableListOf(
+            ExplanationStep(
+                rule = "catalog",
+                observed = "catalog ${catalog.version.value} with ${catalog.residentStates.size} watched states",
+                conclusion = "base rules taken from the catalog",
+            ),
+        )
+        profile.templateId?.let {
+            steps += ExplanationStep(
+                rule = "template",
+                observed = "template ${it.value}",
+                conclusion = "template applied over the catalog",
+            )
+        }
+        if (profile.overrides.isNotEmpty()) {
+            steps += ExplanationStep(
+                rule = "override",
+                observed = "overrides ${profile.overrides.keys.map { it.value }.sorted()}",
+                conclusion = "per-resident overrides win over template and catalog",
+            )
+        }
+        return steps
     }
 
     /**
@@ -87,6 +143,11 @@ public object PolicyResolver {
             sentinel = SentinelPolicy(alertRules = emptyMap()),
             harbor = HarborPolicy(defaultChannels = emptyMap(), escalationTimeouts = emptyMap()),
             recorder = RecorderPolicy(transitionWindows = emptyMap()),
+            fingerprint = buildFingerprint(
+                "legacy" to true,
+                "catalog" to catalog.version.value,
+                "resident" to profile.residentId.value,
+            ),
         )
     }
 
