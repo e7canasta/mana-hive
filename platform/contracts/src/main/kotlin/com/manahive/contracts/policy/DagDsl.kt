@@ -255,6 +255,7 @@ public annotation class ResidentProfileDsl
 public class ResidentProfileBuilder(private val residentId: ResidentId) {
     private var riskLevel: RiskLevel = RiskLevel.MEDIUM
     private var mobilityAid: MobilityAid = MobilityAid.NONE
+    private var watchLevel: WatchLevel? = null
     private var templateId: TemplateId? = null
     private val stateOverrides = mutableMapOf<StateKind, ProfileStateOverride>()
     private val transitionOverrides = mutableMapOf<TransitionKey, ProfileTransitionOverride>()
@@ -267,6 +268,19 @@ public class ResidentProfileBuilder(private val residentId: ResidentId) {
         mobilityAid = aid
     }
 
+    /**
+     * El nivel de vigilancia que el director elige. Es la entrada del árbol
+     * de decisión; los tiempos salen del catálogo del nivel.
+     *
+     * Establece el [templateId] a partir del [WatchLevel.label], de modo
+     * que el resolvedor puede seleccionar el catálogo correcto.
+     */
+    public fun level(watchLevel: WatchLevel) {
+        this.watchLevel = watchLevel
+        this.templateId = TemplateId(watchLevel.label)
+    }
+
+    @Deprecated("Usar level(WatchLevel) — el string libre no validaNingún catálogo", replaceWith = ReplaceWith("level(WatchLevel.fromLabel(id) ?: WatchLevel.STANDARD)"))
     public fun template(id: String) {
         templateId = TemplateId(id)
     }
@@ -291,6 +305,7 @@ public class ResidentProfileBuilder(private val residentId: ResidentId) {
             catalogVersion = CatalogVersion("2.1.0"),
             validFrom = java.time.Instant.now(),
         ),
+        watchLevel = watchLevel,
         stateOverrides = stateOverrides.toMap(),
         transitionOverrides = transitionOverrides.toMap(),
     )
@@ -417,6 +432,7 @@ public data class ProfileTransitionOverride(
 
 public data class ResidentProfileConfig(
     val profile: AlarmProfile,
+    val watchLevel: WatchLevel? = null,
     val stateOverrides: Map<StateKind, ProfileStateOverride>,
     val transitionOverrides: Map<TransitionKey, ProfileTransitionOverride>,
 )

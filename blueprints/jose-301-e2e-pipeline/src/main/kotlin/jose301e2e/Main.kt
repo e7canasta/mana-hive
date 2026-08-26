@@ -29,7 +29,7 @@ val START = Instant.parse("2024-01-15T22:00:00Z")
 val joseProfile = buildResidentProfile("jose") {
     risk(RiskLevel.HIGH)
     mobility(MobilityAid.NONE)
-    template("standard")
+    level(WatchLevel.FALL_RISK)
 
     resident {
         sitting { alertAfter(Duration.ofMinutes(15)) }

@@ -11,7 +11,7 @@ import java.time.Instant
 // ── Context ──────────────────────────────────────────────────────────────────
 
 data class PoliticaContext(
-    val catalog: AlarmCatalog,
+    val catalog: DagCatalog,
     val profile: AlarmProfile,
 )
 
@@ -112,7 +112,8 @@ class PoliticaScenarioBuilder(private val ctx: PoliticaContext) {
     // ── Run ───────────────────────────────────────────────────────────────────
 
     fun run(): PoliticaScenarioResult {
-        val resolved = PolicyResolver.resolve(ctx.catalog, ctx.profile)
+        val explained = PolicyResolver.resolve(ctx.catalog, ctx.profile)
+        val resolved = explained.value
         val resolvedSource = PolicyResolver.resolveSource(ctx.profile)
         result = resolved
         source = resolvedSource

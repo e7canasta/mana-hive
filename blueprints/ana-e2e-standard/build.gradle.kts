@@ -4,7 +4,7 @@ plugins {
 }
 
 application {
-    mainClass.set("susane2e.MainKt")
+    mainClass.set("anae2e.MainKt")
 }
 
 dependencies {

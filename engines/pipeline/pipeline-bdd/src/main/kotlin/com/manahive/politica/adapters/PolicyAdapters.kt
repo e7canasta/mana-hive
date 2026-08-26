@@ -42,16 +42,10 @@ public fun PolicyCalibration.toSceneCalibration(): SceneCalibration = sceneCalib
     heartbeatTimeout = scenePolicy.confidence.heartbeatTimeout
 
     dwell {
-        scenePolicy.dwellThresholds.forEach { (state, threshold) ->
-            when (state) {
-                StateKind.STANDING -> STANDING warning threshold.warning exceeded threshold.exceeded
-                StateKind.SITTING_IN_BED -> SITTING_IN_BED warning threshold.warning exceeded threshold.exceeded
-                StateKind.BED_EDGE -> BED_EDGE warning threshold.warning exceeded threshold.exceeded
-                StateKind.IN_BATHROOM -> IN_BATHROOM warning threshold.warning exceeded threshold.exceeded
-                StateKind.LYING -> LYING warning threshold.warning exceeded threshold.exceeded
-                StateKind.IN_HALLWAY -> IN_HALLWAY warning threshold.warning exceeded threshold.exceeded
-                else -> {}
-            }
+        // Sin `when`: traducir un mapa enumerando estados a mano hace que olvidar
+        // uno pierda el umbral en silencio. Es lo que pasaba con ABSENT.
+        scenePolicy.dwellThresholds.forEach { (kind, threshold) ->
+            state(kind) warning threshold.warning exceeded threshold.exceeded
         }
     }
 

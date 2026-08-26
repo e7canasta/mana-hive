@@ -33,6 +33,17 @@ public class DwellThresholdsBuilder(
     public val ABSENT: DwellThresholdStateBuilder get() = DwellThresholdStateBuilder(StateKind.ABSENT, thresholds)
     public val IN_CHAIR: DwellThresholdStateBuilder get() = DwellThresholdStateBuilder(StateKind.IN_CHAIR, thresholds)
     public val IN_WHEELCHAIR: DwellThresholdStateBuilder get() = DwellThresholdStateBuilder(StateKind.IN_WHEELCHAIR, thresholds)
+
+    /**
+     * Acceso genérico por estado.
+     *
+     * Las propiedades de arriba son azúcar para escribir catálogos a mano. Un
+     * adapter que traduce un mapa NO debe enumerarlas con un `when`: alcanza con
+     * olvidar un estado para que el umbral que el director configuró se pierda en
+     * silencio. Eso pasó con ABSENT — "fuera de la habitación" no disparaba nunca.
+     */
+    public fun state(kind: StateKind): DwellThresholdStateBuilder =
+        DwellThresholdStateBuilder(kind, thresholds)
 }
 
 @SceneDsl

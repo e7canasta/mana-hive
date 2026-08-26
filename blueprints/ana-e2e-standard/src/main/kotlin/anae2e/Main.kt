@@ -1,4 +1,4 @@
-package susane2e
+package anae2e
 
 import com.manahive.contracts.perception.ObservationKind.*
 import com.manahive.contracts.policy.*
@@ -16,25 +16,25 @@ import java.time.Duration
 import java.time.Instant
 
 val BED = BedId("bed-5")
-val SUSAN = ResidentId("susan")
-val NIGHT = NightId("night-susan-401")
+val ANA = ResidentId("ana")
+val NIGHT = NightId("night-ana-401")
 val CAM = MonitorId("CAMERA_MAIN")
 val START = Instant.parse("2024-01-15T22:00:00Z")
 
-// ── Susan's Profile — Libre, sin alertas ────────────────────────────────────
+// ── Ana's Profile — Libre, sin alertas ────────────────────────────────────
 
-val susanProfile = buildResidentProfile("susan") {
+val anaProfile = buildResidentProfile("ana") {
     risk(RiskLevel.LOW)
     mobility(MobilityAid.NONE)
-    template("standard")
+    level(WatchLevel.STANDARD)
 }
 
-// ── Susan's Dwell Profile — Medicación cambiada ────────────────────────────
+// ── Ana's Dwell Profile — Medicación cambiada ────────────────────────────
 
-val susanDwellProfile = buildResidentProfile("susan-dwell") {
+val anaDwellProfile = buildResidentProfile("ana-dwell") {
     risk(RiskLevel.LOW)
     mobility(MobilityAid.NONE)
-    template("standard")
+    level(WatchLevel.STANDARD)
     resident {
         bathroom {
             warningAfter(Duration.ofMinutes(5))    // aviso a los 5 min
@@ -45,8 +45,8 @@ val susanDwellProfile = buildResidentProfile("susan-dwell") {
 
 // ── Politica Engine resolves ────────────────────────────────────────────────
 
-val policyCalibration = PolicyResolver.resolve(STANDARD_CATALOG, susanProfile.profile).value
-val policyCalibrationDwell = PolicyResolver.resolve(STANDARD_CATALOG, susanDwellProfile.profile).value
+val policyCalibration = PolicyResolver.resolve(STANDARD_CATALOG, anaProfile.profile).value
+val policyCalibrationDwell = PolicyResolver.resolve(STANDARD_CATALOG, anaDwellProfile.profile).value
 
 // ── Derived Calibrations (from policy result) ───────────────────────────────
 
@@ -64,7 +64,7 @@ val recorderCalDwell = policyCalibrationDwell.toRecordingCalibration(BED, CAM)
 
 val ctx = PipelineContext(
     bed = BED,
-    resident = SUSAN,
+    resident = ANA,
     night = NIGHT,
     monitor = CAM,
     sceneCalibration = sceneCal,
@@ -76,7 +76,7 @@ val ctx = PipelineContext(
 
 val ctxDwell = PipelineContext(
     bed = BED,
-    resident = SUSAN,
+    resident = ANA,
     night = NIGHT,
     monitor = CAM,
     sceneCalibration = sceneCalDwell,
@@ -90,11 +90,11 @@ val ctxDwell = PipelineContext(
 
 fun main() {
     println("═══════════════════════════════════════════════════════════════")
-    println("  Susan 401 — E2E Pipeline (STANDARD + Dwell Profile)")
+    println("  Ana 401 — E2E Pipeline (STANDARD + Dwell Profile)")
     println("═══════════════════════════════════════════════════════════════")
     println()
-    println("  Perfil STANDARD: ${susanProfile.profile.riskLevel} / ${susanProfile.profile.mode}")
-    println("  Template: ${susanProfile.profile.templateId?.value ?: "none"}")
+    println("  Perfil STANDARD: ${anaProfile.profile.riskLevel} / ${anaProfile.profile.mode}")
+    println("  Template: ${anaProfile.profile.templateId?.value ?: "none"}")
     println()
     println("  Politica resuelta (STANDARD):")
     println("    Scene:     ${policyCalibration.scene.dwellThresholds.size} dwell, ${policyCalibration.scene.hysteresis.size} hysteresis")
@@ -103,13 +103,13 @@ fun main() {
     println()
 
     val bathroomDwell = policyCalibrationDwell.scene.dwellThresholds[StateKind.IN_BATHROOM]
-    println("  Perfil DWELL: ${susanDwellProfile.profile.riskLevel} / ${susanDwellProfile.profile.mode}")
+    println("  Perfil DWELL: ${anaDwellProfile.profile.riskLevel} / ${anaDwellProfile.profile.mode}")
     println("  Dwell IN_BATHROOM: warning=${bathroomDwell?.warning}, exceeded=${bathroomDwell?.exceeded}")
     println()
 
     // ── STANDARD scenarios (sin alertas) ──────────────────────────────────
 
-    ctx.pipeline("Susan se sienta y se acuesta — sin alertas") {
+    ctx.pipeline("Ana se sienta y se acuesta — sin alertas") {
         obs(IN_BED, "0s")
         obs(SITTING_IN_BED, "1h15m")
         obs(IN_BED, "1h32m")
@@ -120,7 +120,7 @@ fun main() {
         thenEvidenceCount(0)
     }.report()
 
-    ctx.pipeline("Susan va al baño — sin alertas") {
+    ctx.pipeline("Ana va al baño — sin alertas") {
         obs(IN_BED, "0s")
         obs(SITTING_IN_BED, "2h47m")
         obs(STANDING, "2h48m")
@@ -133,7 +133,7 @@ fun main() {
         thenHarborCommandCount(0)
     }.report()
 
-    ctx.pipeline("Susan se sienta 3 veces — sin budget") {
+    ctx.pipeline("Ana se sienta 3 veces — sin budget") {
         obs(IN_BED, "0s")
         obs(SITTING_IN_BED, "1h15m")
         obs(IN_BED, "1h32m")
@@ -146,7 +146,7 @@ fun main() {
         thenHarborCommandCount(0)
     }.report()
 
-    ctx.pipeline("Susan camina al baño — sin alertas") {
+    ctx.pipeline("Ana camina al baño — sin alertas") {
         obs(IN_BED, "0s")
         obs(STANDING, "1h00m")
         obs(IN_BATHROOM, "1h05m")
@@ -157,7 +157,7 @@ fun main() {
         thenHarborCommandCount(0)
     }.report()
 
-    ctx.pipeline("Susan LYING→STANDING — sin grabación") {
+    ctx.pipeline("Ana LYING→STANDING — sin grabación") {
         obs(IN_BED, "0s")
         obs(STANDING, "180s")
         obs(IN_BED, "600s")
@@ -169,11 +169,11 @@ fun main() {
 
     println()
     println("───────────────────────────────────────────────────────────────")
-    println("  DWELL PROFILE: Susan con medicación cambiada")
+    println("  DWELL PROFILE: Ana con medicación cambiada")
     println("───────────────────────────────────────────────────────────────")
     println()
 
-    ctxDwell.pipeline("Susan en baño 17 min — warning + episodio") {
+    ctxDwell.pipeline("Ana en baño 17 min — warning + episodio") {
         obs(IN_BED, "0s")
         obs(STANDING, "4m")
         obs(IN_BATHROOM, "6m")
@@ -186,7 +186,7 @@ fun main() {
         thenEpisodeOpenCount(1)
     }.report()
 
-    ctxDwell.pipeline("Susan en baño 4 min — sin warning, sin episodio") {
+    ctxDwell.pipeline("Ana en baño 4 min — sin warning, sin episodio") {
         obs(IN_BED, "0s")
         obs(STANDING, "4m")
         obs(IN_BATHROOM, "6m")

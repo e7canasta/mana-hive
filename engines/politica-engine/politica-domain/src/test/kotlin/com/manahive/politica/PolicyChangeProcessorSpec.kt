@@ -7,7 +7,6 @@ import com.manahive.contracts.policy.MobilityAid
 import com.manahive.contracts.policy.PolicyChangeDetected
 import com.manahive.contracts.policy.PolicyMode
 import com.manahive.contracts.policy.RiskLevel
-import com.manahive.contracts.scene.StateKind
 import com.manahive.kernel.ResidentId
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.collections.shouldHaveSize
@@ -52,8 +51,8 @@ class PolicyChangeProcessorSpec : BehaviorSpec({
                     result.emittedEvents[0].shouldBeInstanceOf<CalibrationChanged>()
                 }
 
-                Then("la calibracion tiene dwell para STANDING") {
-                    result.calibration.scene.dwellThresholds.containsKey(StateKind.STANDING) shouldBe true
+                Then("la calibracion tiene hysteresis") {
+                    result.calibration.scene.hysteresis.isNotEmpty() shouldBe true
                 }
 
                 Then("el residentId es correcto") {

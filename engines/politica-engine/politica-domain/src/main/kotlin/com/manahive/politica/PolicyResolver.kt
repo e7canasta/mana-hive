@@ -4,7 +4,6 @@ import com.manahive.contracts.common.Channel
 import com.manahive.contracts.common.Fingerprint
 import com.manahive.contracts.common.buildFingerprint
 import com.manahive.contracts.policy.AlertRule
-import com.manahive.contracts.policy.AlarmCatalog
 import com.manahive.contracts.policy.AlarmProfile
 import com.manahive.contracts.policy.ClosureCondition
 import com.manahive.contracts.policy.ConfidenceConfig
@@ -19,9 +18,8 @@ import com.manahive.contracts.policy.RecorderPolicy
 import com.manahive.contracts.policy.ScenePolicy
 import com.manahive.contracts.policy.SentinelPolicy
 import com.manahive.contracts.policy.Severity
-import com.manahive.contracts.policy.Template
-import com.manahive.contracts.policy.TemplateId
 import com.manahive.contracts.policy.TransitionKey
+import com.manahive.contracts.policy.TemplateId
 import com.manahive.contracts.policy.TransitionWindow
 import com.manahive.contracts.policy.TriggerOn
 import com.manahive.contracts.scene.StateKind
@@ -121,34 +119,6 @@ public object PolicyResolver {
             )
         }
         return steps
-    }
-
-    /**
-     * Resolve using legacy AlarmCatalog (backward compatible).
-     */
-    public fun resolve(catalog: AlarmCatalog, profile: AlarmProfile): PolicyCalibration {
-        val hysteresis = resolveHysteresis(catalog, profile)
-        val dwellThresholds = resolveDwellThresholds(catalog, profile)
-
-        return PolicyCalibration(
-            residentId = profile.residentId,
-            scene = ScenePolicy(
-                hysteresis = hysteresis,
-                dwellThresholds = dwellThresholds,
-                confidence = ConfidenceConfig(
-                    minConfidence = PolicyDefaults.minConfidence,
-                    heartbeatTimeout = PolicyDefaults.heartbeatTimeout,
-                ),
-            ),
-            sentinel = SentinelPolicy(alertRules = emptyMap()),
-            harbor = HarborPolicy(defaultChannels = emptyMap(), escalationTimeouts = emptyMap()),
-            recorder = RecorderPolicy(transitionWindows = emptyMap()),
-            fingerprint = buildFingerprint(
-                "legacy" to true,
-                "catalog" to catalog.version.value,
-                "resident" to profile.residentId.value,
-            ),
-        )
     }
 
     public fun resolveSource(profile: AlarmProfile): PolicySource = when {
@@ -263,38 +233,6 @@ public object PolicyResolver {
             key to TransitionWindow(before = before, after = after)
         }.toMap()
     }
-
-    // ── Legacy AlarmCatalog resolution ──────────────────────────────────
-
-    private fun resolveHysteresis(
-        catalog: AlarmCatalog,
-        profile: AlarmProfile,
-    ): Map<TransitionKey, Duration> {
-        val base = resolveBase(profile.templateId, catalog)
-            ?.hysteresis
-            ?.takeIf { it.isNotEmpty() }
-            ?: catalog.transitions
-        return applyOverrides<PolicyOverride.HysteresisOverride, TransitionKey, Duration>(base, profile.overrides) { it.key to it.value }
-    }
-
-    private fun resolveDwellThresholds(
-        catalog: AlarmCatalog,
-        profile: AlarmProfile,
-    ): Map<StateKind, DwellThreshold> {
-        val base = resolveBase(profile.templateId, catalog)
-            ?.dwellThresholds
-            ?.takeIf { it.isNotEmpty() }
-            ?: catalog.dwellThresholds
-        return applyOverrides<PolicyOverride.DwellOverride, StateKind, DwellThreshold>(base, profile.overrides) { it.state to it.value }
-    }
-
-    private fun resolveBase(templateId: TemplateId?, catalog: AlarmCatalog): Template? =
-        templateId?.let { id ->
-            catalog.templates[id]
-                ?: throw IllegalArgumentException(
-                    "Template '$id' not found in catalog version ${catalog.version}"
-                )
-        }
 
     private inline fun <reified O : PolicyOverride, K, V> applyOverrides(
         base: Map<K, V>,

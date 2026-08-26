@@ -184,6 +184,20 @@ public class DwellThresholdsBuilder {
     public val BED_EDGE: DwellEntry get() = DwellEntry(StateKind.BED_EDGE)
     public val IN_BATHROOM: DwellEntry get() = DwellEntry(StateKind.IN_BATHROOM)
     public val IN_HALLWAY: DwellEntry get() = DwellEntry(StateKind.IN_HALLWAY)
+    public val IN_ROOM: DwellEntry get() = DwellEntry(StateKind.IN_ROOM)
+    public val OUTDOOR: DwellEntry get() = DwellEntry(StateKind.OUTDOOR)
+    public val ABSENT: DwellEntry get() = DwellEntry(StateKind.ABSENT)
+
+    /**
+     * Acceso genérico por estado.
+     *
+     * Las propiedades de arriba son azúcar para escribir calibraciones a mano.
+     * Un adapter que traduce un mapa debe usar esto: enumerar estados a mano
+     * hace que olvidar uno pierda en silencio el umbral que el director
+     * configuró. Es lo que pasaba con ABSENT — la fila "fuera de la habitación"
+     * de los cuatro niveles no llegaba nunca al motor de escena.
+     */
+    public fun state(kind: StateKind): DwellEntry = DwellEntry(kind)
 
     public fun build(): Map<StateKind, DwellThreshold> = thresholds.toMap()
 }

@@ -85,6 +85,13 @@ public data class TransitionTable(
                 TransitionKey(StateKind.BED_EDGE, StateKind.STANDING) to STANDARD,
 
                 // ── Out of bed transitions ──────────────────────────────
+                // Cualquier estado fuera de la cama puede volverse Absent: perder de
+                // vista al residente es lo que ABSENT significa, y puede pasar desde
+                // donde sea. El grafo estaba asimétrico — se salía de ABSENT hacia seis
+                // estados pero sólo se entraba desde STANDING, así que el recorrido
+                // natural (habitación → pasillo → fuera) nunca llegaba a ABSENT y la
+                // fila "Fuera de la habitación" del catálogo no disparaba nunca.
+
                 // Standing → out-of-bed, furniture, bed, or Absent
                 TransitionKey(StateKind.STANDING, StateKind.BED_EDGE) to STANDARD,
                 TransitionKey(StateKind.STANDING, StateKind.LYING) to BED_TRANSITION,
@@ -101,6 +108,7 @@ public data class TransitionTable(
                 TransitionKey(StateKind.IN_BATHROOM, StateKind.IN_ROOM) to ROOM_TRANSITION,
                 TransitionKey(StateKind.IN_BATHROOM, StateKind.IN_HALLWAY) to ROOM_TRANSITION,
                 TransitionKey(StateKind.IN_BATHROOM, StateKind.OUTDOOR) to ROOM_TRANSITION,
+                TransitionKey(StateKind.IN_BATHROOM, StateKind.ABSENT) to ROOM_TRANSITION,
 
                 // InRoom → Standing, bathroom, hallway, outdoor, furniture, bed
                 TransitionKey(StateKind.IN_ROOM, StateKind.STANDING) to ROOM_TRANSITION,
@@ -112,17 +120,20 @@ public data class TransitionTable(
                 TransitionKey(StateKind.IN_ROOM, StateKind.LYING) to ROOM_TRANSITION,
                 TransitionKey(StateKind.IN_ROOM, StateKind.SITTING_IN_BED) to ROOM_TRANSITION,
                 TransitionKey(StateKind.IN_ROOM, StateKind.BED_EDGE) to ROOM_TRANSITION,
+                TransitionKey(StateKind.IN_ROOM, StateKind.ABSENT) to ROOM_TRANSITION,
 
                 // InHallway → Standing, bathroom, room, outdoor
                 TransitionKey(StateKind.IN_HALLWAY, StateKind.STANDING) to ROOM_TRANSITION,
                 TransitionKey(StateKind.IN_HALLWAY, StateKind.IN_BATHROOM) to ROOM_TRANSITION,
                 TransitionKey(StateKind.IN_HALLWAY, StateKind.IN_ROOM) to ROOM_TRANSITION,
                 TransitionKey(StateKind.IN_HALLWAY, StateKind.OUTDOOR) to ROOM_TRANSITION,
+                TransitionKey(StateKind.IN_HALLWAY, StateKind.ABSENT) to ROOM_TRANSITION,
 
                 // Outdoor → Standing, room, hallway
                 TransitionKey(StateKind.OUTDOOR, StateKind.STANDING) to ROOM_TRANSITION,
                 TransitionKey(StateKind.OUTDOOR, StateKind.IN_ROOM) to ROOM_TRANSITION,
                 TransitionKey(StateKind.OUTDOOR, StateKind.IN_HALLWAY) to ROOM_TRANSITION,
+                TransitionKey(StateKind.OUTDOOR, StateKind.ABSENT) to ROOM_TRANSITION,
 
                 // Absent → Standing or other out-of-bed (returned from unknown location)
                 TransitionKey(StateKind.ABSENT, StateKind.STANDING) to ROOM_TRANSITION,

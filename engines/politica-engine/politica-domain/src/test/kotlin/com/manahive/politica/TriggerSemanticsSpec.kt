@@ -117,7 +117,7 @@ class TriggerSemanticsSpec : BehaviorSpec({
         }
 
         When("resuelvo la política") {
-            val calibracion = PolicyResolver.resolve(catalogo, perfil("susan")).value
+            val calibracion = PolicyResolver.resolve(catalogo, perfil("elena")).value
 
             Then("no se produce ninguna regla — observar no es alarmar") {
                 calibracion.sentinel.alertRules[StateKind.SITTING_IN_BED].shouldBeNull()

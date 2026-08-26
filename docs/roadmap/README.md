@@ -14,7 +14,7 @@
 | `SPEC-00` Build verde | ✅ **cerrada** — `./gradlew check` pasa |
 | `SPEC-01` Episodio prematuro | ✅ **cerrada** — el episodio se abre al vencer el plazo |
 | `SPEC-02` Política canónica | ✅ **cerrada** — ver [ADR-001](../adr/ADR-001-modelo-de-politica-canonico.md) |
-| `SPEC-03` Los cuatro niveles | parcial — el tipo `WatchLevel` y `CATALOG_BY_LEVEL` se adelantaron en `SPEC-02` |
+| `SPEC-03` Los cuatro niveles | ✅ **cerrada** |
 | `SPEC-04` Adapters a producción | abierta |
 | `SPEC-05` Cadena ComeBack | abierta |
 | `SPEC-06` Catálogo en el hub + API | abierta |
@@ -61,6 +61,26 @@ Tres decisiones que se apartaron del plan escrito, todas registradas en el ADR:
 3. **`resolve()` devuelve `Explained<PolicyCalibration>`** y `PolicyCalibration` gana `fingerprint` tipado con el `Fingerprint`/`buildFingerprint` que ya existía en `contracts.common`. Sin lo primero, la procedencia que el hub arma se cortaba en el resolvedor y nunca llegaba a la API.
 
 **Deuda anotada:** `PolicyResolverSpec` y `PoliticaCatalogSpec` ejercitan el resolvedor **legacy** (`AlarmCatalog`). El canónico (`DagCatalog`) tiene cobertura más fina de la que merece. Va a `SPEC-03`.
+
+### Lo verificado al cerrar `SPEC-03`
+
+`./gradlew check` verde sin `--continue`, **443 tests, 0 fallidos**. Cinco blueprints: José 22, Ana 18, night-wandering 11, fall-risk 9, critical 12. `level(WatchLevel)` en el DSL, plantillas fuera de fuentes de test, `resolve(AlarmCatalog, …)` retirado, y la residente Susan renombrada a Ana — sin residuos en el código.
+
+#### "Fuera de la habitación" no disparaba nunca
+
+Al cerrar la spec se retiró un escenario ABSENT del blueprint CRITICAL, atribuyéndolo a que *"el sweep no produce `DwellExceeded` para ABSENT vía `OUT_OF_ROOM`"*. Se verificó: **esa explicación no era la causa**. `OUT_OF_ROOM` sí mapea a `PersonState.Absent`, y el barrido sí emite `DwellExceeded` para ABSENT — hay un test que lo fija (`ClockSweeperAbsentSpec`).
+
+La causa real eran **tres defectos encadenados**, y el escenario estaba destapando el más grave que tuvo el sistema hasta ahora: los cuatro niveles configuran la fila *"Fuera de la habitación"* de `NIVELES-MONITOREO.md` —en CRITICAL, aviso a los 2 minutos— y **no disparaba nunca**. El residente que se va de noche y no vuelve es el caso más peligroso que este producto dice cubrir.
+
+1. **`SceneCalibration.DwellThresholdsBuilder` no exponía `ABSENT`.** Sólo seis estados. La calibración del motor de escena era literalmente incapaz de transportar el umbral, por más que Política lo resolviera bien (el blueprint imprimía `Scene: 5 dwell`, ABSENT incluido).
+2. **El adapter lo descartaba en silencio.** `toSceneCalibration()` traducía el mapa con un `when` que terminaba en `else -> {}`. Exactamente la construcción que `SPEC-00` tarea 3 prohíbe, y por el mismo motivo: apaga un caso del dominio sin ruido.
+3. **El grafo de transiciones era asimétrico.** Se salía de ABSENT hacia seis estados, pero sólo se entraba desde `STANDING`. El recorrido natural para irse —habitación → pasillo → fuera— moría antes de llegar. Se podía volver de ABSENT al pasillo pero no volverse ABSENT desde el pasillo.
+
+Los tres arreglados. El (2) se cerró estructuralmente, no por caso: se agregó `state(kind)` a los builders de dwell y el adapter dejó de enumerar estados a mano, así que la clase entera de bug —"olvidé un estado en el `when`"— deja de ser posible. El escenario retirado volvió al blueprint y pasa.
+
+**Lección para las specs que siguen:** un escenario que no pasa es una hipótesis sobre el motor, no un veredicto. Antes de retirarlo, reproducir la causa en un test del componente acusado. Acá el componente acusado estaba sano y el bug estaba en otros tres lugares.
+
+**Deuda nueva anotada:** hay **dos** clases `DwellThresholdsBuilder` — una en `calibration/dsl/DwellThresholdsDsl.kt` y otra en `calibration/SceneCalibration.kt:167`, con APIs distintas y cobertura de estados distinta. Es la jerarquía paralela que el comentario del primer archivo dice haber eliminado. Unificarlas antes de que la divergencia esconda otro estado.
 
 ---
 

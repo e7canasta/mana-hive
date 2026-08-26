@@ -1,17 +1,18 @@
 package com.manahive.politica
 
-import com.manahive.contracts.policy.AlarmCatalog
 import com.manahive.contracts.policy.AlarmProfile
-import com.manahive.contracts.policy.CatalogVersion
+import com.manahive.contracts.policy.ClosureCondition
+import com.manahive.contracts.policy.DagCatalog
 import com.manahive.contracts.policy.DwellThreshold
 import com.manahive.contracts.policy.MobilityAid
 import com.manahive.contracts.policy.PolicyMode
 import com.manahive.contracts.policy.PolicyOverride
 import com.manahive.contracts.policy.PolicySource
 import com.manahive.contracts.policy.RiskLevel
-import com.manahive.contracts.policy.Template
-import com.manahive.contracts.policy.TemplateId
+import com.manahive.contracts.policy.Severity
 import com.manahive.contracts.policy.TransitionKey
+import com.manahive.contracts.policy.TriggerOn
+import com.manahive.contracts.policy.buildDagCatalog
 import com.manahive.contracts.scene.StateKind
 import com.manahive.kernel.ResidentId
 import com.manahive.kernel.RuleId
@@ -23,82 +24,114 @@ import java.time.Duration
 import java.time.Instant
 
 /**
- * PE-2 · PolicyResolver resuelve PolicyCalibration
+ * PolicyResolver — DAG-centric resolution.
  *
- * Patron: Service Pattern (Fowler)
- * TDD: Red-Green-Refactor (Beck)
+ * Tests the canonical path: DagCatalog + AlarmProfile → PolicyCalibration.
+ * The legacy AlarmCatalog overload has been retired (SPEC-03).
  */
 class PolicyResolverSpec : BehaviorSpec({
 
-    Given("un catalogo con plantillas") {
-        val catalog = AlarmCatalog(
-            transitions = mapOf(
-                TransitionKey(StateKind.LYING, StateKind.BED_EDGE) to Duration.ofMillis(1500),
-                TransitionKey(StateKind.BED_EDGE, StateKind.STANDING) to Duration.ofMillis(1500),
-            ),
-            dwellThresholds = mapOf(
-                StateKind.STANDING to DwellThreshold(
-                    warning = Duration.ofMinutes(4),
-                    exceeded = Duration.ofMinutes(5),
-                ),
-            ),
-            templates = mapOf(
-                TemplateId("night_wandering") to Template(
-                    id = TemplateId("night_wandering"),
-                    hysteresis = mapOf(
-                        TransitionKey(StateKind.LYING, StateKind.BED_EDGE) to Duration.ofMillis(2000),
-                    ),
-                    dwellThresholds = mapOf(
-                        StateKind.STANDING to DwellThreshold(
-                            warning = Duration.ofMinutes(3),
-                            exceeded = Duration.ofMinutes(4),
-                        ),
-                    ),
-                ),
-            ),
-            version = CatalogVersion("1.0.0"),
-        )
+    Given("a DAG catalog with resident states and transitions") {
+        val catalog = buildDagCatalog {
+            version("1.0.0")
+            resident {
+                sitting {
+                    warningAfter(Duration.ofMinutes(3))
+                    alertAfter(Duration.ofMinutes(5))
+                    severity(Severity.WARNING)
+                    closure(ClosureCondition.STAFF_OR_SAFE)
+                }
+                bedEdge {
+                    alertOnEntry()
+                    severity(Severity.CRITICAL)
+                    closure(ClosureCondition.STAFF_AND_SAFE)
+                }
+            }
+            transitions {
+                from(StateKind.LYING) {
+                    to(StateKind.BED_EDGE) { hysteresis(Duration.ofMillis(1500)) }
+                    to(StateKind.STANDING) { hysteresis(Duration.ofMillis(2000)) }
+                }
+                from(StateKind.STANDING) {
+                    to(StateKind.IN_BATHROOM) {
+                        hysteresis(Duration.ofMillis(2000))
+                        record(before = Duration.ofMinutes(2), after = Duration.ofMinutes(5))
+                    }
+                }
+            }
+        }
 
-        And("un perfil con template night_wandering") {
+        And("a profile with overrides") {
             val profile = AlarmProfile(
                 residentId = ResidentId("maria"),
                 riskLevel = RiskLevel.HIGH,
                 mobilityAid = MobilityAid.WALKER,
                 autopilot = false,
-                mode = PolicyMode.PRESET,
-                templateId = TemplateId("night_wandering"),
-                overrides = emptyMap(),
-                catalogVersion = CatalogVersion("1.0.0"),
+                mode = PolicyMode.CUSTOM,
+                templateId = null,
+                overrides = mapOf(
+                    RuleId("dwell-SITTING_IN_BED") to PolicyOverride.DwellOverride(
+                        ruleId = RuleId("dwell-SITTING_IN_BED"),
+                        state = StateKind.SITTING_IN_BED,
+                        value = DwellThreshold(
+                            warning = Duration.ofMinutes(1),
+                            exceeded = Duration.ofMinutes(2),
+                        ),
+                    ),
+                ),
+                catalogVersion = com.manahive.contracts.policy.CatalogVersion("1.0.0"),
                 validFrom = Instant.parse("2026-08-21T03:00:00Z"),
             )
 
-            When("resuelvo las reglas") {
-                val calibration = PolicyResolver.resolve(catalog, profile)
+            When("resolved") {
+                val result = PolicyResolver.resolve(catalog, profile)
+                val calibration = result.value
 
-                Then("la calibracion no es null") {
-                    calibration shouldNotBe null
+                Then("the calibration is explained") {
+                    result.explanation shouldNotBe emptyList<com.manahive.kernel.ExplanationStep>()
                 }
 
-                Then("la histeresis LYING → BED_EDGE viene del template (2s)") {
-                    calibration.scene.hysteresis[TransitionKey(StateKind.LYING, StateKind.BED_EDGE)] shouldBe Duration.ofMillis(2000)
-                }
-
-                Then("el dwell STANDING viene del template (3 min warning, 4 min exceeded)") {
-                    calibration.scene.dwellThresholds[StateKind.STANDING]?.warning shouldBe Duration.ofMinutes(3)
-                    calibration.scene.dwellThresholds[StateKind.STANDING]?.exceeded shouldBe Duration.ofMinutes(4)
-                }
-
-                Then("la fuente es TEMPLATE") {
-                    PolicyResolver.resolveSource(profile) shouldBe PolicySource.TEMPLATE
-                }
-
-                Then("el residentId es correcto") {
+                Then("the residentId is correct") {
                     calibration.residentId shouldBe ResidentId("maria")
+                }
+
+                Then("dwell SITTING_IN_BED comes from the override (1 min warning, 2 min exceeded)") {
+                    calibration.scene.dwellThresholds[StateKind.SITTING_IN_BED]?.warning shouldBe Duration.ofMinutes(1)
+                    calibration.scene.dwellThresholds[StateKind.SITTING_IN_BED]?.exceeded shouldBe Duration.ofMinutes(2)
+                }
+
+                Then("hysteresis LYING → BED_EDGE comes from the catalog (1.5s)") {
+                    calibration.scene.hysteresis[TransitionKey(StateKind.LYING, StateKind.BED_EDGE)] shouldBe Duration.ofMillis(1500)
+                }
+
+                Then("transition window LYING → STANDING is recorded") {
+                    val window = calibration.recorder.transitionWindows[TransitionKey(StateKind.STANDING, StateKind.IN_BATHROOM)]
+                    window shouldNotBe null
+                    window!!.before shouldBe Duration.ofMinutes(2)
+                    window.after shouldBe Duration.ofMinutes(5)
+                }
+
+                Then("alert rule for SITTING_IN_BED has DWELL trigger") {
+                    val rule = calibration.sentinel.alertRules[StateKind.SITTING_IN_BED]
+                    rule shouldNotBe null
+                    rule!!.triggerOn shouldBe TriggerOn.DWELL
+                    rule.severity shouldBe Severity.WARNING
+                }
+
+                Then("alert rule for BED_EDGE has ENTRY trigger") {
+                    val rule = calibration.sentinel.alertRules[StateKind.BED_EDGE]
+                    rule shouldNotBe null
+                    rule!!.triggerOn shouldBe TriggerOn.ENTRY
+                    rule.severity shouldBe Severity.CRITICAL
+                }
+
+                Then("source is OVERRIDE") {
+                    PolicyResolver.resolveSource(profile) shouldBe PolicySource.OVERRIDE
                 }
             }
         }
 
-        And("un perfil sin template (usa catalogo base)") {
+        And("a profile without overrides") {
             val profile = AlarmProfile(
                 residentId = ResidentId("jose"),
                 riskLevel = RiskLevel.LOW,
@@ -107,110 +140,33 @@ class PolicyResolverSpec : BehaviorSpec({
                 mode = PolicyMode.PRESET,
                 templateId = null,
                 overrides = emptyMap(),
-                catalogVersion = CatalogVersion("1.0.0"),
+                catalogVersion = com.manahive.contracts.policy.CatalogVersion("1.0.0"),
                 validFrom = Instant.parse("2026-08-21T03:00:00Z"),
             )
 
-            When("resuelvo las reglas") {
-                val calibration = PolicyResolver.resolve(catalog, profile)
+            When("resolved") {
+                val calibration = PolicyResolver.resolve(catalog, profile).value
 
-                Then("la histeresis LYING → BED_EDGE viene del catalogo base (1.5s)") {
-                    calibration.scene.hysteresis[TransitionKey(StateKind.LYING, StateKind.BED_EDGE)] shouldBe Duration.ofMillis(1500)
+                Then("dwell SITTING_IN_BED comes from the catalog (3 min warning, 5 min exceeded)") {
+                    calibration.scene.dwellThresholds[StateKind.SITTING_IN_BED]?.warning shouldBe Duration.ofMinutes(3)
+                    calibration.scene.dwellThresholds[StateKind.SITTING_IN_BED]?.exceeded shouldBe Duration.ofMinutes(5)
                 }
 
-                Then("el dwell STANDING viene del catalogo base (4 min warning, 5 min exceeded)") {
-                    calibration.scene.dwellThresholds[StateKind.STANDING]?.warning shouldBe Duration.ofMinutes(4)
-                    calibration.scene.dwellThresholds[StateKind.STANDING]?.exceeded shouldBe Duration.ofMinutes(5)
-                }
-
-                Then("la fuente es CATALOG") {
+                Then("source is CATALOG") {
                     PolicyResolver.resolveSource(profile) shouldBe PolicySource.CATALOG
-                }
-            }
-        }
-
-        And("un perfil con override de histeresis") {
-            val profile = AlarmProfile(
-                residentId = ResidentId("pedro"),
-                riskLevel = RiskLevel.MEDIUM,
-                mobilityAid = MobilityAid.WHEELCHAIR,
-                autopilot = false,
-                mode = PolicyMode.CUSTOM,
-                templateId = null,
-                overrides = mapOf(
-                    RuleId("hysteresis LYING→BED_EDGE") to PolicyOverride.HysteresisOverride(
-                        ruleId = RuleId("hysteresis LYING→BED_EDGE"),
-                        key = TransitionKey(StateKind.LYING, StateKind.BED_EDGE),
-                        value = Duration.ofMillis(3000),
-                    ),
-                ),
-                catalogVersion = CatalogVersion("1.0.0"),
-                validFrom = Instant.parse("2026-08-21T03:00:00Z"),
-            )
-
-            When("resuelvo las reglas") {
-                val calibration = PolicyResolver.resolve(catalog, profile)
-
-                Then("la histeresis LYING → BED_EDGE viene del override (3s)") {
-                    calibration.scene.hysteresis[TransitionKey(StateKind.LYING, StateKind.BED_EDGE)] shouldBe Duration.ofMillis(3000)
-                }
-
-                Then("la histeresis BED_EDGE → STANDING viene del catalogo base (1.5s)") {
-                    calibration.scene.hysteresis[TransitionKey(StateKind.BED_EDGE, StateKind.STANDING)] shouldBe Duration.ofMillis(1500)
-                }
-
-                Then("la fuente es OVERRIDE") {
-                    PolicyResolver.resolveSource(profile) shouldBe PolicySource.OVERRIDE
-                }
-            }
-        }
-
-        And("un perfil con override de dwell") {
-            val profile = AlarmProfile(
-                residentId = ResidentId("laura"),
-                riskLevel = RiskLevel.HIGH,
-                mobilityAid = MobilityAid.WALKER,
-                autopilot = false,
-                mode = PolicyMode.CUSTOM,
-                templateId = null,
-                overrides = mapOf(
-                    RuleId("dwell STANDING") to PolicyOverride.DwellOverride(
-                        ruleId = RuleId("dwell STANDING"),
-                        state = StateKind.STANDING,
-                        value = DwellThreshold(
-                            warning = Duration.ofMinutes(2),
-                            exceeded = Duration.ofMinutes(3),
-                        ),
-                    ),
-                ),
-                catalogVersion = CatalogVersion("1.0.0"),
-                validFrom = Instant.parse("2026-08-21T03:00:00Z"),
-            )
-
-            When("resuelvo las reglas") {
-                val calibration = PolicyResolver.resolve(catalog, profile)
-
-                Then("el dwell STANDING viene del override (2 min warning, 3 min exceeded)") {
-                    calibration.scene.dwellThresholds[StateKind.STANDING]?.warning shouldBe Duration.ofMinutes(2)
-                    calibration.scene.dwellThresholds[StateKind.STANDING]?.exceeded shouldBe Duration.ofMinutes(3)
-                }
-
-                Then("la fuente es OVERRIDE") {
-                    PolicyResolver.resolveSource(profile) shouldBe PolicySource.OVERRIDE
                 }
             }
         }
     }
 
-    Given("un catalogo vacio") {
-        val catalog = AlarmCatalog(
-            transitions = emptyMap(),
-            dwellThresholds = emptyMap(),
-            templates = emptyMap(),
-            version = CatalogVersion("1.0.0"),
-        )
+    Given("an empty DAG catalog") {
+        val catalog = buildDagCatalog {
+            version("1.0.0")
+            resident { }
+            transitions { }
+        }
 
-        And("un perfil sin template") {
+        And("a profile without overrides") {
             val profile = AlarmProfile(
                 residentId = ResidentId("empty"),
                 riskLevel = RiskLevel.LOW,
@@ -219,65 +175,23 @@ class PolicyResolverSpec : BehaviorSpec({
                 mode = PolicyMode.PRESET,
                 templateId = null,
                 overrides = emptyMap(),
-                catalogVersion = CatalogVersion("1.0.0"),
+                catalogVersion = com.manahive.contracts.policy.CatalogVersion("1.0.0"),
                 validFrom = Instant.parse("2026-08-21T03:00:00Z"),
             )
 
-            When("resuelvo las reglas") {
-                val calibration = PolicyResolver.resolve(catalog, profile)
+            When("resolved") {
+                val calibration = PolicyResolver.resolve(catalog, profile).value
 
-                Then("la histeresis esta vacia") {
+                Then("hysteresis is empty") {
                     calibration.scene.hysteresis.isEmpty() shouldBe true
                 }
 
-                Then("los dwell thresholds estan vacios") {
+                Then("dwell thresholds are empty") {
                     calibration.scene.dwellThresholds.isEmpty() shouldBe true
                 }
 
-                Then("la fuente es CATALOG") {
+                Then("source is CATALOG") {
                     PolicyResolver.resolveSource(profile) shouldBe PolicySource.CATALOG
-                }
-            }
-        }
-    }
-
-    Given("un catalogo con plantillas") {
-        val catalog = AlarmCatalog(
-            transitions = mapOf(
-                TransitionKey(StateKind.LYING, StateKind.BED_EDGE) to Duration.ofMillis(1500),
-            ),
-            dwellThresholds = emptyMap(),
-            templates = mapOf(
-                TemplateId("night_wandering") to Template(
-                    id = TemplateId("night_wandering"),
-                    hysteresis = mapOf(
-                        TransitionKey(StateKind.LYING, StateKind.BED_EDGE) to Duration.ofMillis(2000),
-                    ),
-                    dwellThresholds = emptyMap(),
-                ),
-            ),
-            version = CatalogVersion("1.0.0"),
-        )
-
-        And("un perfil con template inexistente") {
-            val profile = AlarmProfile(
-                residentId = ResidentId("maria"),
-                riskLevel = RiskLevel.HIGH,
-                mobilityAid = MobilityAid.WALKER,
-                autopilot = false,
-                mode = PolicyMode.PRESET,
-                templateId = TemplateId("nonexistent"),
-                overrides = emptyMap(),
-                catalogVersion = CatalogVersion("1.0.0"),
-                validFrom = Instant.parse("2026-08-21T03:00:00Z"),
-            )
-
-            When("resuelvo las reglas") {
-                Then("lanza IllegalArgumentException") {
-                    val exception = io.kotest.assertions.throwables.shouldThrow<IllegalArgumentException> {
-                        PolicyResolver.resolve(catalog, profile)
-                    }
-                    exception.message shouldContain "nonexistent"
                 }
             }
         }

@@ -2,16 +2,13 @@ package com.manahive.politica
 
 import com.manahive.contracts.common.Fingerprint
 import com.manahive.contracts.common.buildFingerprint
-import com.manahive.contracts.policy.AlarmCatalog
 import com.manahive.contracts.policy.CalibrationChanged
-import com.manahive.contracts.policy.CatalogVersion
-import com.manahive.contracts.policy.DwellThreshold
+import com.manahive.contracts.policy.DagCatalog
 import com.manahive.contracts.policy.PolicyCalibration
 import com.manahive.contracts.policy.PolicyChangeDetected
+import com.manahive.contracts.policy.STANDARD_CATALOG
 import com.manahive.contracts.policy.Version
-import com.manahive.contracts.scene.StateKind
 import com.manahive.kernel.ResidentId
-import java.time.Duration
 import java.time.Instant
 
 /**
@@ -19,27 +16,22 @@ import java.time.Instant
  *
  * Flow:
  * 1. Receives PolicyChangeDetected from System of Record
- * 2. Resolves PolicyCalibration directly via PolicyResolver
+ * 2. Resolves PolicyCalibration via PolicyResolver (DAG-centric)
  * 3. Emits CalibrationChanged event
  *
- * Follows:
- * - SRP (Martin): only processes policy changes, nothing else
- * - Event Driven (Hohpe): reacts to events, emits events
- * - Remove Dispensable (Fowler): no intermediate EffectivePolicy type
- * - DI (Martin): catalog injected via constructor, not hardcoded
- *
- * @property catalog The alarm catalog for resolution
+ * @property catalog The DAG catalog for resolution (defaults to STANDARD)
  * @property versionProvider Function to get next version for a resident
  */
 public class DefaultPolicyChangeProcessor(
-    private val catalog: AlarmCatalog = defaultCatalog(),
+    private val catalog: DagCatalog = STANDARD_CATALOG,
     private val versionProvider: (ResidentId) -> Version = { Version(1) },
 ) : PolicyChangeProcessor {
 
     override fun process(event: PolicyChangeDetected, now: Instant): PolicyChangeResult {
         val profile = event.snapshot
 
-        val calibration = PolicyResolver.resolve(catalog, profile)
+        val result = PolicyResolver.resolve(catalog, profile)
+        val calibration = result.value
 
         val version = versionProvider(profile.residentId)
 
@@ -54,20 +46,6 @@ public class DefaultPolicyChangeProcessor(
         return PolicyChangeResult(
             calibration = calibration,
             emittedEvents = listOf(changeEvent),
-        )
-    }
-
-    private companion object {
-        private fun defaultCatalog(): AlarmCatalog = AlarmCatalog(
-            transitions = emptyMap(),
-            dwellThresholds = mapOf(
-                StateKind.STANDING to DwellThreshold(
-                    warning = Duration.ofMinutes(4),
-                    exceeded = Duration.ofMinutes(5),
-                ),
-            ),
-            templates = emptyMap(),
-            version = CatalogVersion("1.0.0"),
         )
     }
 }

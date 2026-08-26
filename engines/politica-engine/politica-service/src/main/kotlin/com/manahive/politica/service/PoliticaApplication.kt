@@ -2,9 +2,8 @@ package com.manahive.politica.service
 
 import com.manahive.politica.DefaultPolicyChangeProcessor
 import com.manahive.politica.PolicyChangeProcessor
-import com.manahive.contracts.policy.AlarmCatalog
-import com.manahive.contracts.policy.CatalogVersion
-import com.manahive.contracts.policy.TemplateId
+import com.manahive.contracts.policy.DagCatalog
+import com.manahive.contracts.policy.STANDARD_CATALOG
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 import org.springframework.context.annotation.Bean
@@ -22,15 +21,10 @@ import org.springframework.context.annotation.Bean
 class PoliticaApplication {
 
     @Bean
-    fun alarmCatalog(): AlarmCatalog = AlarmCatalog(
-        transitions = emptyMap(),
-        dwellThresholds = emptyMap(),
-        templates = emptyMap(),
-        version = CatalogVersion("1.0.0"),
-    )
+    fun dagCatalog(): DagCatalog = STANDARD_CATALOG
 
     @Bean
-    fun policyChangeProcessor(catalog: AlarmCatalog): PolicyChangeProcessor =
+    fun policyChangeProcessor(catalog: DagCatalog): PolicyChangeProcessor =
         DefaultPolicyChangeProcessor(catalog)
 }
 
