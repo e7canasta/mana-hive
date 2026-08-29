@@ -5,6 +5,7 @@ import com.manahive.contracts.policy.AlarmProfile
 import com.manahive.contracts.policy.EffectiveRules
 import com.manahive.hub.policy.PolicyEventPublisher
 import com.manahive.kernel.ResidentId
+import com.manahive.messaging.BusEvents
 import com.manahive.messaging.NatsObjectMapper
 import com.manahive.messaging.Subjects
 import io.nats.client.Connection
@@ -30,7 +31,7 @@ import java.util.UUID
 @Component
 @ConditionalOnProperty(name = ["nats.enabled"], havingValue = "true", matchIfMissing = true)
 public class PolicyNatsEgress(
-    private val connection: Connection,
+    private val events: BusEvents,
 ) : PolicyEventPublisher {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -39,11 +40,10 @@ public class PolicyNatsEgress(
 
     @PostConstruct
     public fun start() {
-        try {
-            jetStream = connection.jetStream()
-            log.info("Policy NATS egress started")
-        } catch (e: Exception) {
-            log.warn("NATS not available, egress disabled: {}", e.message)
+        events.onConnected {
+            runCatching { jetStream = events.connection!!.jetStream() }
+                .onSuccess { log.info("Policy NATS egress started") }
+                .onFailure { log.warn("Egress sin JetStream: {}", it.message) }
         }
     }
 

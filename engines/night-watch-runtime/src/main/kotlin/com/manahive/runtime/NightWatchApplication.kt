@@ -5,6 +5,8 @@ import com.manahive.kernel.BedId
 import com.manahive.kernel.MonitorId
 import com.manahive.kernel.NightId
 import com.manahive.kernel.ResidentId
+import com.manahive.messaging.BusConnector
+import com.manahive.messaging.BusEvents
 import com.manahive.messaging.NatsConfig
 import com.manahive.messaging.NatsObjectMapper
 import org.springframework.beans.factory.annotation.Value

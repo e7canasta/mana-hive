@@ -15,8 +15,10 @@ import com.manahive.hub.policy.InMemoryPolicyCatalog
 import com.manahive.hub.policy.InMemoryPolicyLayerStore
 import com.manahive.hub.policy.InMemoryRawPolicyStore
 import com.manahive.hub.policy.InMemorySemanticBucketStore
-import com.manahive.messaging.NatsClientConfiguration
+import com.manahive.messaging.BusConnector
+import com.manahive.messaging.BusEvents
 import com.manahive.messaging.NatsObjectMapper
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Import
@@ -34,7 +36,6 @@ import org.springframework.context.annotation.Primary
  * se conecta este sistema. Los tests la apagan con `nats.enabled=false`.
  */
 @Configuration
-@Import(NatsClientConfiguration::class)
 public class HubInfrastructureConfiguration {
 
     // ── Jackson ────────────────────────────────────────────────────────────
@@ -82,4 +83,28 @@ public class HubInfrastructureConfiguration {
 
     @Bean
     public fun policyCatalog(): PolicyCatalog = InMemoryPolicyCatalog()
+
+    // ── Bus ───────────────────────────────────────────────────────────────
+
+    @Bean
+    public fun busEvents(): BusEvents = BusEvents()
+
+    /**
+     * Conexión al bus que no bloquea el arranque y reintenta para siempre.
+     *
+     * El hub es el System of Record: si no arranca porque NATS todavía no está,
+     * la API de política tampoco responde y nadie puede dar de alta a un
+     * residente. En 24/7 la caída del bus tiene que degradar la ingesta, no
+     * tumbar el servicio.
+     */
+    @Bean
+    @org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(
+        name = ["nats.enabled"],
+        havingValue = "true",
+        matchIfMissing = true,
+    )
+    public fun busConnector(
+        @Value("\${nats.url:nats://localhost:4222}") url: String,
+        events: BusEvents,
+    ): BusConnector = BusConnector(url, events)
 }

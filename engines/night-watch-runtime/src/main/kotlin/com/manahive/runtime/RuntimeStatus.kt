@@ -1,5 +1,6 @@
 package com.manahive.runtime
 
+import com.manahive.messaging.BusEvents
 import io.nats.client.Connection
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicReference
@@ -65,31 +66,3 @@ fun Connection.Status.toRuntimeState(): RuntimeState = when (this) {
     else -> RuntimeState.WAITING_FOR_BUS
 }
 
-/**
- * Puente entre el hilo de NATS y el servicio, sin pasar por Spring.
- *
- * El listener de conexión se dispara en un hilo del cliente NATS **mientras el
- * contexto todavía se está armando**. Pedirle un bean ahí adentro deadlockea:
- * el listener espera al `nightWatchService`, que espera a la conexión, que es
- * justo la que está creándose. Esto son dos referencias volátiles que el
- * servicio completa cuando ya existe.
- */
-class BusEvents {
-    @Volatile
-    var onConnected: (() -> Unit)? = null
-
-    @Volatile
-    var onLost: ((String) -> Unit)? = null
-
-    /**
-     * La conexión, cuando exista.
-     *
-     * Es nullable a propósito: el servicio arranca **antes** que el bus y tiene
-     * que poder responder "todavía no" en vez de no arrancar.
-     */
-    @Volatile
-    var connection: Connection? = null
-
-    val connected: Boolean
-        get() = connection?.status == Connection.Status.CONNECTED
-}

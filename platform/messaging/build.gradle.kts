@@ -13,4 +13,6 @@ dependencies {
     compileOnly(platform("org.springframework.boot:spring-boot-dependencies:4.0.1"))
     compileOnly("org.springframework.boot:spring-boot-autoconfigure")
     compileOnly("org.springframework:spring-context")
+    compileOnly("jakarta.annotation:jakarta.annotation-api")
+    compileOnly("org.slf4j:slf4j-api")
 }

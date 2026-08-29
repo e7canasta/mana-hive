@@ -1,6 +1,6 @@
 package com.manahive.runtime
 
-import io.nats.client.Connection
+import com.manahive.messaging.BusEvents
 import org.springframework.boot.health.contributor.Health
 import org.springframework.boot.health.contributor.HealthIndicator
 import org.springframework.http.HttpStatus

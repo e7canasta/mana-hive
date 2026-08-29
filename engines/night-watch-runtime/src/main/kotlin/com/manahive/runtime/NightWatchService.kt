@@ -20,6 +20,7 @@ import com.manahive.hub.policy.LevelTemplate
 import com.manahive.hub.policy.PolicyLayers
 import com.manahive.hub.policy.toAlarmProfile
 import com.manahive.kernel.ResidentId
+import com.manahive.messaging.BusEvents
 import com.manahive.messaging.NatsObjectMapper
 import com.manahive.messaging.NatsTopology
 import com.manahive.messaging.Subjects
@@ -62,8 +63,8 @@ class NightWatchService(
         // el orden de arranque no puede ser una precondición.
         status.transition(RuntimeState.WAITING_FOR_BUS, "esperando al bus")
         // Recién ahora el servicio existe: se engancha a los eventos del bus.
-        events.onConnected = { onBusAvailable() }
-        events.onLost = { onBusLost(it) }
+        events.onConnected { onBusAvailable() }
+        events.onLost { onBusLost(it) }
         // Y si el bus ya estaba arriba, el evento CONNECTED pudo haber pasado
         // antes de este enganche: se intenta una vez de entrada.
         onBusAvailable()

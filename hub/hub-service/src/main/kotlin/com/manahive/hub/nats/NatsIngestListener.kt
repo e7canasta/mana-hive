@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.manahive.contracts.EventEnvelope
 import com.manahive.hub.ledger.EventStore
+import com.manahive.messaging.BusEvents
 import com.manahive.messaging.Subjects
 import io.nats.client.Connection
 import io.nats.client.Dispatcher
@@ -24,7 +25,7 @@ import jakarta.annotation.PreDestroy
 @Component
 @ConditionalOnProperty(name = ["nats.enabled"], havingValue = "true", matchIfMissing = true)
 public class NatsIngestListener(
-    private val connection: Connection,
+    private val events: BusEvents,
     private val eventStore: EventStore,
     private val mapper: ObjectMapper,
 ) {
@@ -33,11 +34,18 @@ public class NatsIngestListener(
 
     @PostConstruct
     public fun start() {
+        // No bloquea: se suscribe cuando el bus aparece, y otra vez en cada
+        // reconexión. El hub tiene que poder arrancar antes que NATS.
+        events.onConnected { subscribeSafely() }
+        if (events.connected) subscribeSafely()
+    }
+
+    private fun subscribeSafely() {
         try {
             subscribeToStreams()
             log.info("NATS ingest listener started")
         } catch (e: Exception) {
-            log.warn("NATS not available, ingest listener disabled: {}", e.message)
+            log.warn("No se pudo suscribir al bus: {}", e.message)
         }
     }
 
@@ -58,6 +66,7 @@ public class NatsIngestListener(
 
         streams.forEach { (name, subject) ->
             try {
+                val connection = events.connection ?: return
                 val dispatcher = connection.createDispatcher { msg ->
                     try {
                         val payload = String(msg.data)

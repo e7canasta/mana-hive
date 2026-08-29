@@ -8,13 +8,16 @@ import com.manahive.hub.policy.InMemoryPolicyLayerStore
 import com.manahive.hub.policy.PolicyService
 import com.manahive.kernel.ResidentId
 import com.manahive.kernel.StaffId
+import com.manahive.messaging.BusEvents
 import com.manahive.messaging.NatsConfig
 import com.manahive.messaging.NatsObjectMapper
+import com.manahive.messaging.NatsTopology
 import com.manahive.messaging.Subjects
 import io.nats.client.Connection
 import io.nats.client.PushSubscribeOptions
 import io.nats.client.api.ConsumerConfiguration
 import io.nats.client.api.DeliverPolicy
+import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.condition.EnabledIf
 import org.springframework.beans.factory.annotation.Autowired
@@ -65,13 +68,19 @@ class PolicyBusIntegrationSpec {
     @Autowired lateinit var policyService: PolicyService
     @Autowired lateinit var layerStore: InMemoryPolicyLayerStore
 
-    /** La conexión del propio hub: los streams los creó su bean de topología. */
-    @Autowired lateinit var connection: Connection
+    /** La conexión del propio hub, que ahora llega de forma asíncrona. */
+    @Autowired lateinit var busEvents: BusEvents
 
     @Test
     fun `un cambio de nivel viaja por el bus y el motor puede recalibrar con el`() {
         run {
-            val conn = connection
+            // El hub conecta sin bloquear el arranque: se espera a que aparezca.
+            val deadline = System.currentTimeMillis() + 10_000
+            while (!busEvents.connected && System.currentTimeMillis() < deadline) Thread.sleep(200)
+            val conn = busEvents.connection
+            assumeTrue(conn != null && busEvents.connected, "el hub no llegó a conectarse")
+            requireNotNull(conn)
+            NatsTopology(conn.jetStreamManagement()).ensureAll()
 
             val jose = ResidentId("jose-bus-${System.nanoTime()}")
             val jsm = conn.jetStreamManagement()

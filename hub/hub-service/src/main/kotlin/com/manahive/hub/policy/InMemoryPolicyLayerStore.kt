@@ -6,12 +6,13 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
 
 /**
- * In-memory implementation of [PolicyLayerStore].
+ * In-memory implementation of [PolicyLayerStore] — now explicitly a **CACHE** derived from mana-hub SOR.
  *
  * Stores the event history per resident and folds it to [PolicyLayers].
- * Intended for development, testing, and single-instance deployments.
- * For production, replace with an event-sourced implementation backed by
- * the ledger.
+ * **No es SOR:** la verdad vive en mana-hub Postgres `alarm_profile_versions` + `hub_policy_outbox`.
+ * Al arrancar se hidrata via `hub.policy.change.v1` (NATS) o `GET /api/v1/alarm-presets/{id}` snapshot.
+ * Pierde todo al reiniciar y se reconstruye — como `current_bed_states` o `EpisodeLedger` en NightWatch.
+ * Para tests/dev sigue siendo útil; en prod es PolicyCache.
  *
  * Vernon: "Infrastructure" — implementation detail behind the port.
  */
@@ -47,3 +48,6 @@ public class InMemoryPolicyLayerStore : PolicyLayerStore {
         events.clear()
     }
 }
+
+/** Alias explícito: deja claro que es caché de trabajo, no disco — usar este nombre en prod */
+public typealias PolicyCache = InMemoryPolicyLayerStore

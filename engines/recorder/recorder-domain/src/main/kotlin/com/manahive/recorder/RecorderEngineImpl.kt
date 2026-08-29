@@ -45,10 +45,13 @@ internal class RecorderEngineImpl(
                     conclusion = "No recording rule matches this trigger",
                 )
             )
-            return Explained(
-                value = RecordingVerdict(commands = emptyList(), evidenceRecords = emptyList(), ledger = ledger),
-                explanation = explanation,
-            )
+            // Y sigue: grabar y dejar evidencia son decisiones distintas.
+            //
+            // Acá había un `return` que devolvía evidencia vacía, así que las
+            // reglas de evidencia sólo se evaluaban cuando además matcheaba una
+            // regla de grabación. Un episodio WARNING —que el catálogo quiere
+            // que deje evidencia pero no que encienda la cámara— no dejaba
+            // ningún rastro. El director pedía una cosa y el motor hacía otra.
         }
 
         // Process each matching rule
