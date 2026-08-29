@@ -57,7 +57,7 @@ public fun ObservationKind.toPersonState(): PersonState = when (this) {
 public fun ObservationKind.toSceneStateChange(): ((SceneState) -> SceneState)? = when (this) {
     // ── Staff ─────────────────────────────────────────────────
     ObservationKind.STAFF_ENTERED -> { state -> state.copy(staff = PresenceState.Present) }
-    ObservationKind.STAFF_LEFT -> { state -> state.copy(staff = PresenceState.NotPresent, staffSince = null) }
+    ObservationKind.STAFF_LEFT -> { state -> state.copy(staff = PresenceState.NotPresent) }
     ObservationKind.STAFF_IN_REACH -> { state -> state.copy(staff = PresenceState.InReach) }
 
     // ── Wheelchair ────────────────────────────────────────────

@@ -111,7 +111,7 @@ public data class DigitalTwin(
      * don't produce SceneEvents directly — they're derived.
      */
     public fun evolveScene(change: (SceneState) -> SceneState, at: Instant): DigitalTwin {
-        val newScene = change(scene)
+        val newScene = change(scene).stamped(previous = scene, at = at)
         return if (newScene != scene) {
             copy(scene = newScene, sceneSince = at)
         } else {
@@ -119,10 +119,27 @@ public data class DigitalTwin(
         }
     }
 
+    /**
+     * Cuanto lleva un campo de escena en su estado actual.
+     *
+     * Null si ese campo nunca fue observado. No es cero: un campo que nadie miro
+     * no lleva cero tiempo en un estado, no tiene estado — y una regla de
+     * permanencia sobre el no se puede evaluar todavia.
+     */
+    public fun durationInSceneField(field: String, now: Instant): Duration? =
+        scene.durationIn(field, now)
+
     /** Duration in current person state. */
     public fun durationInState(now: Instant): Duration = Duration.between(stateSince, now)
 
-    /** Duration in current scene state. */
+    /**
+     * Cuanto hace que cambio *algo* de la escena.
+     *
+     * No sirve para permanencia por campo — para eso esta [durationInSceneField].
+     * Este reloj se resetea cuando cambia cualquier campo, asi que usarlo para
+     * medir cuanto lleva la baranda abajo da la respuesta equivocada apenas se
+     * mueva la silla.
+     */
     public fun durationInSceneState(now: Instant): Duration = Duration.between(sceneSince, now)
 
     /**

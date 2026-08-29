@@ -69,6 +69,7 @@ include(":platform:contracts")
 include(":platform:domain-kernel")
 include(":platform:infrastructure")
 include(":platform:messaging")
+include(":platform:profile-api")
 include(":platform:serialization")
 
 // Los *-service de motor viven en .archive: night-watch-runtime los reemplaza.

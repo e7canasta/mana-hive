@@ -16,6 +16,7 @@ import com.manahive.scene.calibration.toDwellCatalog
 import com.manahive.scene.core.DigitalTwin
 import java.time.Duration
 import java.time.Instant
+import com.manahive.contracts.scene.SceneState
 
 /**
  * The patrolman of silence: produces facts only the passage of time reveals.
@@ -202,11 +203,15 @@ internal class ClockSweeperImpl : ClockSweeper {
         val facts = mutableListOf<SceneEvent>()
         val newMarks = mutableSetOf<SceneDwellMarkKey>()
 
-        checkSceneFieldDwell(twin, "staff", twin.sceneSince, ctx, facts, newMarks)
-        checkSceneFieldDwell(twin, "wheelchair", twin.sceneSince, ctx, facts, newMarks)
-        checkSceneFieldDwell(twin, "walker", twin.sceneSince, ctx, facts, newMarks)
-        checkSceneFieldDwell(twin, "bed.left", twin.sceneSince, ctx, facts, newMarks)
-        checkSceneFieldDwell(twin, "bed.right", twin.sceneSince, ctx, facts, newMarks)
+        // Cada campo con su propio reloj. Con uno compartido, mover la silla a
+        // las 3:10 borraba que la baranda estaba abajo desde las 3:00.
+        SceneState.FIELDS.forEach { field ->
+            val since = twin.scene.sinceOf(field) ?: return@forEach
+            // Un campo que ningun sensor informo no acumula permanencia: no esta
+            // hace cero minutos en un estado, no tiene estado.
+            if (twin.scene.stateOf(field)?.isKnown != true) return@forEach
+            checkSceneFieldDwell(twin, field, since, ctx, facts, newMarks)
+        }
 
         return SceneDwellCheckResult(facts, newMarks)
     }
