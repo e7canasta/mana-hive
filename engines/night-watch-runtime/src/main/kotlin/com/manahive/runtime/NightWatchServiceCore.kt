@@ -13,9 +13,9 @@ import com.manahive.kernel.AlertId
 import com.manahive.kernel.EventRef
 import com.manahive.kernel.ResidentId
 import com.manahive.profile.api.ResidentProfileDto
-import com.manahive.hub.policy.LevelTemplate
-import com.manahive.hub.policy.PolicyLayers
-import com.manahive.hub.policy.toAlarmProfile
+import com.manahive.contracts.policy.LevelTemplate
+import com.manahive.contracts.policy.PolicyLayers
+import com.manahive.contracts.policy.toAlarmProfile
 import com.manahive.politica.PolicyResolver
 import com.manahive.kernel.Clock
 import com.manahive.kernel.ManualClock

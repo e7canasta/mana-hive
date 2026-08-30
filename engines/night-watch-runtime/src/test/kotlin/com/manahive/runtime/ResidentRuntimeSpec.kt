@@ -7,9 +7,9 @@ import com.manahive.contracts.policy.STANDARD_CATALOG
 import com.manahive.contracts.policy.WatchLevel
 import com.manahive.contracts.scene.SceneEvent
 import com.manahive.contracts.sentinel.SentinelSignal
-import com.manahive.hub.policy.LevelTemplate
-import com.manahive.hub.policy.PolicyLayers
-import com.manahive.hub.policy.toAlarmProfile
+import com.manahive.contracts.policy.LevelTemplate
+import com.manahive.contracts.policy.PolicyLayers
+import com.manahive.contracts.policy.toAlarmProfile
 import com.manahive.kernel.BedId
 import com.manahive.kernel.MonitorId
 import com.manahive.kernel.NightId

@@ -1,4 +1,4 @@
-package com.manahive.hub.policy
+package com.manahive.contracts.policy
 
 import com.manahive.contracts.policy.AlarmProfile
 import com.manahive.contracts.policy.CatalogVersion

@@ -1,0 +1,176 @@
+# Tres javas + infra - Ecosistema completo mana-hive + mana-hub
+# mana-hive (motores/NATS) 18081, mana-hub (SoR/JPA) 8080, bridge (traductor) 8090
+# Leyden AOTCache + Xmx tuning validado: total ~850M en 8Gi
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: mana-hub-pg-three
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: mana_hub
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      - pg-three:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d mana_hub"]
+      interval: 5s
+      retries: 10
+
+  nats:
+    image: nats:latest
+    container_name: mana-nats-three
+    restart: unless-stopped
+    ports:
+      - "4223:4222"
+      - "8223:8222"
+    command: ["-js", "--store_dir=/data"]
+    volumes:
+      - nats-three:/data
+    healthcheck:
+      test: ["CMD", "nats-server", "--version"]
+      interval: 10s
+      retries: 5
+
+  # --- Generadores AOT (training onRefresh) ---
+  aotgen-hive:
+    build:
+      context: ..
+      dockerfile: aot-jvm/Dockerfile.aotgen
+      args:
+        JAR_FILE: engines/night-watch-runtime/build/libs/engines-night-watch-runtime.jar
+    user: "0:0"
+    environment:
+      AOT_DIR: /cache
+      AOT_CACHE: /cache/app.aot
+    volumes:
+      - ./cache:/cache
+    restart: "no"
+
+  aotgen-hub:
+    build:
+      context: ../../mana-hub
+      dockerfile: ../mana-hive/aot-jvm/Dockerfile.aotgen
+      args:
+        JAR_FILE: bootstrap/build/libs/bootstrap-1.0.0-SNAPSHOT.jar
+    user: "0:0"
+    # Hub necesita heap mayor para entrenamiento Leyden (JPA/Hibernate ~23k clases)
+    command: ["/bin/sh","-c","mkdir -p \"$${AOT_DIR}\" && java -Xmx512m -XX:MaxMetaspaceSize=256m -XX:AOTCacheOutput=\"$${AOT_CACHE}\" -Dspring.context.exit=onRefresh -jar app.jar"]
+    environment:
+      AOT_DIR: /cache-hub
+      AOT_CACHE: /cache-hub/app.aot
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/mana_hub
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+    volumes:
+      - ./cache-hub:/cache-hub
+    restart: "no"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  aotgen-bridge:
+    build:
+      context: ../../mana-hub
+      dockerfile: ../mana-hive/aot-jvm/Dockerfile.aotgen
+      args:
+        JAR_FILE: event-bridge/build/libs/event-bridge-1.0.0-SNAPSHOT.jar
+    user: "0:0"
+    environment:
+      AOT_DIR: /cache-bridge
+      AOT_CACHE: /cache-bridge/app.aot
+    volumes:
+      - ./cache-bridge:/cache-bridge
+    restart: "no"
+
+  # --- Runtimes (Leyden + heap acotado) ---
+  # NATS ya está incluido arriba (4222 JetStream) - es el bus entre hive ↔ bridge
+  mana-hive:
+    build:
+      context: ..
+      dockerfile: aot-jvm/Dockerfile.deploy
+      args:
+        JAR_FILE: engines/night-watch-runtime/build/libs/engines-night-watch-runtime.jar
+    command: ["java", "-Xmx256m", "-XX:MaxMetaspaceSize=96m", "-XX:AOTCache=/cache/app.aot", "-jar", "app.jar"]
+    environment:
+      AOT_DIR: /cache
+      AOT_CACHE: /cache/app.aot
+      SPRING_PROFILES_ACTIVE: default
+      NATS_URL: nats://nats:4222
+    volumes:
+      - ./cache:/cache
+    depends_on:
+      aotgen-hive:
+        condition: service_completed_successfully
+      nats:
+        condition: service_started
+    ports:
+      - "18081:8081"
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 400M
+
+  mana-hub:
+    build:
+      context: ../../mana-hub
+      dockerfile: ../mana-hive/aot-jvm/Dockerfile.deploy
+      args:
+        JAR_FILE: bootstrap/build/libs/bootstrap-1.0.0-SNAPSHOT.jar
+    command: ["java", "-Xmx512m", "-XX:MaxMetaspaceSize=128m", "-XX:AOTCache=/cache-hub/app.aot", "-jar", "app.jar"]
+    environment:
+      AOT_DIR: /cache-hub
+      AOT_CACHE: /cache-hub/app.aot
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/mana_hub
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+    volumes:
+      - ./cache-hub:/cache-hub
+    depends_on:
+      aotgen-hub:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 700M
+
+  bridge:
+    build:
+      context: ../../mana-hub
+      dockerfile: ../mana-hive/aot-jvm/Dockerfile.deploy
+      args:
+        JAR_FILE: event-bridge/build/libs/event-bridge-1.0.0-SNAPSHOT.jar
+    command: ["java", "-Xmx256m", "-XX:MaxMetaspaceSize=96m", "-XX:AOTCache=/cache-bridge/app.aot", "-jar", "app.jar"]
+    environment:
+      AOT_DIR: /cache-bridge
+      AOT_CACHE: /cache-bridge/app.aot
+      NATS_URL: nats://nats:4222
+      BRIDGE_TARGET_URL: http://mana-hub:8080
+    volumes:
+      - ./cache-bridge:/cache-bridge
+    depends_on:
+      aotgen-bridge:
+        condition: service_completed_successfully
+      nats:
+        condition: service_started
+      mana-hub:
+        condition: service_started
+    ports:
+      - "8090:8090"
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 350M
+
+volumes:
+  pg-three:
+  nats-three:

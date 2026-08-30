@@ -58,11 +58,6 @@ include(":engines:sentinel:sentinel-batch")
 include(":engines:sentinel:sentinel-bdd")
 include(":engines:sentinel:sentinel-domain")
 
-// ── hub: el System of Record ──────────────────────────────────────────────────
-include(":hub:hub-batch")
-include(":hub:hub-domain")
-include(":hub:hub-service")
-
 // ── platform: kernel compartido, lenguaje publicado, convenciones del bus ─────
 include(":platform:batch-io")
 include(":platform:blueprint-harness")

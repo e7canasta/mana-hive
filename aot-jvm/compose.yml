@@ -6,6 +6,7 @@ services:
       dockerfile: aot-jvm/Dockerfile.aotgen
       args:
         JAR_FILE: engines/night-watch-runtime/build/libs/engines-night-watch-runtime.jar
+    user: "0:0"
     environment:
       AOT_DIR: /cache
       AOT_CACHE: /cache/app.aot
@@ -21,6 +22,7 @@ services:
       dockerfile: aot-jvm/Dockerfile.aotgen
       args:
         JAR_FILE: hub/hub-service/build/libs/hub-hub-service.jar
+    user: "0:0"
     environment:
       AOT_DIR: /cache-hub
       AOT_CACHE: /cache-hub/app.aot

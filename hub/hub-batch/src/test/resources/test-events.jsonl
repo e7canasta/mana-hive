@@ -1,2 +1,0 @@
-{"eventId":"evt-001","type":"SceneFact","version":1,"occurredAt":"2026-08-22T03:00:00Z","source":"scene-engine","payloadJson":"{\"bed\":\"12A\",\"kind\":\"TRANSITION_DETECTED\",\"from\":\"LYING\",\"to\":\"STANDING\"}"}
-{"eventId":"evt-002","type":"SceneFact","version":1,"occurredAt":"2026-08-22T03:00:15Z","source":"scene-engine","payloadJson":"{\"bed\":\"12A\",\"kind\":\"TRANSITION_DETECTED\",\"from\":\"STANDING\",\"to\":\"FLOOR\"}"}

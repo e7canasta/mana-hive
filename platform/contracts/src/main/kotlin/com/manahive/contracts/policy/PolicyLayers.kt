@@ -1,4 +1,4 @@
-package com.manahive.hub.policy
+package com.manahive.contracts.policy
 
 import com.manahive.contracts.policy.DwellThreshold
 import com.manahive.contracts.policy.WatchLevel
