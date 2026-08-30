@@ -42,7 +42,7 @@ public object ProfileValidation {
                 "una version solo puede suceder a una anterior: ${profile.supersedes} >= ${profile.version}",
             )
         }
-        if (profile.provenance.reason.isBlank()) {
+        if (profile.provenance?.reason.isNullOrBlank()) {
             problems += ProfileProblem(
                 "provenance.reason",
                 "un cambio de vigilancia que nadie puede explicar: el motivo es obligatorio",

@@ -34,7 +34,7 @@ public data class ResidentProfileDto(
     public val version: Int,
     public val supersedes: Int?,
     public val validFrom: String,
-    public val provenance: ProvenanceDto,
+    public val provenance: ProvenanceDto? = null,
     public val windows: List<TimeWindowDto> = emptyList(),
     public val subjects: Map<String, SubjectDto> = emptyMap(),
 )

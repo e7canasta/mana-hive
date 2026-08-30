@@ -93,9 +93,9 @@ public object ProfileMapper {
         }
 
         val validFrom = dto.validFrom.asInstant("validFrom", problems)
-        val authoredAt = dto.provenance.authoredAt.asInstant("provenance.authoredAt", problems)
+        val authoredAt = dto.provenance?.authoredAt?.asInstant("provenance.authoredAt", problems)
 
-        if (dto.provenance.authoredBy.isBlank()) {
+        if (dto.provenance?.authoredBy.isNullOrBlank()) {
             problems += ProfileProblem("provenance.authoredBy", "vacio: un perfil lo firma alguien")
         }
 
@@ -118,11 +118,11 @@ public object ProfileMapper {
                 supersedes = dto.supersedes,
                 validFrom = validFrom!!,
                 provenance = Provenance(
-                    template = dto.provenance.template?.let(::TemplateId),
-                    templateVersion = dto.provenance.templateVersion,
-                    authoredBy = dto.provenance.authoredBy,
+                    template = dto.provenance?.template?.let(::TemplateId),
+                    templateVersion = dto.provenance?.templateVersion,
+                    authoredBy = dto.provenance?.authoredBy ?: "unknown",
                     authoredAt = authoredAt!!,
-                    reason = dto.provenance.reason,
+                    reason = dto.provenance?.reason ?: "sin motivo",
                 ),
                 windows = windows,
                 subjects = subjects,
