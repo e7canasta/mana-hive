@@ -27,6 +27,8 @@ object SentinelSignalWriter {
     fun formatSignal(signal: SentinelSignal): String = when (signal) {
         is SentinelSignal.EpisodeOpened ->
             "EPISODE_OPENED rule=${signal.rule.value} severity=${signal.severity}"
+        is SentinelSignal.EpisodeComplicated ->
+            "EPISODE_COMPLICATED rule=${signal.rule.value} severity=${signal.severity} previousSeverity=${signal.previousSeverity}"
         is SentinelSignal.EpisodeClosed ->
             "EPISODE_CLOSED cause=${signal.cause}"
         is SentinelSignal.AutoRecovery ->

@@ -34,6 +34,7 @@ internal class HarborEngineImpl(
     ): Explained<HarborVerdict> {
         val result = when (signal) {
             is SentinelSignal.EpisodeOpened -> handleEpisodeOpened(signal, state, now)
+            is SentinelSignal.EpisodeComplicated -> handleEpisodeComplicated(signal, state)
             is SentinelSignal.EpisodeClosed -> handleEpisodeClosed(signal, state, now)
             is SentinelSignal.AutoRecovery -> handleAutoRecovery(signal, state, now)
             is SentinelSignal.UmbrellaEvent -> handleUmbrellaEvent(signal, state)
@@ -203,6 +204,18 @@ internal class HarborEngineImpl(
         explanation = listOf(ExplanationStep(
             rule = "umbrella",
             observed = "umbrella event for ${signal.episode.value}",
+            conclusion = "no new notice, episode already open",
+        )),
+    )
+
+    private fun handleEpisodeComplicated(
+        signal: SentinelSignal.EpisodeComplicated,
+        state: HarborState,
+    ): EvalResult = EvalResult(
+        state = state,
+        explanation = listOf(ExplanationStep(
+            rule = signal.rule.value,
+            observed = "episode ${signal.episode.value} complicated: ${signal.previousSeverity} -> ${signal.severity}",
             conclusion = "no new notice, episode already open",
         )),
     )

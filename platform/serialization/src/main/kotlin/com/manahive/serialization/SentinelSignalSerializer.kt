@@ -57,6 +57,31 @@ object SentinelSignalSerializer {
                     confirmationWindow = confirmationWindow,
                 )
             }
+            SignalType.EPISODE_COMPLICATED -> {
+                val episode = EpisodeId(node.get("episode").asText())
+                val rule = RuleId(node.get("rule").asText())
+                val trigger = StateKind.valueOf(node.get("trigger").asText())
+                val severity = Severity.valueOf(node.get("severity").asText())
+                val previousSeverity = Severity.valueOf(node.get("previousSeverity").asText())
+                val reversible = node.get("reversible").asBoolean()
+                val requiresNvr = node.get("requiresNvr").asBoolean()
+                val confirmationWindow = node.get("confirmationWindow")?.asText()?.let { Duration.parse(it) }
+
+                SentinelSignal.EpisodeComplicated(
+                    bed = bed,
+                    resident = resident,
+                    at = at,
+                    rulesFingerprint = rulesFingerprint,
+                    episode = episode,
+                    rule = rule,
+                    trigger = trigger,
+                    severity = severity,
+                    previousSeverity = previousSeverity,
+                    reversible = reversible,
+                    requiresNvr = requiresNvr,
+                    confirmationWindow = confirmationWindow,
+                )
+            }
             SignalType.EPISODE_CLOSED -> {
                 val episode = EpisodeId(node.get("episode").asText())
                 val cause = ClosureCause.valueOf(node.get("cause").asText())
@@ -164,6 +189,8 @@ object SentinelSignalSerializer {
     private fun formatDetails(signal: SentinelSignal): String = when (signal) {
         is SentinelSignal.EpisodeOpened ->
             "rule=${signal.rule.value} severity=${signal.severity} reversible=${signal.reversible}"
+        is SentinelSignal.EpisodeComplicated ->
+            "rule=${signal.rule.value} severity=${signal.severity} previousSeverity=${signal.previousSeverity} reversible=${signal.reversible}"
         is SentinelSignal.EpisodeClosed ->
             "cause=${signal.cause}"
         is SentinelSignal.AutoRecovery ->

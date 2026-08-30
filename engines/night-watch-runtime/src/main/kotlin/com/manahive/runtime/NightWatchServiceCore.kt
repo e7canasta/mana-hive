@@ -170,8 +170,22 @@ class NightWatchServiceCore(
             publisher.publishSceneEvent(bed, fact)
         }
 
+        // Deduplicate signals by (type, episode) — sweep + observation can produce the same signal
+        val seen = mutableSetOf<String>()
         for (signal in out.signals) {
-            publisher.publishSentinelSignal(bed, signal)
+            val key = "${signal.type}:${signal::class.simpleName}"
+            val episodeKey = when (signal) {
+                is com.manahive.contracts.sentinel.SentinelSignal.EpisodeOpened -> "EP:${signal.episode.value}"
+                is com.manahive.contracts.sentinel.SentinelSignal.EpisodeClosed -> "EP:${signal.episode.value}"
+                is com.manahive.contracts.sentinel.SentinelSignal.AutoRecovery -> "EP:${signal.episode.value}"
+                is com.manahive.contracts.sentinel.SentinelSignal.UmbrellaEvent -> "EP:${signal.episode.value}"
+                else -> key
+            }
+            if (seen.add(episodeKey)) {
+                publisher.publishSentinelSignal(bed, signal)
+            } else {
+                log.debug("Skipping duplicate signal: {}", episodeKey)
+            }
         }
 
         for ((signal, command) in out.harborCommands) {

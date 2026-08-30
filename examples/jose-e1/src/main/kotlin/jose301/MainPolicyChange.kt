@@ -1,38 +1,26 @@
 package jose301
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.manahive.contracts.EventEnvelope
 import com.manahive.contracts.perception.Observation
 import com.manahive.contracts.perception.ObservationKind
-import com.manahive.contracts.policy.AlarmProfile
-import com.manahive.contracts.policy.CatalogVersion
-import com.manahive.contracts.policy.MobilityAid
-import com.manahive.contracts.policy.PolicyChangeDetected
-import com.manahive.contracts.policy.PolicyMode
-import com.manahive.contracts.policy.RiskLevel
-import com.manahive.contracts.policy.TemplateId
 import com.manahive.kernel.BedId
 import com.manahive.kernel.MonitorId
-import com.manahive.kernel.NightId
-import com.manahive.kernel.ResidentId
 import com.manahive.messaging.NatsConfig
 import com.manahive.messaging.NatsObjectMapper
 import com.manahive.messaging.Subjects
+import com.manahive.profile.api.ResidentProfileChanged
+import com.manahive.profile.api.ResidentProfileDto
 import java.time.Duration
 import java.time.Instant
 import java.util.UUID
 
 /**
- * Policy change test — jose STANDARD → FALL_RISK.
+ * Policy change test — sends full ResidentProfileDto via NATS.
  *
- * Shows that:
- * - STANDARD: no dwell alerts (pure observation)
- * - FALL_RISK: dwell warning at 15m, alert at 20m
- *
- * Prerequisites:
- * - NATS running
- * - NightWatchApplication started with census.json + jose.json
- * - FileEventWriter configured to write events.jsonl
+ * Reads jose-e1-full.json and publishes it as ResidentProfileChanged.
+ * NightWatchService receives it and recalibrates.
  */
 fun main() {
     val mapper = NatsObjectMapper.mapper
@@ -41,9 +29,16 @@ fun main() {
     val monitor = MonitorId("m1")
 
     println("═══════════════════════════════════════════════════════════════")
-    println("  Policy Change Test — jose STANDARD → FALL_RISK")
-    println("  dwell: SittingInBed warning=15m, alert=20m")
+    println("  Policy Change Test — Full ResidentProfileDto")
     println("═══════════════════════════════════════════════════════════════")
+    println()
+
+    // Load full profile from JSON
+    val cpStream = object {}::class.java.getResourceAsStream("/profiles/jose-e1-full.json")
+        ?: error("No se encontró profiles/jose-e1-full.json")
+    val profile = mapper.readValue<ResidentProfileDto>(cpStream)
+    cpStream.close()
+    println("  Profile loaded: ${profile.profileId} (v${profile.version})")
     println()
 
     val conn = NatsConfig.createConnection()
@@ -85,24 +80,13 @@ fun main() {
         println("  → OBS: $kind at t=$offset")
     }
 
-    fun pubPolicyChange(level: String) {
-        val change = PolicyChangeDetected(
-            residentId = ResidentId("jose"),
-            at = Instant.now(),
-            snapshot = AlarmProfile(
-                residentId = ResidentId("jose"),
-                riskLevel = RiskLevel.HIGH,
-                mobilityAid = MobilityAid.NONE,
-                autopilot = true,
-                mode = PolicyMode.PRESET,
-                templateId = TemplateId(level),
-                overrides = emptyMap(),
-                catalogVersion = CatalogVersion("1.0.0"),
-                validFrom = Instant.now(),
-            ),
+    fun pubProfileChange() {
+        val change = ResidentProfileChanged(
+            at = Instant.now().toString(),
+            profile = profile,
         )
-        publishEnveloped(Subjects.policyChangeDetected(), "PolicyChangeDetected", Instant.now(), change)
-        println("  → POLICY: jose → $level")
+        publishEnveloped(Subjects.residentProfile(), "ResidentProfileChanged", Instant.now(), change)
+        println("  → PROFILE: ${profile.profileId} published")
     }
 
     // ── Step 1: Switch to ManualClock ──
@@ -123,20 +107,20 @@ fun main() {
     Thread.sleep(200)
     println()
 
-    // ── Step 4: Change policy to FALL_RISK ──
-    println("── Step 4: policyChange → FALL_RISK ──")
-    pubPolicyChange("fall-risk")
+    // ── Step 4: Send full profile ──
+    println("── Step 4: publish full ResidentProfileDto ──")
+    pubProfileChange()
     Thread.sleep(200)
     println()
 
     // ── Step 5: advance 5m → sweep: DWELL_WARNING ──
-    println("── Step 5: advance(5m) → sweep: DWELL_WARNING (15m threshold) ──")
+    println("── Step 5: advance(5m) → sweep: DWELL_WARNING (12m threshold) ──")
     pubTime("advance", "PT5M")
     Thread.sleep(200)
     println()
 
     // ── Step 6: advance 5m → sweep: DWELL_EXCEEDED ──
-    println("── Step 6: advance(5m) → sweep: DWELL_EXCEEDED (20m threshold) ──")
+    println("── Step 6: advance(5m) → sweep: DWELL_EXCEEDED (15m threshold) ──")
     pubTime("advance", "PT5M")
     Thread.sleep(200)
     println()
@@ -156,8 +140,8 @@ fun main() {
     println("═══════════════════════════════════════════════════════════════")
     println("  Done — Check events.jsonl for:")
     println("    - NO dwell events at t=15m (STANDARD)")
-    println("    - DWELL_WARNING at t=20m (FALL_RISK)")
-    println("    - DWELL_EXCEEDED at t=25m (FALL_RISK)")
+    println("    - DWELL_WARNING at t=20m (after profile change)")
+    println("    - DWELL_EXCEEDED at t=25m")
     println("    - EPISODE_OPENED + EPISODE_CLOSED")
     println("═══════════════════════════════════════════════════════════════")
 

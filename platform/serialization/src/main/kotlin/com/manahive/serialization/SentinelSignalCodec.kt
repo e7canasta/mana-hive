@@ -74,6 +74,38 @@ object SentinelSignalCodec : Codec<SentinelSignal> {
                     }
                 }.getOrThrow()
             }
+            SignalType.EPISODE_COMPLICATED -> {
+                val episode = EpisodeId(node.get("episode").asText())
+                val rule = RuleId(node.get("rule").asText())
+                val triggerResult = StateKindInput.parseStateKind(node.get("trigger").asText())
+                val severityResult = parseSeverity(node.get("severity").asText())
+                val previousSeverityResult = parseSeverity(node.get("previousSeverity").asText())
+                val reversible = node.get("reversible").asBoolean()
+                val requiresNvr = node.get("requiresNvr").asBoolean()
+                val confirmationWindow = node.get("confirmationWindow")?.asText()
+                    ?.let { Duration.parse(it) }
+
+                triggerResult.flatMap { trigger ->
+                    severityResult.flatMap { severity ->
+                        previousSeverityResult.map { previousSeverity ->
+                            SentinelSignal.EpisodeComplicated(
+                                bed = bed,
+                                resident = resident,
+                                at = at,
+                                rulesFingerprint = rulesFingerprint,
+                                episode = episode,
+                                rule = rule,
+                                trigger = trigger,
+                                severity = severity,
+                                previousSeverity = previousSeverity,
+                                reversible = reversible,
+                                requiresNvr = requiresNvr,
+                                confirmationWindow = confirmationWindow,
+                            )
+                        }
+                    }
+                }.getOrThrow()
+            }
             SignalType.EPISODE_CLOSED -> {
                 val episode = EpisodeId(node.get("episode").asText())
                 val causeResult = parseClosureCause(node.get("cause").asText())
@@ -183,6 +215,8 @@ object SentinelSignalCodec : Codec<SentinelSignal> {
     fun formatDetails(signal: SentinelSignal): String = when (signal) {
         is SentinelSignal.EpisodeOpened ->
             "rule=${signal.rule.value} severity=${signal.severity} reversible=${signal.reversible}"
+        is SentinelSignal.EpisodeComplicated ->
+            "rule=${signal.rule.value} severity=${signal.severity} previousSeverity=${signal.previousSeverity} reversible=${signal.reversible}"
         is SentinelSignal.EpisodeClosed ->
             "cause=${signal.cause}"
         is SentinelSignal.AutoRecovery ->

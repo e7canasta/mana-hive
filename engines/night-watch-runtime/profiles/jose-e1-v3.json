@@ -1,0 +1,60 @@
+{
+  "profileId": "jose@v3",
+  "residentId": "jose",
+  "version": 3,
+  "supersedes": 2,
+  "validFrom": "2024-01-15T22:00:00Z",
+  "provenance": {
+    "template": "STANDARD",
+    "templateVersion": "1.0.0",
+    "authoredBy": "dr-sistema",
+    "authoredAt": "2024-01-15T10:00:00Z",
+    "reason": "v3: thresholds reducidos para testing — warning=5m, alert=8m"
+  },
+  "windows": [],
+  "subjects": {
+    "resident": {
+      "kind": "dag",
+      "aspects": {
+        "posture": {
+          "unknownIsInitial": true,
+          "confidence": { "SITTING_IN_BED": 0.8 },
+          "transitions": [
+            {
+              "from": "LYING",
+              "to": "SITTING_IN_BED",
+              "stableFor": "PT1.5S",
+              "record": { "before": "PT30S", "after": "PT2M", "quality": "HIGH" }
+            },
+            {
+              "from": "SITTING_IN_BED",
+              "to": "LYING",
+              "stableFor": "PT1.5S"
+            }
+          ],
+          "states": {
+            "LYING": {
+              "comeBack": [
+                {
+                  "window": "always",
+                  "warningAfter": "PT5M",
+                  "alertAfter": "PT8M",
+                  "severity": "WARNING",
+                  "closure": "STAFF_OR_SAFE",
+                  "notify": {
+                    "channels": ["PUSH", "TABLET"],
+                    "escalateAfter": "PT3M"
+                  },
+                  "record": { "before": "PT1M", "after": "PT3M", "quality": "HIGH" }
+                }
+              ]
+            },
+            "SITTING_IN_BED": {
+              "observeOnly": true
+            }
+          }
+        }
+      }
+    }
+  }
+}

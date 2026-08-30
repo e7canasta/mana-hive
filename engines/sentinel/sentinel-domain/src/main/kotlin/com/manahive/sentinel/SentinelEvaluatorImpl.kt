@@ -322,40 +322,34 @@ internal class SentinelEvaluatorImpl(
         val open = episodes.openForBed(fact.bed)
             ?: return openFieldEpisode(fact.bed, rule, now, episodes)
 
-        // Ya hay un episodio abierto. La severidad decide sola: algo mayor lo
-        // eleva, algo menor o igual entra como parte del mismo. Es la misma
-        // composicion que usan las posturas — no hace falta condicion cruzada.
+        // Ya hay un episodio abierto. Si la severidad es mayor, eleva silenciosamente.
+        // No genera signal nuevo — el episodio ya está registrado.
         if (rule.severity.rank > open.severity.rank) {
-            val desde = open.severity
             return EvalResult(
                 episodes = episodes.open(open.escalate(rule, now)),
-                signals = listOf(
-                    SentinelSignal.EpisodeOpened(
-                        bed = fact.bed,
-                        resident = calibration.residentId,
-                        at = now,
-                        rulesFingerprint = calibration.fingerprint,
-                        episode = open.id,
-                        rule = rule.id,
-                        // El episodio lo abrio otra cosa; esta señal dice quien
-                        // lo elevo, y quien lo elevo fue un campo.
-                        trigger = null,
-                        field = rule.field,
-                        severity = rule.severity,
-                        reversible = true,
-                        requiresNvr = rule.requiresNvr,
-                        confirmationWindow = rule.confirmationWindow,
-                    ),
-                ),
+                signals = emptyList(),
                 explanation = listOf(
                     ExplanationStep(
                         rule = rule.id.value,
                         observed = "${fact.field} = ${rule.state}",
-                        conclusion = "episodio elevado: $desde -> ${rule.severity}",
+                        conclusion = "episodio elevado: ${open.severity} -> ${rule.severity}",
                     ),
                 ),
             )
         }
+
+        // Severidad igual o menor — el evento entra bajo el paraguas, no notifica.
+        return EvalResult(
+            episodes = episodes,
+            signals = emptyList(),
+            explanation = listOf(
+                ExplanationStep(
+                    rule = rule.id.value,
+                    observed = "${fact.field} = ${rule.state}",
+                    conclusion = "bajo paraguas: severidad ${rule.severity} <= ${open.severity}",
+                ),
+            ),
+        )
 
         return EvalResult(
             episodes = episodes,
@@ -671,7 +665,7 @@ internal class SentinelEvaluatorImpl(
     ): EvalResult {
         val updated = open.escalate(newRule, now)
 
-        val signal = SentinelSignal.EpisodeOpened(
+        val signal = SentinelSignal.EpisodeComplicated(
             bed = bed,
             resident = calibration.residentId,
             at = now,
@@ -680,6 +674,7 @@ internal class SentinelEvaluatorImpl(
             rule = newRule.id,
             trigger = state,
             severity = newRule.severity,
+            previousSeverity = open.severity,
             reversible = newRule.reversible,
             requiresNvr = newRule.requiresNvr,
             confirmationWindow = newRule.confirmationWindow,

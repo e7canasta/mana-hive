@@ -2,7 +2,6 @@ package com.manahive.runtime
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.manahive.contracts.perception.Observation
-import com.manahive.contracts.policy.PolicyChangeDetected
 import com.manahive.messaging.BusEvents
 import com.manahive.messaging.NatsObjectMapper
 import com.manahive.messaging.NatsTopology
@@ -63,7 +62,6 @@ class NightWatchService(
             dispatchers.forEach { d -> runCatching { connection.closeDispatcher(d) } }
             dispatchers.clear()
             subscribeToObservations(connection)
-            subscribeToPolicyChanges(connection)
             subscribeToProfiles(connection)
             subscribeToTimeControl(connection)
             status.transition(RuntimeState.RUNNING, "consumiendo del bus")
@@ -105,21 +103,6 @@ class NightWatchService(
         dispatcher.subscribe(Subjects.PERCEPTION_WILDCARD)
         dispatchers.add(dispatcher)
         log.info("Subscribed to PERCEPTION stream")
-    }
-
-    private fun subscribeToPolicyChanges(connection: Connection) {
-        val dispatcher = connection.createDispatcher { msg ->
-            try {
-                val envelope = mapper.readValue<com.manahive.contracts.EventEnvelope>(String(msg.data))
-                val change = mapper.readValue<PolicyChangeDetected>(envelope.payloadJson)
-                core.onPolicyChange(change)
-            } catch (e: Exception) {
-                log.error("Failed to process policy change: {}", e.message)
-            }
-        }
-        dispatcher.subscribe(Subjects.policyChangeDetected())
-        dispatchers.add(dispatcher)
-        log.info("Subscribed to policy changes")
     }
 
     private fun subscribeToProfiles(connection: Connection) {

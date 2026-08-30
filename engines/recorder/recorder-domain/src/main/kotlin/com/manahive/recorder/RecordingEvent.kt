@@ -299,6 +299,7 @@ public data class SentinelSignalTrigger(
 ) : RecordingTrigger {
     override val context: RecordingContext = when (signal) {
         is SentinelSignal.EpisodeOpened -> RecordingContext.TiedToEpisode(signal.episode)
+        is SentinelSignal.EpisodeComplicated -> RecordingContext.TiedToEpisode(signal.episode)
         is SentinelSignal.EpisodeClosed -> RecordingContext.TiedToEpisode(signal.episode)
         is SentinelSignal.AutoRecovery -> RecordingContext.TiedToEpisode(signal.episode)
         is SentinelSignal.UmbrellaEvent -> RecordingContext.TiedToEpisode(signal.episode)

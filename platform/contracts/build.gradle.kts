@@ -5,6 +5,7 @@ plugins {
 
 dependencies {
     api(projects.platform.domainKernel)
+    api("com.fasterxml.jackson.core:jackson-annotations:2.20")
 }
 
 // Shared Kernel — publicado como JAR para que mana-hub consuma los mismos tipos.

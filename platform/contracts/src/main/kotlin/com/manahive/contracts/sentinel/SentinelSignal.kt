@@ -1,5 +1,7 @@
 package com.manahive.contracts.sentinel
 
+import com.fasterxml.jackson.annotation.JsonSubTypes
+import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.manahive.contracts.policy.Severity
 import com.manahive.contracts.policy.TriggerOn
 import com.manahive.contracts.scene.StateKind
@@ -21,6 +23,7 @@ import java.time.Instant
  */
 public enum class SignalType {
     EPISODE_OPENED,
+    EPISODE_COMPLICATED,
     UMBRELLA_EVENT,
     AUTO_RECOVERY,
     EPISODE_CLOSED,
@@ -41,6 +44,17 @@ public enum class SignalType {
  * - EpisodeClosed: episode closes (staff+safe, or auto-recovery)
  * - SuppressedWithRecord: suppressed (staff present, already alerted, fatigue)
  */
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type", visible = true)
+@JsonSubTypes(
+    JsonSubTypes.Type(SentinelSignal.EpisodeOpened::class, name = "EPISODE_OPENED"),
+    JsonSubTypes.Type(SentinelSignal.EpisodeComplicated::class, name = "EPISODE_COMPLICATED"),
+    JsonSubTypes.Type(SentinelSignal.UmbrellaEvent::class, name = "UMBRELLA_EVENT"),
+    JsonSubTypes.Type(SentinelSignal.AutoRecovery::class, name = "AUTO_RECOVERY"),
+    JsonSubTypes.Type(SentinelSignal.EpisodeClosed::class, name = "EPISODE_CLOSED"),
+    JsonSubTypes.Type(SentinelSignal.SuppressedWithRecord::class, name = "SUPPRESSED_WITH_RECORD"),
+    JsonSubTypes.Type(SentinelSignal.DwellPreWarning::class, name = "DWELL_PRE_WARNING"),
+    JsonSubTypes.Type(SentinelSignal.ComeBackPreWarning::class, name = "COME_BACK_PRE_WARNING"),
+)
 public sealed interface SentinelSignal {
     public val type: SignalType
     public val bed: BedId
@@ -74,6 +88,28 @@ public sealed interface SentinelSignal {
         /** El campo `sujeto.aspecto` que lo abrio, si fue un campo de escena. */
         public val field: String? = null,
         public val severity: Severity,
+        public val reversible: Boolean,
+        public val requiresNvr: Boolean,
+        public val confirmationWindow: Duration?,
+    ) : SentinelSignal
+
+    /**
+     * The episode's clinical picture worsened — severity increased.
+     * Same info as EpisodeOpened: which rule fired and what severity it has now.
+     * The episode is already open; this signal reports the deterioration.
+     */
+    public data class EpisodeComplicated(
+        override val type: SignalType = SignalType.EPISODE_COMPLICATED,
+        override val bed: BedId,
+        override val resident: ResidentId?,
+        override val at: Instant,
+        override val rulesFingerprint: String,
+        public val episode: EpisodeId,
+        public val rule: RuleId,
+        public val trigger: StateKind?,
+        public val field: String? = null,
+        public val severity: Severity,
+        public val previousSeverity: Severity,
         public val reversible: Boolean,
         public val requiresNvr: Boolean,
         public val confirmationWindow: Duration?,
@@ -261,6 +297,17 @@ public fun SentinelSignal.toMap(): Map<String, Any?> = linkedMapOf<String, Any?>
             put("trigger", trigger?.name ?: "none")
             field?.let { put("field", it) }
             put("severity", severity.name)
+            put("reversible", reversible)
+            put("requiresNvr", requiresNvr)
+            confirmationWindow?.let { put("confirmationWindow", it.toString()) }
+        }
+        is SentinelSignal.EpisodeComplicated -> {
+            put("episode", episode.value)
+            put("rule", rule.value)
+            put("trigger", trigger?.name ?: "none")
+            field?.let { put("field", it) }
+            put("severity", severity.name)
+            put("previousSeverity", previousSeverity.name)
             put("reversible", reversible)
             put("requiresNvr", requiresNvr)
             confirmationWindow?.let { put("confirmationWindow", it.toString()) }
