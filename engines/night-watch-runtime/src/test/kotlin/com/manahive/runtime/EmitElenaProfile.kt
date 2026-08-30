@@ -15,7 +15,9 @@ import java.io.File
 class EmitElenaProfile {
     @Test
     fun `escribe profiles-elena_json`() {
-        val dir = File(System.getProperty("manahive.profiles.out") ?: "profiles")
+        // Sube al raiz del repo: el test corre con el working dir del modulo,
+        // y dejar el perfil ahi crea un `profiles/` suelto adentro del modulo.
+        val dir = File(System.getenv("MANAHIVE_PROFILES_OUT") ?: "../../profiles")
         dir.mkdirs()
         val json = NatsObjectMapper.mapper
             .writerWithDefaultPrettyPrinter()

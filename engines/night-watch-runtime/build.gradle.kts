@@ -17,4 +17,5 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     runtimeOnly(libs.jnats)
+    testImplementation(libs.jnats)
 }

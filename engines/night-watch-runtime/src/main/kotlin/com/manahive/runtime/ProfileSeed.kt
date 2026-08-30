@@ -31,6 +31,11 @@ class ProfileSeed(
     private val log = LoggerFactory.getLogger(javaClass)
     private val mapper = NatsObjectMapper.mapper
 
+    public companion object {
+        /** El censo vive junto a los perfiles pero no es uno. */
+        public const val CENSUS_FILE: String = "census.json"
+    }
+
     /** Carga todos los perfiles del directorio. Devuelve cuantos quedaron vigentes. */
     fun load(): Int {
         if (!directory.isDirectory) {
@@ -41,7 +46,12 @@ class ProfileSeed(
             return 0
         }
 
-        val archivos = directory.listFiles { f: File -> f.isFile && f.name.endsWith(".json") }
+        // `census.json` vive en el mismo directorio y no es un perfil: es
+        // infraestructura. Sin excluirlo, cada arranque loguea un error que no
+        // lo es, y un error que siempre aparece es un error que nadie mira.
+        val archivos = directory.listFiles { f: File ->
+            f.isFile && f.name.endsWith(".json") && f.name != CENSUS_FILE
+        }
             ?.sortedBy { it.name }
             .orEmpty()
 

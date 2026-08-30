@@ -7,27 +7,67 @@ Lo que digo acá con seguridad, lo verifiqué. Lo que no, está marcado como **[
 
 ## 0. Estado del árbol
 
-Sin commitear. Fase 3 paso 1 + **fases 4 y 6 completas** + dos bugs vivos arreglados.
+**El servicio real corre con el perfil del director gobernándolo.** Verificado contra NATS, no en memoria.
 
 | Verificación | Resultado |
 |---|---|
-| `./gradlew check` (todo, con hub-service) | **649 tests, 0 fallas** (eran 534) |
-| purity guard, konsist | pasan |
-| `scripts/blueprints.sh` | **11/11 en verde, en 26 segundos** |
+| `./gradlew check` (todo, con hub-service) | **600 tests, 0 fallas** |
+| `scripts/blueprints.sh` | **11/11 en verde** |
+| `night-watch-runtime` real contra NATS | **arranca en 1,2s, abre episodio CRITICAL** |
 
-**Trampa nueva, cuesta 20 minutos:** `:hub:hub-service:test` **se cuelga sin NATS**, no se saltea. Es la respuesta a la pregunta abierta del §8: no hay `assumeTrue`, hay un cliente esperando un broker que no está. Levantar NATS **antes** de correr `check`:
+> Los tests bajaron de 649 a 600 porque se **borraron 49 junto con el código muerto** del vocabulario duplicado. Menos tests y más cobertura real.
 
-```bash
-nats-server -p 4222 -m 8222 -js -sd /tmp/natsdata &
+### Estado de las fases
+
+| Fase | Estado |
+|---|---|
+| 1 — Reloj por slot + `UNKNOWN` | ✅ |
+| 2 — Identidad de estado abierta | ✅ **cerrada por borrado** |
+| 3 — El perfil como contrato | ✅ **el runtime lo usa** |
+| 4 — Transporte de campos de escena | ✅ |
+| 5 — Frontera externa | ⚠️ las dos vías andan; falta el sistema de registro real (otro equipo) |
+| 6 — Notificación | ✅ |
+
+### La prueba, tal cual salió del servicio
+
+```
+CensusSeed      : Censo: elena en cama bed-5 (CAMERA_ROOM_401)
+ProfileCalibrator: Alta de elena con perfil v8 (ventana 'night', huella 9489321e…)
+ProfileSeed     : Arranque en frio: 1 de 1 perfiles vigentes
+NightWatchService: consumiendo: 1 residentes activos
+NightWatchService: Signal for elena: EpisodeOpened
+NightWatchService: Harbor command for elena: Dispatch
 ```
 
-**Trampa vieja que volví a pisar:** `pkill -f <patrón>` matchea el propio comando y mata la shell. Vale para `nats-server` **y para `GradleWrapperMain`**. Matar por PID.
+Y la señal que salió al bus, con las cinco reglas del perfil en la huella:
 
-**El runner de blueprints estaba roto y parecía lento.** `blueprints/nats-e2e` **no terminaba**: imprimía su veredicto —*14 checks, 0 fallidos*— y el JVM se quedaba vivo. `nc.use { }` sí cierra la conexión, pero el cliente de NATS deja hilos no-daemon y el proceso no sale solo. Como `nats-e2e` es el último de la lista, colgaba al runner entero.
+```json
+{ "type": "EPISODE_OPENED", "resident": "elena", "rule": "alert-bed_edge",
+  "trigger": "BED_EDGE", "severity": "CRITICAL", "requiresNvr": true,
+  "rulesFingerprint": "alert-bed-left-down,alert-bed_edge,alert-in_bathroom,
+                       alert-wheelchair-presence-out_of_reach,comeback-lying" }
+```
 
-El síntoma era peor que el bug: parecía que los blueprints tardaban más de diez minutos, y a los diez minutos alguien mataba el proceso y **perdía el resultado de los once**. Arreglado con `exitProcess` explícito, y el runner ahora corre cada blueprint bajo `timeout` (`BP_TIMEOUT`, 180s por defecto) para que uno que no termina no pueda volver a llevarse a los otros diez.
+### Cómo se instala en una habitación
 
-**De 10+ minutos colgado a 26 segundos.**
+```bash
+nats-server -p 4222 -m 8222 -js -sd /var/lib/nats &
+
+mkdir -p profiles
+# profiles/census.json  → [{"resident":"elena","bed":"bed-5",
+#                           "night":"night-elena-401","monitor":"CAMERA_ROOM_401"}]
+# profiles/elena.json   → el ResidentProfileDto del director
+
+./gradlew :engines:night-watch-runtime:bootRun \
+  --args='--manahive.profiles.dir=/ruta/a/profiles'
+
+curl localhost:8081/actuator/health   # {"status":"UP"}
+```
+
+**Trampas del build:**
+
+- `:hub:hub-service:test` **se cuelga sin NATS**, no se saltea. Levantar el broker antes de `check`.
+- `pkill -f <patrón>` matchea el propio comando y mata la shell. Vale para `nats-server` y `GradleWrapperMain`. Matar por PID.
 
 ---
 
