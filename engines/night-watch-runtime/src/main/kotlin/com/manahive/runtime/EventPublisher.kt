@@ -3,6 +3,7 @@ package com.manahive.runtime
 import com.manahive.kernel.BedId
 import com.manahive.contracts.scene.SceneEvent
 import com.manahive.contracts.sentinel.SentinelSignal
+import com.manahive.contracts.notice.NoticeEvent
 import com.manahive.harbor.NoticeCommand
 import com.manahive.recorder.RecordingCommand
 import com.manahive.recorder.EvidenceRecord
@@ -12,14 +13,12 @@ import com.manahive.recorder.EvidenceRecord
  *
  * The runtime produces domain events. This interface is the single exit point.
  * The adapter (NATS, file, MQTT) unwraps them for the channel internally.
- *
- * No AlarmEvent here — that's a channel concern (the adapter converts
- * NoticeCommand + SentinelSignal → AlarmEvent when publishing to the bus).
  */
 interface EventPublisher {
     fun publishSceneEvent(bed: BedId, event: SceneEvent)
     fun publishSentinelSignal(bed: BedId, signal: SentinelSignal)
     fun publishNoticeCommand(bed: BedId, signal: SentinelSignal, command: NoticeCommand)
+    fun publishNoticeEvent(bed: BedId, event: NoticeEvent)
     fun publishRecordingCommand(bed: BedId, command: RecordingCommand)
     fun publishEvidenceRecord(bed: BedId, record: EvidenceRecord)
 }

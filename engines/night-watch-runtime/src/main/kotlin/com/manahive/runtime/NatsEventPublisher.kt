@@ -13,6 +13,7 @@ import com.manahive.kernel.AlertId
 import com.manahive.harbor.NoticeCommand
 import com.manahive.messaging.BusEvents
 import com.manahive.messaging.NatsObjectMapper
+import com.manahive.contracts.notice.NoticeEvent
 import com.manahive.messaging.Subjects
 import com.manahive.recorder.RecordingCommand
 import com.manahive.recorder.EvidenceRecord
@@ -58,6 +59,10 @@ class NatsEventPublisher(
             )
             emit(Subjects.alarmEvent(event.alert), "AlarmEvent", event.at, mapper.writeValueAsString(event))
         }
+    }
+
+    override fun publishNoticeEvent(bed: BedId, event: NoticeEvent) {
+        emit(Subjects.noticeEvent(event.noticeId), "NoticeEvent", event.at, mapper.writeValueAsString(event))
     }
 
     override fun publishRecordingCommand(bed: BedId, command: RecordingCommand) {

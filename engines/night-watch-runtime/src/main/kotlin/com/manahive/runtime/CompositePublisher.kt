@@ -4,6 +4,7 @@ import com.manahive.kernel.BedId
 import com.manahive.contracts.scene.SceneEvent
 import com.manahive.contracts.sentinel.SentinelSignal
 import com.manahive.harbor.NoticeCommand
+import com.manahive.contracts.notice.NoticeEvent
 import com.manahive.recorder.RecordingCommand
 import com.manahive.recorder.EvidenceRecord
 
@@ -32,6 +33,10 @@ class CompositePublisher(
 
     override fun publishNoticeCommand(bed: BedId, signal: SentinelSignal, command: NoticeCommand) {
         delegates.forEach { it.publishNoticeCommand(bed, signal, command) }
+    }
+
+    override fun publishNoticeEvent(bed: BedId, event: NoticeEvent) {
+        delegates.forEach { it.publishNoticeEvent(bed, event) }
     }
 
     override fun publishRecordingCommand(bed: BedId, command: RecordingCommand) {

@@ -107,6 +107,8 @@ public data class EvidenceRule(
 public enum class EvidenceType {
     /** Evidence that a recording was started for an incident */
     INCIDENT,
+    /** Evidence that a recording was stopped */
+    STOPPED,
     /** Evidence that a clip was created from the recording */
     CLIP,
 }

@@ -2,6 +2,7 @@ package com.manahive.messaging
 
 import com.manahive.kernel.AlertId
 import com.manahive.kernel.BedId
+import com.manahive.kernel.NoticeId
 import com.manahive.kernel.ResidentId
 
 /**
@@ -26,6 +27,7 @@ public object Subjects {
     public fun residentProfile(): String = "hub.policy.profile.v1"
     public fun recordingCommand(bed: BedId): String = "recorder.command.v1.${bed.value}"
     public fun evidenceRecord(bed: BedId): String = "evidence.record.v1.${bed.value}"
+    public fun noticeEvent(noticeId: NoticeId): String = "notice.event.v1.${noticeId.value}"
 
     public const val CENSUS_SNAPSHOT: String = "hub.census.snapshot.v1"
 
@@ -36,4 +38,5 @@ public object Subjects {
     public const val POLICY_WILDCARD: String = "hub.policy.>"
     public const val RECORDER_WILDCARD: String = "recorder.command.v1.>"
     public const val EVIDENCE_WILDCARD: String = "evidence.record.v1.>"
+    public const val NOTICE_WILDCARD: String = "notice.event.v1.>"
 }

@@ -110,7 +110,10 @@ class ProfileCalibrator(
 
     private fun apply(profile: ResidentProfile, window: String): Boolean {
         val proyectada = ProfileProjection.project(profile, window)
-        val calibrations = EngineCalibrations.from(proyectada.value)
+        val existing = runtime.get(profile.residentId)
+        val bedId = existing?.bed ?: census.bedFor(profile.residentId)?.bed ?: com.manahive.kernel.BedId("unknown")
+        val monitorId = existing?.monitor ?: census.bedFor(profile.residentId)?.monitor ?: com.manahive.kernel.MonitorId("unknown")
+        val calibrations = EngineCalibrations.from(proyectada.value, bedId, monitorId)
 
         // Lo que el perfil dice y la calibracion no sabe transportar se loguea
         // en vez de desaparecer. Mientras esta lista no este vacia, el perfil
@@ -119,7 +122,6 @@ class ProfileCalibrator(
             log.warn("No transportable ({}): {} — {}", profile.residentId.value, it.path, it.reason)
         }
 
-        val existing = runtime.get(profile.residentId)
         if (existing == null) {
             val bed = census.bedFor(profile.residentId)
             if (bed == null) {

@@ -8,6 +8,10 @@ import com.manahive.contracts.policy.WatchLevel
 import com.manahive.contracts.policy.catalogFor
 import com.manahive.contracts.scene.SceneEvent
 import com.manahive.contracts.sentinel.SentinelSignal
+import com.manahive.contracts.notice.NoticeEvent
+import com.manahive.contracts.notice.NoticeContext
+import com.manahive.contracts.notice.NoticeResolution
+import com.manahive.kernel.NoticeId
 import com.manahive.harbor.NoticeCommand
 import com.manahive.kernel.AlertId
 import com.manahive.kernel.EventRef
@@ -77,9 +81,11 @@ class NightWatchServiceCore(
         )
         val profile = layers.toAlarmProfile(change.residentId, change.at)
         val calibration = PolicyResolver.resolve(catalog, profile.value).value
-        val calibrations = EngineCalibrations.from(calibration)
-
         val existing = runtime.get(change.residentId)
+        val bedId = existing?.bed ?: census.bedFor(change.residentId)?.bed ?: com.manahive.kernel.BedId("unknown")
+        val monitorId = existing?.monitor ?: census.bedFor(change.residentId)?.monitor ?: com.manahive.kernel.MonitorId("unknown")
+        val calibrations = EngineCalibrations.from(calibration, bedId, monitorId)
+
         if (existing == null) {
             val bed = census.bedFor(change.residentId)
             if (bed == null) {
@@ -169,7 +175,7 @@ class NightWatchServiceCore(
         }
 
         for ((signal, command) in out.harborCommands) {
-            publisher.publishNoticeCommand(bed, signal, command)
+            publisher.publishNoticeEvent(bed, toNoticeEvent(signal, command))
         }
 
         for (command in out.recorderCommands) {
@@ -184,4 +190,78 @@ class NightWatchServiceCore(
 
     private fun parseWatchLevel(value: String): WatchLevel? =
         WatchLevel.entries.firstOrNull { it.label == value || it.name == value }
+
+    /**
+     * Convert domain NoticeCommand + SentinelSignal → contracts NoticeEvent.
+     *
+     * The domain NoticeCommand is internal to Harbor.
+     * The contracts NoticeEvent is what goes on the bus for hub.
+     */
+    private fun toNoticeEvent(signal: SentinelSignal, command: NoticeCommand): NoticeEvent {
+        val episode = when (signal) {
+            is SentinelSignal.EpisodeOpened -> signal.episode
+            is SentinelSignal.EpisodeClosed -> signal.episode
+            is SentinelSignal.AutoRecovery -> signal.episode
+            is SentinelSignal.UmbrellaEvent -> signal.episode
+            else -> com.manahive.kernel.EpisodeId("unknown")
+        }
+        val noticeId = NoticeId.fromEpisode(episode)
+        return when (command) {
+            is NoticeCommand.Dispatch -> {
+                val opened = signal as? SentinelSignal.EpisodeOpened
+                NoticeEvent.Dispatch(
+                    noticeId = noticeId,
+                    at = signal.at,
+                    bed = signal.bed,
+                    episode = episode,
+                    resident = opened?.resident,
+                    severity = opened?.severity ?: com.manahive.contracts.policy.Severity.WARNING,
+                    channels = command.channels,
+                    recipients = emptyList(),
+                    message = "${opened?.rule ?: "unknown"}: ${signal.bed.value}",
+                    context = NoticeContext(
+                        episode = episode,
+                        rule = opened?.rule ?: com.manahive.kernel.RuleId("unknown"),
+                        baseline = opened?.trigger?.name ?: "unknown",
+                        trigger = opened?.trigger?.name ?: "unknown",
+                        duration = java.time.Duration.ZERO,
+                        description = opened?.rule?.value ?: "notice",
+                    ),
+                )
+            }
+            is NoticeCommand.Resolve -> {
+                val resolution = when (command.resolution) {
+                    com.manahive.harbor.Resolution.STAFF_PRESENT -> NoticeResolution.STAFF_PRESENT
+                    com.manahive.harbor.Resolution.AUTO_RECOVERY -> NoticeResolution.AUTO_RECOVERY
+                    com.manahive.harbor.Resolution.SUPERSEDED -> NoticeResolution.SUPERSEDED
+                }
+                NoticeEvent.Resolved(
+                    noticeId = noticeId,
+                    at = command.at,
+                    resolution = resolution,
+                    resolvedBy = null,
+                    duration = java.time.Duration.ZERO,
+                )
+            }
+            else -> NoticeEvent.Dispatch(
+                noticeId = noticeId,
+                at = signal.at,
+                bed = signal.bed,
+                episode = episode,
+                resident = null,
+                severity = com.manahive.contracts.policy.Severity.WARNING,
+                channels = emptySet(),
+                recipients = emptyList(),
+                message = command::class.simpleName ?: "unknown",
+                context = NoticeContext(
+                    episode = episode,
+                    rule = com.manahive.kernel.RuleId("unknown"),
+                    baseline = "unknown",
+                    trigger = "unknown",
+                    duration = java.time.Duration.ZERO,
+                    description = command::class.simpleName ?: "unknown",
+                ),
+            )
+        }
+    }
 }

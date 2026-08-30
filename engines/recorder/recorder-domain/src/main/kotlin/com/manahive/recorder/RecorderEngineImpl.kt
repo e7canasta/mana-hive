@@ -161,6 +161,7 @@ internal class RecorderEngineImpl(
         // Get the monitors from active recordings for this bed
         val activeRecordings = ledger.findActiveForBed(trigger.bed)
         val monitors = activeRecordings.map { it.started.target.monitor }.distinct()
+        val recordingStartedAt = activeRecordings.firstOrNull()?.started?.at ?: now
 
         // Create evidence record based on the trigger type
         val evidenceRecord = when (rule.evidenceType) {
@@ -172,14 +173,21 @@ internal class RecorderEngineImpl(
                 trigger = trigger::class.simpleName ?: "unknown",
                 at = now,
             )
+            EvidenceType.STOPPED -> EvidenceRecordingStopped(
+                bed = trigger.bed,
+                episode = episodeId,
+                monitors = monitors,
+                end = now,
+                at = now,
+            )
             EvidenceType.CLIP -> if (episodeId != null) {
                 val window = rule.window
                 EvidenceClipCreated(
                     bed = trigger.bed,
                     episode = episodeId,
                     monitors = monitors,
-                    start = window.startTime(now),
-                    end = window.endTime(now),
+                    start = recordingStartedAt,
+                    end = now,
                     at = now,
                 )
             } else {

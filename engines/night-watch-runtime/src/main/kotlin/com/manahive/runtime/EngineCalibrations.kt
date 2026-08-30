@@ -2,6 +2,8 @@ package com.manahive.runtime
 
 import com.manahive.contracts.policy.PolicyCalibration
 import com.manahive.harbor.HarborCalibration
+import com.manahive.kernel.BedId
+import com.manahive.kernel.MonitorId
 import com.manahive.politica.adapters.toHarborCalibration
 import com.manahive.politica.adapters.toRecordingCalibration
 import com.manahive.politica.adapters.toSceneCalibration
@@ -23,14 +25,15 @@ data class EngineCalibrations(
     val recorder: RecordingCalibration,
 ) {
     companion object {
-        fun from(policy: PolicyCalibration): EngineCalibrations = EngineCalibrations(
+        fun from(
+            policy: PolicyCalibration,
+            bedId: BedId = BedId("unknown"),
+            monitorId: MonitorId = MonitorId("unknown"),
+        ): EngineCalibrations = EngineCalibrations(
             scene = policy.toSceneCalibration(),
             sentinel = policy.toSentinelCalibration(),
             harbor = policy.toHarborCalibration(),
-            recorder = policy.toRecordingCalibration(
-                bedId = com.manahive.kernel.BedId("unknown"),
-                monitorId = com.manahive.kernel.MonitorId("unknown"),
-            ),
+            recorder = policy.toRecordingCalibration(bedId, monitorId),
         )
     }
 }

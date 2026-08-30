@@ -6,6 +6,7 @@ import com.manahive.kernel.BedId
 import com.manahive.contracts.scene.SceneEvent
 import com.manahive.contracts.sentinel.SentinelSignal
 import com.manahive.harbor.NoticeCommand
+import com.manahive.contracts.notice.NoticeEvent
 import com.manahive.recorder.RecordingCommand
 import com.manahive.recorder.EvidenceRecord
 import com.manahive.recorder.batch.toJson
@@ -65,12 +66,15 @@ class FileEventWriter(
 
     override fun publishNoticeCommand(bed: BedId, signal: SentinelSignal, command: NoticeCommand) {
         harborCommands += command
+    }
+
+    override fun publishNoticeEvent(bed: BedId, event: NoticeEvent) {
         events += mapOf(
-            "type" to "NoticeCommand",
+            "type" to "NoticeEvent",
             "bed" to bed.value,
-            "at" to signal.at.toString(),
-            "offset" to java.time.Duration.between(startTime, signal.at).toString(),
-            "payload" to mapper.readTree(NoticeCommandSerializer.toJson(command)),
+            "at" to event.at.toString(),
+            "offset" to java.time.Duration.between(startTime, event.at).toString(),
+            "payload" to mapper.valueToTree<JsonNode>(event),
         )
     }
 

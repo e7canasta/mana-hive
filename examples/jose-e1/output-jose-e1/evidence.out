@@ -1,2 +1,2 @@
-{"type":"EvidenceRecordingStarted","bed":"bed-4","episode":"bed-4-f85a3d36-2d5d-478f-ad54-6b2663ee31e3","monitors":["unknown"],"start":"2024-01-15T23:32:00Z","trigger":"SentinelSignalTrigger","at":"2024-01-15T23:32:00Z"}
-{"type":"EvidenceRecordingStarted","bed":"bed-4","episode":"bed-4-f85a3d36-2d5d-478f-ad54-6b2663ee31e3","monitors":["unknown"],"start":"2024-01-15T23:32:00Z","trigger":"SentinelSignalTrigger","at":"2024-01-15T23:32:00Z"}
+{"type":"EvidenceRecordingStarted","bed":"bed-4","episode":"bed-4-35846f61-20c5-4a03-98df-7de49ca78221","monitors":["m1"],"start":"2024-01-15T23:32:00Z","trigger":"SentinelSignalTrigger","at":"2024-01-15T23:32:00Z"}
+{"type":"EvidenceRecordingStopped","bed":"bed-4","episode":"bed-4-35846f61-20c5-4a03-98df-7de49ca78221","monitors":["m1"],"end":"2024-01-15T23:32:00Z","at":"2024-01-15T23:32:00Z"}

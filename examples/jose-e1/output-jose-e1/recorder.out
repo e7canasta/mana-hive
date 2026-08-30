@@ -1,2 +1,2 @@
-t=1h15m  RECORDING_STARTED monitor=unknown quality=HD
-t=1h15m  RECORDING_STOPPED monitor=unknown
+t=1h15m  RECORDING_STARTED monitor=m1 quality=HD
+t=1h15m  RECORDING_STOPPED monitor=m1

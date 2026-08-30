@@ -212,10 +212,18 @@ public fun PolicyCalibration.toRecordingCalibration(
             evidenceType = EvidenceType.INCIDENT
         }
     }
-    // Catch-all: ANY episode opened produces evidence (fallback for rules without specific evidence)
-    evidenceRule("ev-any-episode") {
-        trigger { episodeOpened() }
-        evidenceType = EvidenceType.INCIDENT
+    // Episode closed: stop evidence recording
+    evidenceRule("ev-episode-closed") {
+        trigger { episodeClosed() }
+        evidenceType = EvidenceType.STOPPED
+    }
+    // Catch-all: only if no specific rules exist
+    if (this@toRecordingCalibration.sentinel.alertRules.isEmpty() &&
+        this@toRecordingCalibration.sentinel.comeBackRules.isEmpty()) {
+        evidenceRule("ev-any-episode") {
+            trigger { episodeOpened() }
+            evidenceType = EvidenceType.INCIDENT
+        }
     }
 }
 

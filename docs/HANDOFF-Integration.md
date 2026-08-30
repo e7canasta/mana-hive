@@ -1,7 +1,7 @@
 # Handoff: mana-hive ↔ mana-hub Integration
 
 **Fecha:** 2026-08-30  
-**Próxima sesión:** Implementar Sprint 1 (Contracts JAR)
+**Estado:** Sprint 1-3 completados, Sprint 6 en progreso
 
 ## Estado Actual
 
@@ -12,73 +12,67 @@
 - ✅ Time control vía NATS
 - ✅ Profile change vía NATS
 - ✅ Event recording vía NATS
-- ✅ Hub eliminado, PolicyLayers movido a contracts
+- ✅ Contracts JAR publicado (`com.manahive:contracts:1.0.0`)
+- ✅ NoticeEvent modelado (Dispatch, Sent, Delivered, Seen, Confirmed, Escalated, Expired, Resolved)
+- ✅ Stream NOTICE en NatsTopology
+- ✅ NVR Simulator funciona end-to-end
+- ✅ Flujo completo: Service → NVR → ClipCreated
 
 ### Lo que falta
-- 🔴 Contracts JAR no publicado
-- 🔴 Hub no consume tipos de hive
-- 🔴 Bridge no tiene routing inteligente
+- 🔴 Sender externo (NoticeEvent.Sent)
+- 🔴 App externa (NoticeEvent.Seen/Confirmed)
+- 🔴 Scheduler (NoticeEvent.Escalated/Expired)
 - 🔴 Profile endpoints no implementados
 - 🔴 Outbox pattern no implementado
+- 🔴 Bridge no consume notice.event.v1.>
+- 🔴 E2E con hub real
 
-## Próximos Pasos (Sprint 1)
+## Event Taxonomy
 
-### 1. Configurar Gradle Publication
+| Event Type | Source Engine | Subject | Content |
+|------------|---------------|---------|---------|
+| `SceneEvent` | SceneEngine | `scene.fact.v1.<bed>` | Observations, transitions, signal lost |
+| `SentinelSignal` | SentinelEngine | `sentinel.signal.v1.<bed>` | Episodes opened/closed, comeBack alerts |
+| `NoticeEvent` | HarborEngine (via service) | `notice.event.v1.<notice>` | Dispatch, Sent, Confirmed, Escalated, Resolved |
+| `EvidenceRecord` | RecorderEngine | `evidence.record.v1.<bed>` | Recording started/stopped, clip created |
 
-**Archivo:** `platform/contracts/build.gradle.kts`
+### Command Taxonomy (internal, not on bus)
 
-```kotlin
-plugins {
-    `java-library`
-    `maven-publish`
-}
+| Command | Source | Purpose |
+|---------|--------|---------|
+| `NoticeCommand` | HarborEngine | Internal to harbor domain |
+| `RecordingCommand` | RecorderEngine | Instructions to NVR adapter |
 
-group = "com.manahive"
-version = "1.0.0"
+## Próximos Pasos (Sprint 6)
 
-publishing {
-    publications {
-        create<MavenPublication>("contracts") {
-            from(components["java"])
-            artifactId = "contracts"
-        }
-    }
-}
-```
+### 1. Sender Externo
 
-### 2. Publicar a Maven Local
-
-```bash
-./gradlew :platform:contracts:publishToMavenLocal
-```
-
-### 3. Verificar en mana-hub
+**Archivo:** `examples/jose-e1/src/main/kotlin/jose301/MainSender.kt`
 
 ```kotlin
-// mana-hub/build.gradle.kts
-repositories {
-    mavenLocal()
-}
-
-dependencies {
-    implementation("com.manahive:contracts:1.0.0")
-}
+// Escucha NoticeEvent.Dispatch
+// Emite NoticeEvent.Sent al mismo canal
+// Simula envío de push notification
 ```
 
-### 4. Test de Consumo
+### 2. App Externa (staff)
+
+**Archivo:** `examples/jose-e1/src/main/kotlin/jose301/MainApp.kt`
 
 ```kotlin
-// mana-hub test
-import com.manahive.contracts.scene.SceneEvent
-import com.manahive.contracts.sentinel.SentinelSignal
+// Escucha NoticeEvent.Sent
+// Emite NoticeEvent.Seen cuando staff abre la notificación
+// Emite NoticeEvent.Confirm cuando staff confirma presencia
+```
 
-val event = SceneEvent.TransitionDetected(
-    bed = BedId("bed-4"),
-    night = NightId("night-1"),
-    at = Instant.now(),
-    from = PersonState.Lying,
-    to = PersonState.SittingInBed,
-)
+### 3. Scheduler
+
+**Archivo:** `examples/jose-e1/src/main/kotlin/jose301/MainScheduler.kt`
+
+```kotlin
+// Escucha NoticeEvent.Confirm
+// Si no hay respuesta en 15 minutos → emite NoticeEvent.Escalated
+// Si episode se resuelve → emite NoticeEvent.Expired
 ```
 
 ## Archivos Clave
@@ -99,6 +93,9 @@ for main in MainKt MainFromJsonKt MainPipelineKt MainResidentRuntimeKt MainNight
   ./gradlew :examples:jose-e1:run -Pmain=jose301.$main
 done
 
+# NVR Simulator
+./gradlew :examples:jose-e1:run -Pmain=jose301.MainNvrSimulatorKt
+
 # Blueprints
 ./gradlew :blueprints:level-thresholds:run
 
@@ -109,13 +106,7 @@ done
 
 ## Decisiones Pendientes
 
-1. **Versioning strategy** — semver estricto o calendar versioning?
-2. **Backward compatibility** — ¿agregar siempre, nunca modificar?
-3. **Dependencia en mana-hub** — ¿implementation o api?
-4. **Testing del JAR** — ¿tests de compatibilidad automática?
-
-## Contacto
-
-- **mana-hive owner:** Equipo mana-hive
-- **mana-hub owner:** Equipo mana-hub
-- **Bridge owner:** Equipo mana-hub (consume contratos de hive)
+1. **Engine-Owned Publishing (ADR-006)** — refactor para que cada engine publique directo via publisher interface
+2. **Sender implementation** — ¿real o simulado?
+3. **Escalation policy** — ¿tiempo fijo o configurable por residente?
+4. **Profile endpoints** — ¿usar contratos existentes o crear nuevos?
