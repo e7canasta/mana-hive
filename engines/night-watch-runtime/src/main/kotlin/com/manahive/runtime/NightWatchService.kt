@@ -93,11 +93,13 @@ class NightWatchService(
     private fun subscribeToObservations(connection: Connection) {
         val dispatcher = connection.createDispatcher { msg ->
             try {
-                val envelope = mapper.readValue<com.manahive.contracts.EventEnvelope>(String(msg.data))
+                val raw = String(msg.data)
+                log.debug("Observation received: {} bytes", raw.length)
+                val envelope = mapper.readValue<com.manahive.contracts.EventEnvelope>(raw)
                 val obs = mapper.readValue<Observation>(envelope.payloadJson)
                 core.onObservation(obs)
             } catch (e: Exception) {
-                log.error("Failed to process observation: {}", e.message)
+                log.error("Failed to process observation: {}", e.message, e)
             }
         }
         dispatcher.subscribe(Subjects.PERCEPTION_WILDCARD)
@@ -145,7 +147,8 @@ class NightWatchService(
     private fun subscribeToTimeControl(connection: Connection) {
         val dispatcher = connection.createDispatcher { msg ->
             try {
-                val cmd = mapper.readValue<TimeCommand>(String(msg.data))
+                val envelope = mapper.readValue<com.manahive.contracts.EventEnvelope>(String(msg.data))
+                val cmd = mapper.readValue<TimeCommand>(envelope.payloadJson)
                 when (cmd.action) {
                     "advance" -> {
                         val d = java.time.Duration.parse(cmd.duration ?: "PT0S")
@@ -165,6 +168,10 @@ class NightWatchService(
                     "useSystem" -> {
                         timeSink.useSystem()
                         log.info("Switched to SystemClock")
+                    }
+                    "sweep" -> {
+                        core.sweep()
+                        log.info("Manual sweep triggered")
                     }
                 }
             } catch (e: Exception) {

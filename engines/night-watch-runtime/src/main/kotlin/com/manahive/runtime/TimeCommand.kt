@@ -19,4 +19,8 @@ data class TimeCommand(
     val duration: String? = null,
     val instant: String? = null,
     val startAt: String? = null,
-)
+) {
+    companion object {
+        const val SWEEP = "sweep"
+    }
+}

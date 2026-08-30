@@ -20,6 +20,7 @@ dependencies {
     implementation(project(":engines:night-watch-runtime"))
     implementation(project(":platform:contracts"))
     implementation(project(":platform:domain-kernel"))
+    implementation(project(":platform:messaging"))
     implementation(project(":platform:profile-api"))
     implementation(project(":platform:blueprint-harness"))
     implementation(project(":platform:batch-io"))

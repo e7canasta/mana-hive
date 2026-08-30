@@ -1,0 +1,28 @@
+{
+  "profileId": "jose@v1",
+  "residentId": "jose",
+  "version": 1,
+  "supersedes": null,
+  "validFrom": "2024-01-15T22:00:00Z",
+  "provenance": {
+    "template": "STANDARD",
+    "templateVersion": "1.0.0",
+    "authoredBy": "dr-sistema",
+    "authoredAt": "2024-01-15T10:00:00Z",
+    "reason": "Arranque en frío: STANDARD puro, sin alertas"
+  },
+  "windows": [],
+  "subjects": {
+    "resident": {
+      "kind": "dag",
+      "aspects": {
+        "posture": {
+          "unknownIsInitial": true,
+          "confidence": {},
+          "transitions": [],
+          "states": {}
+        }
+      }
+    }
+  }
+}

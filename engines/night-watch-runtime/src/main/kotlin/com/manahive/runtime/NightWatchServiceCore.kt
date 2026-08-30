@@ -45,12 +45,16 @@ class NightWatchServiceCore(
     val residentCount: Int get() = runtime.size
 
     override fun onObservation(obs: Observation) {
+        log.info("[OBS] Received {} for bed {} at {}", obs.kind, obs.bed.value, obs.observedAt)
         val entry = census.lookup(obs.bed)
         if (entry == null) {
             log.debug("No census entry for bed {}, ignoring", obs.bed.value)
             return
         }
+        log.info("[OBS] Census hit: resident={}", entry.resident.value)
         val out = runtime.onObservation(entry.resident, obs)
+        log.info("[OBS] Runtime produced: sceneFacts={}, signals={}, harborCmds={}, recorderCmds={}",
+            out.sceneFacts.size, out.signals.size, out.harborCommands.size, out.recorderCommands.size)
         publish(obs.bed, out)
     }
 
@@ -101,8 +105,17 @@ class NightWatchServiceCore(
         calibrator.reprojectOnWindowEdge()
         if (runtime.size == 0) return
         val now = clock.instant()
+        log.info("[SWEEP] Running at {}", now)
         val results = runtime.tickAll(now)
         for ((residentId, out) in results) {
+            log.info("[SWEEP] {}: sceneFacts={}, signals={}, harborCmds={}",
+                residentId.value, out.sceneFacts.size, out.signals.size, out.harborCommands.size)
+            for (fact in out.sceneFacts) {
+                log.info("[SWEEP]   fact: {}", fact::class.simpleName)
+            }
+            for (signal in out.signals) {
+                log.info("[SWEEP]   signal: {}", signal::class.simpleName)
+            }
             runtime.get(residentId)?.let { publish(it.bed, out) }
         }
     }
@@ -118,22 +131,32 @@ class NightWatchServiceCore(
 
     override fun advanceTime(duration: java.time.Duration) {
         val c = clock
-        if (c is ManualClock) c.advance(duration)
+        if (c is ManualClock) {
+            c.advance(duration)
+            log.info("[TIME] Advanced by {} → now {}", duration, c.instant())
+        } else {
+            log.warn("[TIME] advanceTime ignored: clock is SystemClock, not ManualClock")
+        }
     }
 
     override fun setTime(instant: Instant) {
         val c = clock
-        if (c is ManualClock) c.setTo(instant)
+        if (c is ManualClock) {
+            c.setTo(instant)
+            log.info("[TIME] Set to {}", instant)
+        } else {
+            log.warn("[TIME] setTime ignored: clock is SystemClock, not ManualClock")
+        }
     }
 
     override fun useManual(startAt: Instant) {
         clock = ManualClock(startAt)
-        log.info("Clock switched to ManualClock at {}", startAt)
+        log.info("[TIME] ═══ SWITCHED TO ManualClock at {} ═══", startAt)
     }
 
     override fun useSystem() {
         clock = SystemClock
-        log.info("Clock switched to SystemClock")
+        log.info("[TIME] ═══ SWITCHED TO SystemClock ═══")
     }
 
     private fun publish(bed: com.manahive.kernel.BedId, out: Outbound) {
