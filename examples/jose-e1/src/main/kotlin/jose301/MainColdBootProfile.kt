@@ -110,7 +110,7 @@ fun main() {
     Thread.sleep(200)
     println()
 
-    // ── Step 5: advance 11m → sweep: COMEBACK_WARNING (12m from leaving) ──
+    // ── Step 5: advance 11m → sweep: COMEBACK_WARNING (12m from leaving at t=1m) ──
     println("── Step 5: advance(11m) → sweep: COMEBACK_WARNING ──")
     pubTime("advance", "PT11M")
     Thread.sleep(200)
@@ -118,17 +118,17 @@ fun main() {
     Thread.sleep(200)
     println()
 
-    // ── Step 6: advance 3m → sweep: COMEBACK_EXCEEDED (15m from leaving) ──
-    println("── Step 6: advance(3m) → sweep: COMEBACK_EXCEEDED ──")
-    pubTime("advance", "PT3M")
+    // ── Step 6: advance 5m → sweep: COMEBACK_EXCEEDED (16m from leaving, >15m threshold) ──
+    println("── Step 6: advance(5m) → sweep: COMEBACK_EXCEEDED ──")
+    pubTime("advance", "PT5M")
     Thread.sleep(200)
     pubTime("sweep")
     Thread.sleep(200)
     println()
 
-    // ── Step 7: obs(IN_BED) at t=15m → resident returns, episode closes ──
-    println("── Step 7: obs(IN_BED) at t=15m → episode closes ──")
-    pubObservation(Duration.ofMinutes(15), ObservationKind.IN_BED)
+    // ── Step 7: obs(IN_BED) at t=17m → resident returns, episode closes ──
+    println("── Step 7: obs(IN_BED) at t=17m → episode closes ──")
+    pubObservation(Duration.ofMinutes(17), ObservationKind.IN_BED)
     Thread.sleep(200)
     println()
 

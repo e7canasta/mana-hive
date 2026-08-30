@@ -1,0 +1,67 @@
+services:
+  # Generador AOT para night-watch-runtime (Fase entrenamiento)
+  aotgen-runtime:
+    build:
+      context: ..
+      dockerfile: aot-jvm/Dockerfile.aotgen
+      args:
+        JAR_FILE: engines/night-watch-runtime/build/libs/engines-night-watch-runtime.jar
+    environment:
+      AOT_DIR: /cache
+      AOT_CACHE: /cache/app.aot
+    volumes:
+      - ./cache:/cache
+    restart: "no"
+    # Entrena con el mismo tuning que despliegue
+
+  # Generador AOT para hub-service (SoR)
+  aotgen-hub:
+    build:
+      context: ..
+      dockerfile: aot-jvm/Dockerfile.aotgen
+      args:
+        JAR_FILE: hub/hub-service/build/libs/hub-hub-service.jar
+    environment:
+      AOT_DIR: /cache-hub
+      AOT_CACHE: /cache-hub/app.aot
+    volumes:
+      - ./cache-hub:/cache-hub
+    restart: "no"
+
+  # Night-watch runtime optimizado: 18081:8081 (Leyden + Xmx256m + 96m metaspace)
+  night-watch-runtime:
+    build:
+      context: ..
+      dockerfile: aot-jvm/Dockerfile.deploy
+      args:
+        JAR_FILE: engines/night-watch-runtime/build/libs/engines-night-watch-runtime.jar
+    environment:
+      AOT_DIR: /cache
+      AOT_CACHE: /cache/app.aot
+    volumes:
+      - ./cache:/cache
+    depends_on:
+      aotgen-runtime:
+        condition: service_completed_successfully
+    ports:
+      - "18081:8081"
+    restart: unless-stopped
+
+  # Hub-service SoR transaccional: 8080:8080
+  hub-service:
+    build:
+      context: ..
+      dockerfile: aot-jvm/Dockerfile.deploy
+      args:
+        JAR_FILE: hub/hub-service/build/libs/hub-hub-service.jar
+    environment:
+      AOT_DIR: /cache-hub
+      AOT_CACHE: /cache-hub/app.aot
+    volumes:
+      - ./cache-hub:/cache-hub
+    depends_on:
+      aotgen-hub:
+        condition: service_completed_successfully
+    ports:
+      - "8080:8080"
+    restart: unless-stopped

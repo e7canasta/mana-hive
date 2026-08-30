@@ -1,0 +1,45 @@
+FROM container-registry.oracle.com/java/openjdk:25-oraclelinux9 as builder
+
+ARG MODULES=java.base,java.compiler,java.desktop,java.instrument,java.net.http,java.prefs,java.rmi,java.scripting,java.security.jgss,java.sql.rowset,jdk.jfr,jdk.management,jdk.management.agent,jdk.management.jfr,jdk.jcmd,jdk.net,jdk.unsupported
+
+RUN $JAVA_HOME/bin/jlink \
+	--add-modules ${MODULES} \
+	--no-man-pages \
+	--no-header-files \
+    --compress=zip-9 \
+	--output /javaruntime
+
+WORKDIR /builder
+# Gradle build: engines/night-watch-runtime/build/libs/*.jar or hub/hub-service/build/libs/*.jar
+# Context is project root, override with --build-arg JAR_FILE=...
+ARG JAR_FILE=aot-jvm/app.jar
+COPY ${JAR_FILE} app.jar
+# Extract the jar file using an efficient layout
+RUN $JAVA_HOME/bin/java -Djarmode=tools -jar app.jar extract --layers --destination extracted
+
+FROM container-registry.oracle.com/os/oraclelinux:9-slim
+
+ENV JAVA_HOME /usr/java/openjdk-25
+ENV PATH $JAVA_HOME/bin:$PATH
+ENV AOT_DIR=/cache
+
+COPY --from=builder /javaruntime $JAVA_HOME
+
+WORKDIR /application
+# Copy the extracted jar contents from the builder container into the working directory in the runtime container
+# Every copy step creates a new docker layer
+# This allows docker to only pull the changes it really needs
+COPY --from=builder /builder/extracted/dependencies/ ./
+COPY --from=builder /builder/extracted/spring-boot-loader/ ./
+COPY --from=builder /builder/extracted/snapshot-dependencies/ ./
+COPY --from=builder /builder/extracted/application/ ./
+
+# Training run: genera AOT cache con mismo tuning que despliegue
+RUN mkdir -p ${AOT_DIR} && chmod 755 ${AOT_DIR} \
+    && java -Xmx256m -XX:MaxMetaspaceSize=96m -XX:AOTCacheOutput=${AOT_DIR}/app.aot -Dspring.context.exit=onRefresh -jar app.jar \
+    && groupadd -r appuser && useradd -r -g appuser appuser
+
+USER appuser
+
+# Deployment run: combo ganador Leyden + heap acotado (RSS ~300MB)
+CMD ["java", "-Xmx256m", "-XX:MaxMetaspaceSize=96m", "-XX:AOTCache=/cache/app.aot", "-jar", "app.jar"]
