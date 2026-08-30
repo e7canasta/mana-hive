@@ -2,6 +2,7 @@ plugins { id("manahive.spring-service") }
 
 dependencies {
     implementation(project(":platform:serialization"))
+    implementation(project(":platform:batch-io"))
     implementation(projects.platform.contracts)
     implementation(projects.platform.domainKernel)
     implementation(projects.platform.messaging)
@@ -9,6 +10,7 @@ dependencies {
     implementation(projects.engines.sentinel.sentinelDomain)
     implementation(projects.engines.harbor.harborDomain)
     implementation(projects.engines.recorder.recorderDomain)
+    implementation(projects.engines.recorder.recorderBatch)
     implementation(projects.engines.politicaEngine.politicaDomain)
     implementation(projects.engines.politicaEngine.politicaAdapters)
     implementation(projects.hub.hubDomain)

@@ -1,0 +1,159 @@
+package com.manahive.runtime
+
+import com.manahive.contracts.alarm.AlertKey
+import com.manahive.contracts.alarm.AlarmEvent
+import com.manahive.contracts.perception.Observation
+import com.manahive.contracts.policy.PolicyChangeDetected
+import com.manahive.contracts.policy.WatchLevel
+import com.manahive.contracts.policy.catalogFor
+import com.manahive.contracts.scene.SceneEvent
+import com.manahive.contracts.sentinel.SentinelSignal
+import com.manahive.harbor.NoticeCommand
+import com.manahive.kernel.AlertId
+import com.manahive.kernel.EventRef
+import com.manahive.kernel.ResidentId
+import com.manahive.profile.api.ResidentProfileDto
+import com.manahive.hub.policy.LevelTemplate
+import com.manahive.hub.policy.PolicyLayers
+import com.manahive.hub.policy.toAlarmProfile
+import com.manahive.politica.PolicyResolver
+import com.manahive.kernel.Clock
+import com.manahive.kernel.ManualClock
+import com.manahive.kernel.SystemClock
+import com.manahive.recorder.RecordingCommand
+import org.slf4j.LoggerFactory
+import java.time.Instant
+
+/**
+ * Pure orchestration: no NATS, no Spring, no I/O.
+ *
+ * Depends on [NightWatchRuntime], [Census], [ProfileCalibrator], [EventPublisher], and [Clock].
+ * All side effects go through [EventPublisher] — the core doesn't know where events go.
+ *
+ * The [Clock] is a shared mutable reference — when it advances, everyone sees the new time.
+ */
+class NightWatchServiceCore(
+    private val runtime: NightWatchRuntime,
+    private val census: Census,
+    private val publisher: EventPublisher,
+    private var clock: Clock,
+) : NightWatchServiceContract, TimeSink {
+
+    private val log = LoggerFactory.getLogger(javaClass)
+    internal val calibrator = ProfileCalibrator(runtime, census)
+
+    val residentCount: Int get() = runtime.size
+
+    override fun onObservation(obs: Observation) {
+        val entry = census.lookup(obs.bed)
+        if (entry == null) {
+            log.debug("No census entry for bed {}, ignoring", obs.bed.value)
+            return
+        }
+        val out = runtime.onObservation(entry.resident, obs)
+        publish(obs.bed, out)
+    }
+
+    override fun onPolicyChange(change: PolicyChangeDetected) {
+        val raw = change.snapshot.templateId?.value.orEmpty()
+        val level = parseWatchLevel(raw)
+        if (level == null) {
+            log.error(
+                "Nivel irreconocible '{}' para {}: no se recalibra.",
+                raw, change.residentId.value,
+            )
+            return
+        }
+        val catalog = catalogFor(level)
+        val layers = PolicyLayers(
+            level = level,
+            template = LevelTemplate(id = change.snapshot.templateId?.value ?: level.label, level = level),
+            adjustments = emptyList(),
+            windows = emptyList(),
+        )
+        val profile = layers.toAlarmProfile(change.residentId, change.at)
+        val calibration = PolicyResolver.resolve(catalog, profile.value).value
+        val calibrations = EngineCalibrations.from(calibration)
+
+        val existing = runtime.get(change.residentId)
+        if (existing == null) {
+            val bed = census.bedFor(change.residentId)
+            if (bed == null) {
+                log.error(
+                    "Política para {} pero no está en el censo",
+                    change.residentId.value,
+                )
+                return
+            }
+            runtime.register(change.residentId, bed.bed, bed.night, bed.monitor, calibrations)
+            log.info("Alta de {} en nivel {}", change.residentId.value, level)
+        } else {
+            runtime.recalibrate(change.residentId, calibrations)
+            log.info("Recalibrated {} to level {}", change.residentId.value, level)
+        }
+    }
+
+    override fun onProfileChanged(profile: ResidentProfileDto) {
+        calibrator.accept(profile)
+    }
+
+    override fun sweep() {
+        calibrator.reprojectOnWindowEdge()
+        if (runtime.size == 0) return
+        val now = clock.instant()
+        val results = runtime.tickAll(now)
+        for ((residentId, out) in results) {
+            runtime.get(residentId)?.let { publish(it.bed, out) }
+        }
+    }
+
+    fun sweepAt(now: Instant) {
+        calibrator.reprojectOnWindowEdge()
+        if (runtime.size == 0) return
+        val results = runtime.tickAll(now)
+        for ((residentId, out) in results) {
+            runtime.get(residentId)?.let { publish(it.bed, out) }
+        }
+    }
+
+    override fun advanceTime(duration: java.time.Duration) {
+        val c = clock
+        if (c is ManualClock) c.advance(duration)
+    }
+
+    override fun setTime(instant: Instant) {
+        val c = clock
+        if (c is ManualClock) c.setTo(instant)
+    }
+
+    override fun useManual(startAt: Instant) {
+        clock = ManualClock(startAt)
+        log.info("Clock switched to ManualClock at {}", startAt)
+    }
+
+    override fun useSystem() {
+        clock = SystemClock
+        log.info("Clock switched to SystemClock")
+    }
+
+    private fun publish(bed: com.manahive.kernel.BedId, out: Outbound) {
+        for (fact in out.sceneFacts) {
+            publisher.publishSceneEvent(bed, fact)
+        }
+
+        for (signal in out.signals) {
+            publisher.publishSentinelSignal(bed, signal)
+        }
+
+        for ((signal, command) in out.harborCommands) {
+            publisher.publishNoticeCommand(bed, signal, command)
+        }
+
+        for (command in out.recorderCommands) {
+            publisher.publishRecordingCommand(bed, command)
+        }
+    }
+
+    private fun parseWatchLevel(value: String): WatchLevel? =
+        WatchLevel.entries.firstOrNull { it.label == value || it.name == value }
+}

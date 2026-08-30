@@ -2,9 +2,11 @@ package com.manahive.runtime
 
 import com.manahive.contracts.perception.Observation
 import com.manahive.kernel.BedId
+import com.manahive.kernel.Clock
 import com.manahive.kernel.MonitorId
 import com.manahive.kernel.NightId
 import com.manahive.kernel.ResidentId
+import com.manahive.kernel.SystemClock
 import org.slf4j.LoggerFactory
 import java.time.Instant
 import java.util.concurrent.ConcurrentHashMap
@@ -19,7 +21,9 @@ import java.util.concurrent.ConcurrentHashMap
  * observation and tick for the same resident are serialized, but
  * different residents process in parallel.
  */
-class NightWatchRuntime {
+class NightWatchRuntime(
+    private val clock: Clock = SystemClock,
+) {
     private val log = LoggerFactory.getLogger(javaClass)
     private val runtimes = ConcurrentHashMap<ResidentId, ResidentRuntime>()
 
@@ -32,7 +36,7 @@ class NightWatchRuntime {
         monitor: MonitorId,
         calibrations: EngineCalibrations,
     ): ResidentRuntime {
-        val rt = ResidentRuntime(residentId, bed, night, monitor, calibrations)
+        val rt = ResidentRuntime(residentId, bed, night, monitor, calibrations, clock)
         runtimes[residentId] = rt
         log.info("Registered runtime for resident {} on bed {}", residentId.value, bed.value)
         return rt
@@ -62,7 +66,13 @@ class NightWatchRuntime {
     }
 
     /**
-     * Tick all runtimes (sweep). Uses wall clock time.
+     * Tick all runtimes using the injected clock.
+     * Each resident is ticked under its own lock.
+     */
+    fun tickAll(): Map<ResidentId, Outbound> = tickAll(clock.instant())
+
+    /**
+     * Tick all runtimes at a specific time.
      * Each resident is ticked under its own lock.
      */
     fun tickAll(now: Instant): Map<ResidentId, Outbound> {

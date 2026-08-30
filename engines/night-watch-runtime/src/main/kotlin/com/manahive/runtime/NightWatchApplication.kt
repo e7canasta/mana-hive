@@ -41,6 +41,24 @@ class NightWatchApplication {
     fun runtimeStatus(): RuntimeStatusHolder = RuntimeStatusHolder()
 
     /**
+     * El core: orquestación pura, sin NATS ni Spring.
+     *
+     * En producción usa SystemClock. En tests se pasa un ManualClock
+     * y todos los componentes comparten la misma referencia.
+     */
+    @Bean
+    fun nightWatchServiceCore(
+        runtime: NightWatchRuntime,
+        census: Census,
+        publisher: EventPublisher,
+    ): NightWatchServiceCore = NightWatchServiceCore(runtime, census, publisher, com.manahive.kernel.SystemClock)
+
+    @Bean
+    fun timeSink(
+        core: NightWatchServiceCore,
+    ): TimeSink = core
+
+    /**
      * La conexión al bus, con el servicio escuchando sus cambios de estado.
      *
      * Cada vez que el bus vuelve hay que **re-suscribirse**: las suscripciones
@@ -60,6 +78,21 @@ class NightWatchApplication {
         @Value("\${nats.url:nats://localhost:4222}") url: String,
         events: BusEvents,
     ): BusConnector = BusConnector(url, events)
+
+    /**
+     * NATS adapter for event publishing.
+     *
+     * The core publishes through [EventPublisher]; this bean provides
+     * the NATS implementation. Swap with [FileEventWriter] for tests.
+     */
+    @Bean
+    fun natsEventPublisher(
+        events: BusEvents,
+    ): EventPublisher {
+        // JetStream is created when the bus connects
+        // NatsEventPublisher needs it at publish time, not at creation time
+        return NatsEventPublisher(events)
+    }
 }
 
 fun main(args: Array<String>) {

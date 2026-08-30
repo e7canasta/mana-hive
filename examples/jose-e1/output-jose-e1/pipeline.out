@@ -1,6 +1,9 @@
-# Pipeline trace: 5 observations → 9 scene → 2 signals → 2 commands
+# Pipeline trace: 5 observations → 12 scene → 2 signals → 2 commands
 
 t=0s  INPUT      IN_BED                    confidence=0.95
+t=0s  SCENE      SignalLost                SIGNAL_LOST monitor=m1
+t=0s  SCENE      SignalRecovered           SIGNAL_RECOVERED monitor=m1
+t=0s  SCENE      TransitionDetected        TRANSITION Unknown → Lying
 t=1h15m  INPUT      SITTING_IN_BED            confidence=0.92
 t=1h15m  SCENE      SignalLost                SIGNAL_LOST monitor=m1
 t=1h15m  SCENE      TransitionDetected        TRANSITION Lying → SittingInBed

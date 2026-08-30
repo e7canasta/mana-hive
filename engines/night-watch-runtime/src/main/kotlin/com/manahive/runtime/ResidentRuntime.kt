@@ -127,7 +127,23 @@ class ResidentRuntime(
 
         val now = obs.observedAt
 
-        // Stage 1: Scene
+        // Sweep BEFORE: evaluate dwell/comeback based on interval since last obs
+        val sweep = sweeper.sweep(listOf(twin), now, calibrations.scene.toDwellCatalog(), dwellMarks)
+        dwellMarks = sweep.value.marks
+        val sweepSignals = mutableListOf<SentinelSignal>()
+        for (fact in sweep.value.facts) {
+            val eval = sentinel.evaluate(fact, episodes, fact.at)
+            episodes = eval.value.episodes
+            sweepSignals.addAll(eval.value.signals)
+        }
+        val sweepCommands = mutableListOf<NoticeFor>()
+        for (signal in sweepSignals) {
+            val eval = harborEngine.evaluate(signal, harborState, signal.at)
+            harborState = eval.value.state
+            eval.value.commands.forEach { sweepCommands += NoticeFor(signal, it) }
+        }
+
+        // Observe: update state with new observation
         val sceneResult = sceneInterpreter.interpret(twin, obs, now)
         twin = sceneResult.value.twin
         val sceneFacts = sceneResult.value.facts
@@ -163,7 +179,12 @@ class ResidentRuntime(
             recorderCommands.addAll(result.value.commands)
         }
 
-        return Outbound(sceneFacts, signals, commands, recorderCommands)
+        return Outbound(
+            sceneFacts = sweep.value.facts + sceneFacts,
+            signals = sweepSignals + signals,
+            harborCommands = sweepCommands + commands,
+            recorderCommands = recorderCommands,
+        )
     }
 
     /**
