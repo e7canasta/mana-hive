@@ -49,6 +49,7 @@ class ResidentRuntime(
     val night: NightId,
     val monitor: MonitorId,
     calibrations: EngineCalibrations,
+    val clock: com.manahive.kernel.Clock = com.manahive.kernel.SystemClock,
 ) {
     private var sceneInterpreter: SceneInterpreter = createInterpreter(calibrations.scene)
     private var sweeper: ClockSweeper = createSweeper()
@@ -164,6 +165,11 @@ class ResidentRuntime(
 
         return Outbound(sceneFacts, signals, commands, recorderCommands)
     }
+
+    /**
+     * Sweep using the injected clock. No parameters needed — the clock decides.
+     */
+    fun tick(): Outbound = onTick(clock.instant())
 
     /**
      * Process a sweep tick (wall clock). Checks dwell, come-back, signal lost.

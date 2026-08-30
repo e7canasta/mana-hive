@@ -5,7 +5,7 @@ plugins {
 }
 
 application {
-    mainClass.set("jose301.MainPipelineKt")
+    mainClass.set(findProperty("main")?.toString() ?: "jose301.MainPipelineKt")
 }
 
 dependencies {
