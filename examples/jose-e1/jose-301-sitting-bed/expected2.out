@@ -1,0 +1,31 @@
+# Config 2: Viaje completo
+# 23 hechos — cada transición de José
+
+t=1h15m     TRANSITION LYING → SITTING_IN_BED           # E1 se sienta
+t=1h32m     TRANSITION SITTING_IN_BED → LYING            # E1 se acuesta
+
+t=2h47m     TRANSITION LYING → SITTING_IN_BED           # E2 se sienta
+t=2h49m     TRANSITION SITTING_IN_BED → STANDING         # E2 se levanta
+t=2h50m     TRANSITION STANDING → IN_BATHROOM            # E2 entra al baño
+t=3h5m      TRANSITION IN_BATHROOM → IN_ROOM             # E2 sale del baño
+t=3h7m      TRANSITION IN_ROOM → LYING                   # E2 se acuesta
+
+t=4h32m     TRANSITION LYING → SITTING_IN_BED           # E3 se sienta
+t=4h33m     TRANSITION SITTING_IN_BED → STANDING         # E3 se levanta
+t=4h34m     TRANSITION STANDING → IN_BATHROOM            # E3 entra al baño
+t=5h5m      TRANSITION IN_BATHROOM → IN_ROOM             # E3 sale del baño
+t=5h7m      TRANSITION IN_ROOM → LYING                   # E3 se acuesta
+
+t=5h50m     TRANSITION LYING → SITTING_IN_BED           # E4 se sienta
+t=5h54m     TRANSITION SITTING_IN_BED → LYING            # E4 se acuesta
+
+t=7h20m     TRANSITION LYING → SITTING_IN_BED           # E5 se sienta
+t=7h21m     TRANSITION SITTING_IN_BED → STANDING         # E5 se levanta
+t=7h22m     TRANSITION STANDING → IN_BATHROOM            # E5 entra al baño
+t=7h36m     TRANSITION IN_BATHROOM → IN_ROOM             # E5 sale del baño
+t=7h38m     TRANSITION IN_ROOM → LYING                   # E5 se acuesta
+
+t=8h35m     TRANSITION LYING → SITTING_IN_BED           # E6 se sienta
+t=8h38m     TRANSITION SITTING_IN_BED → LYING            # E6 se acuesta
+
+t=9h0m      TRANSITION LYING → SITTING_IN_BED           # E7 se levanta para el día

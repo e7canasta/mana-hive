@@ -73,4 +73,7 @@ include(":platform:messaging")
 include(":platform:profile-api")
 include(":platform:serialization")
 
+// ── examples: pruebas de integración y arranque en frío ─────────────────────
+include(":examples:jose-e1")
+
 // Los *-service de motor viven en .archive: night-watch-runtime los reemplaza.

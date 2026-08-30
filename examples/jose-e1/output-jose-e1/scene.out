@@ -1,0 +1,9 @@
+t=1h15m  SIGNAL_LOST monitor=m1
+t=1h15m  TRANSITION Lying → SittingInBed
+t=1h32m  COMEBACK_EXCEEDED PT15M
+t=1h32m  SIGNAL_LOST monitor=m1
+t=1h32m  TRANSITION SittingInBed → Lying
+t=5h50m  SIGNAL_LOST monitor=m1
+t=5h50m  TRANSITION Lying → SittingInBed
+t=5h54m  SIGNAL_LOST monitor=m1
+t=5h54m  TRANSITION SittingInBed → Lying

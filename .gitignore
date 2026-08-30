@@ -6,6 +6,7 @@ build/
 local.properties
 .obsidian/
 archive/
+.archive/
 crates/
 # NO ignorar gradle/ — ahi viven el wrapper y libs.versions.toml.
 # La cache es .gradle/ (linea 1), que es otra cosa. Sin gradle/ en el

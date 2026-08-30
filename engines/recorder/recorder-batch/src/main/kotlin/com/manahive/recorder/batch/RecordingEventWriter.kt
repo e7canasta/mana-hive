@@ -1,68 +1,56 @@
 package com.manahive.recorder.batch
 
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.manahive.recorder.ClipCreated
 import com.manahive.recorder.RecordingCommand
 import com.manahive.recorder.RecordingStarted
 import com.manahive.recorder.RecordingStopped
 import java.io.File
-
-private val mapper = jacksonObjectMapper()
+import java.time.Duration
+import java.time.Instant
 
 /**
- * Write recording commands to a JSONL file.
+ * Writes RecordingCommands to .out files.
  *
- * Same pattern as HarborOutWriter — extension function on List.
+ * Format: `t=<offset>  <TYPE> <details>`
  */
-public fun List<RecordingCommand>.writeTo(file: File) {
-    file.parentFile?.mkdirs()
-    file.bufferedWriter().use { writer ->
-        for (command in this) {
-            val json = command.toJson()
-            writer.write(mapper.writeValueAsString(json))
-            writer.newLine()
+object RecordingEventWriter {
+
+    fun write(file: File, commands: List<RecordingCommand>, startTime: Instant) {
+        file.parentFile?.mkdirs()
+        file.bufferedWriter().use { writer ->
+            commands.forEach { command ->
+                val offset = formatOffset(Duration.between(startTime, command.at))
+                val body = formatCommand(command)
+                writer.write("t=$offset  $body")
+                writer.newLine()
+            }
+        }
+    }
+
+    private fun formatCommand(command: RecordingCommand): String = when (command) {
+        is RecordingStarted ->
+            "RECORDING_STARTED monitor=${command.target.monitor.value} quality=${command.config.quality.name}"
+        is RecordingStopped ->
+            "RECORDING_STOPPED monitor=${command.target.monitor.value}"
+        is ClipCreated ->
+            "CLIP_CREATED episode=${command.episode.value} monitor=${command.target.monitor.value}"
+    }
+
+    private fun formatOffset(d: Duration): String {
+        val h = d.toHours()
+        val m = d.toMinutesPart()
+        val s = d.toSecondsPart()
+        return buildString {
+            if (h > 0) append("${h}h")
+            if (m > 0) append("${m}m")
+            if (s > 0 || isEmpty()) append("${s}s")
         }
     }
 }
 
 /**
- * Convert a RecordingCommand to a JSON-serializable map.
+ * Extension function for backward compatibility with RecorderBatchApp.
  */
-public fun RecordingCommand.toJson(): Map<String, Any?> = when (this) {
-    is RecordingStarted -> mapOf(
-        "type" to "RecordingStarted",
-        "bed" to target.bed.value,
-        "monitor" to target.monitor.value,
-        "start" to config.start.toString(),
-        "quality" to config.quality.name,
-        "context" to when (context) {
-            is com.manahive.recorder.RecordingContext.Standalone -> "standalone"
-            is com.manahive.recorder.RecordingContext.TiedToEpisode -> "tied-to-episode"
-        },
-        "episode" to context.episode?.value,
-        "at" to at.toString(),
-    )
-    is RecordingStopped -> mapOf(
-        "type" to "RecordingStopped",
-        "bed" to target.bed.value,
-        "monitor" to target.monitor.value,
-        "end" to end.toString(),
-        "context" to when (context) {
-            is com.manahive.recorder.RecordingContext.Standalone -> "standalone"
-            is com.manahive.recorder.RecordingContext.TiedToEpisode -> "tied-to-episode"
-        },
-        "episode" to context.episode?.value,
-        "at" to at.toString(),
-    )
-    is ClipCreated -> mapOf(
-        "type" to "ClipCreated",
-        "bed" to target.bed.value,
-        "monitor" to target.monitor.value,
-        "episode" to episode.value,
-        "start" to start.toString(),
-        "end" to end.toString(),
-        "path" to path?.value,
-        "size" to size.bytes,
-        "at" to at.toString(),
-    )
+public fun List<RecordingCommand>.writeTo(file: File) {
+    RecordingEventWriter.write(file, this, Instant.EPOCH)
 }

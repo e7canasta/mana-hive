@@ -1,0 +1,10 @@
+# José — solo E1 y E4 (sentado, sin baño)
+#
+# E1 (23:15): se sienta 17 min → se acuesta
+# E4 (03:50): se sienta 4 min → se acuesta
+
+t=0s        OBS IN_BED          confidence=0.95
+t=1h15m     OBS SITTING_IN_BED  confidence=0.92
+t=1h32m     OBS IN_BED          confidence=0.94
+t=5h50m     OBS SITTING_IN_BED  confidence=0.90
+t=5h54m     OBS IN_BED          confidence=0.93

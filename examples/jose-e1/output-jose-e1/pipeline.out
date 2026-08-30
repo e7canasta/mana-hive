@@ -1,0 +1,20 @@
+# Pipeline trace: 5 observations → 9 scene → 2 signals → 2 commands
+
+t=0s  INPUT      IN_BED                    confidence=0.95
+t=1h15m  INPUT      SITTING_IN_BED            confidence=0.92
+t=1h15m  SCENE      SignalLost                SIGNAL_LOST monitor=m1
+t=1h15m  SCENE      TransitionDetected        TRANSITION Lying → SittingInBed
+t=1h32m  INPUT      IN_BED                    confidence=0.94
+t=1h32m  SCENE      ComeBackExceeded          COMEBACK_EXCEEDED PT15M
+t=1h32m  SCENE      SignalLost                SIGNAL_LOST monitor=m1
+t=1h32m  SCENE      TransitionDetected        TRANSITION SittingInBed → Lying
+t=1h32m  SENTINEL   EpisodeOpened             EPISODE_OPENED rule=comeback-lying severity=WARNING
+t=1h32m  SENTINEL   EpisodeClosed             EPISODE_CLOSED cause=AUTO_RECOVERY
+t=1h32m  HARBOR     Dispatch                 
+t=1h32m  HARBOR     Resolve                  
+t=5h50m  INPUT      SITTING_IN_BED            confidence=0.9
+t=5h50m  SCENE      SignalLost                SIGNAL_LOST monitor=m1
+t=5h50m  SCENE      TransitionDetected        TRANSITION Lying → SittingInBed
+t=5h54m  INPUT      IN_BED                    confidence=0.93
+t=5h54m  SCENE      SignalLost                SIGNAL_LOST monitor=m1
+t=5h54m  SCENE      TransitionDetected        TRANSITION SittingInBed → Lying

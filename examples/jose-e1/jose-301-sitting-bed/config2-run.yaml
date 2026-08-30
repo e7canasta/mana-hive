@@ -1,0 +1,26 @@
+# Config 2: Viaje completo
+# Notificación: SITTING_IN_BED, STANDING, IN_BATHROOM, IN_ROOM, IN_BED
+# Objetivo: Trazabilidad completa del recorrido de José
+
+scene:
+  bed: "bed-4"
+  night: "night-jose-301"
+  resident: "jose"
+  monitor: "m1"
+
+calibration:
+  transitions: RELEASE_2
+  confidence:
+    SITTING_IN_BED: 0.8
+    STANDING: 0.7
+    IN_BATHROOM: 0.75
+    IN_ROOM: 0.75
+  dwell:
+    # sin dwell — solo trazabilidad
+  heartbeat:
+    timeout: 90s
+
+events:
+  source: "events.dat"
+  output: "output-config2"
+  start: "2024-01-15T22:00:00Z"

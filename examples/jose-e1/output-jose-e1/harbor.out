@@ -1,0 +1,2 @@
+DISPATCH channels=[PUSH, TABLET]
+RESOLVE resolution=AUTO_RECOVERY
