@@ -273,14 +273,20 @@ public object Severity {
  * dice cual de los dos alcanza.
  */
 public object Closure {
-    /** Cierra cuando el residente vuelve a un estado seguro. */
+    /** Cierra cuando el residente vuelve a un estado seguro, sin intervencion. */
     public const val SAFE_ONLY: String = "SAFE_ONLY"
-    /** Cierra solo con intervencion de personal. */
-    public const val STAFF_ONLY: String = "STAFF_ONLY"
+
+    /**
+     * Hacen falta las dos cosas: que entre el personal y que la situacion vuelva
+     * a ser segura. Es el cierre de una caida — no alcanza con que alguien pase
+     * por la habitacion, ni con que la persona se levante sola.
+     */
+    public const val STAFF_AND_SAFE: String = "STAFF_AND_SAFE"
+
     /** Cualquiera de las dos alcanza. */
     public const val STAFF_OR_SAFE: String = "STAFF_OR_SAFE"
 
-    public val ALL: Set<String> = setOf(SAFE_ONLY, STAFF_ONLY, STAFF_OR_SAFE)
+    public val ALL: Set<String> = setOf(SAFE_ONLY, STAFF_AND_SAFE, STAFF_OR_SAFE)
 }
 
 /** Canales por los que se puede avisar. */

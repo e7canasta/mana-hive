@@ -74,6 +74,10 @@ fun testCalibration(
         channels = setOf(Channel.PUSH, Channel.TABLET)
         escalationTimeout = Duration.ofMinutes(5)
     }
+    call {
+        channels = setOf(Channel.PUSH, Channel.TABLET)
+        escalationTimeout = Duration.ofMinutes(2)
+    }
     incident {
         channels = setOf(Channel.PUSH, Channel.TABLET, Channel.WARD_BOARD, Channel.CONSOLE)
         escalationTimeout = Duration.ZERO

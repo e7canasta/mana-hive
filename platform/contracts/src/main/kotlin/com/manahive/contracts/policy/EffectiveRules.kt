@@ -44,12 +44,42 @@ public data class AlertRule(
 )
 
 /**
- * Severity of an alert. Maps to system behavior:
- * - INFO: log only, aggregated into round digest
- * - WARNING: notify staff, wait for confirmation
- * - CRITICAL: dispatch immediately, NVR recording
+ * Que tan grave es lo que paso, en el idioma de quien tiene que responder.
+ *
+ * Los niveles no son etiquetas: cada uno responde dos preguntas distintas
+ * —quien se entera, y si alguien tiene que ir— y esa es toda su semantica.
+ *
+ * | Nivel | Se entera | Hay que ir |
+ * |---|---|---|
+ * | [INFO] | nadie, queda en el registro | no |
+ * | [WARNING] | el personal de turno | no |
+ * | [HIGH] | el personal de turno | **si**, sin urgencia |
+ * | [CRITICAL] | todos, ya | **si**, ahora |
+ *
+ * [HIGH] se agrego porque entre "te aviso" y "es una emergencia" no habia nada,
+ * y ahi vive la mayor parte del trabajo nocturno de un geriatrico: la baranda
+ * que quedo baja, el andador fuera de alcance, el bano que se esta estirando.
+ * Sin ese escalon, todo eso o se subestimaba como aviso o se inflaba a critico
+ * — y un sistema que grita siempre deja de escucharse.
+ *
+ * La severidad es ademas **el mecanismo de composicion de episodios**: cuando ya
+ * hay un episodio abierto, un evento de nivel menor entra como neutro y no
+ * notifica, uno del mismo nivel es parte del mismo episodio, y uno mayor lo
+ * eleva. Por eso el orden importa y esta explicito en [rank].
  */
-public enum class Severity { INFO, WARNING, CRITICAL }
+public enum class Severity {
+    INFO,
+    WARNING,
+    HIGH,
+    CRITICAL,
+    ;
+
+    /** Orden de gravedad. Lo usa la composicion de episodios. */
+    public val rank: Int get() = ordinal
+
+    /** Si este nivel espera que alguien vaya a la habitacion. */
+    public val requiresAttendance: Boolean get() = this == HIGH || this == CRITICAL
+}
 
 /**
  * How a rule is triggered. Determines which SceneEvent opens the episode:

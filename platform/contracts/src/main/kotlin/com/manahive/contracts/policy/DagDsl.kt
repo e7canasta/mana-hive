@@ -72,6 +72,18 @@ public class DagResidentStatesBuilder(
         states[StateKind.IN_BATHROOM] = DagResidentStateRuleBuilder(StateKind.IN_BATHROOM).apply(block).build()
     }
 
+    /**
+     * En el piso.
+     *
+     * Se declara como cualquier otro estado, y esa es toda la gracia: la caida
+     * no tiene tratamiento especial en el motor. Si una plantilla la quiere
+     * critica al entrar, lo escribe aca; si otra institucion la quiere manejar
+     * distinto, lo cambia sin tocar una linea de codigo.
+     */
+    public fun onFloor(block: DagResidentStateRuleBuilder.() -> Unit) {
+        states[StateKind.ON_FLOOR] = DagResidentStateRuleBuilder(StateKind.ON_FLOOR).apply(block).build()
+    }
+
     public fun absent(block: DagResidentStateRuleBuilder.() -> Unit) {
         states[StateKind.ABSENT] = DagResidentStateRuleBuilder(StateKind.ABSENT).apply(block).build()
     }
@@ -467,6 +479,10 @@ public class ResidentStateOverridesBuilder(
 
     public fun bedEdge(block: ProfileStateOverrideBuilder.() -> Unit) {
         overrides[StateKind.BED_EDGE] = ProfileStateOverrideBuilder().apply(block).build()
+    }
+
+    public fun onFloor(block: ProfileStateOverrideBuilder.() -> Unit) {
+        overrides[StateKind.ON_FLOOR] = ProfileStateOverrideBuilder().apply(block).build()
     }
 }
 

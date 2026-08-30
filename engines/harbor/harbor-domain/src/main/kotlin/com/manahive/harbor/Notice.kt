@@ -43,10 +43,20 @@ public data class Notice(
     /** Does this notice require immediate action? */
     val isUrgent: Boolean get() = severity == Severity.CRITICAL
 
+    /**
+     * Si este aviso espera que alguien vaya a la habitacion.
+     *
+     * Es distinto de [isUrgent]: HIGH manda a alguien, pero no interrumpe todo.
+     */
+    val requiresAttendance: Boolean get() = severity.requiresAttendance
+
     /** Confirmation window based on severity. */
     public val confirmationWindow: Duration? get() = when (severity) {
         Severity.INFO -> null
         Severity.WARNING -> Duration.ofMinutes(5)
+        // Se espera menos que en un aviso porque alguien tiene que ir; pero no
+        // es cero, porque no es una emergencia y el turno puede estar ocupado.
+        Severity.HIGH -> Duration.ofMinutes(2)
         Severity.CRITICAL -> Duration.ZERO
     }
 

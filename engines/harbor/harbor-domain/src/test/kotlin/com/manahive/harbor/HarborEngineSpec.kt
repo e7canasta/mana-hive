@@ -49,6 +49,7 @@ class HarborEngineSpec : BehaviorSpec({
         confirmationWindow = when (severity) {
             Severity.INFO -> null
             Severity.WARNING -> Duration.ofMinutes(5)
+            Severity.HIGH -> Duration.ofMinutes(2)
             Severity.CRITICAL -> Duration.ZERO
         },
     )

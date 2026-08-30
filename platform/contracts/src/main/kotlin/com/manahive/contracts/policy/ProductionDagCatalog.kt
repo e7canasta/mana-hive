@@ -55,6 +55,16 @@ public val PRODUCTION_DAG_CATALOG: DagCatalog = buildDagCatalog {
             severity(Severity.WARNING)
             closure(ClosureCondition.STAFF_OR_SAFE)
         }
+        // La caida no tiene tratamiento especial en el motor: es un estado mas,
+        // y su gravedad se declara aca como la de cualquier otro. Viene puesta en
+        // la plantilla para que ningun perfil nazca sin una respuesta a la caida
+        // — pero nace editable, que es la diferencia entre un default y una
+        // constante escondida en el codigo.
+        onFloor {
+            severity(Severity.CRITICAL)
+            alertOnEntry()
+            closure(ClosureCondition.STAFF_AND_SAFE)
+        }
     }
 
     room {
@@ -130,6 +140,20 @@ public val PRODUCTION_DAG_CATALOG: DagCatalog = buildDagCatalog {
             to(StateKind.IN_BATHROOM) {
                 hysteresis(Duration.ofMillis(2000))
             }
+        }
+        // Uno se cae desde cualquier posicion, asi que la caida es alcanzable
+        // desde todas. Sin estas aristas el estado ON_FLOOR era inalcanzable: la
+        // observacion llegaba y el interprete la descartaba por transicion
+        // ilegal. Histeresis corta —una caida hay que creerla rapido— pero no
+        // cero, para no morder ruido del sensor.
+        from(StateKind.LYING) { to(StateKind.ON_FLOOR) { hysteresis(Duration.ofMillis(800)) } }
+        from(StateKind.SITTING_IN_BED) { to(StateKind.ON_FLOOR) { hysteresis(Duration.ofMillis(800)) } }
+        from(StateKind.BED_EDGE) { to(StateKind.ON_FLOOR) { hysteresis(Duration.ofMillis(800)) } }
+        from(StateKind.STANDING) { to(StateKind.ON_FLOOR) { hysteresis(Duration.ofMillis(800)) } }
+        // Y se sale del piso: alguien lo levanta o se levanta solo.
+        from(StateKind.ON_FLOOR) {
+            to(StateKind.STANDING) { hysteresis(Duration.ofMillis(1500)) }
+            to(StateKind.LYING) { hysteresis(Duration.ofMillis(1500)) }
         }
     }
 }

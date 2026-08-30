@@ -30,6 +30,7 @@ include(":blueprints:jose-301-sitting-bed")
 include(":blueprints:level-critical")
 include(":blueprints:level-fall-risk")
 include(":blueprints:level-night-wandering")
+include(":blueprints:nats-e2e")
 include(":blueprints:two-residents-e2e")
 
 // ── engines: nucleo puro + cascara delgada. night-watch-runtime es el deployable 

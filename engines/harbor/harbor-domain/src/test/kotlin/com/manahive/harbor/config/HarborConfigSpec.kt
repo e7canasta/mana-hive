@@ -16,18 +16,24 @@ class HarborConfigSpec : DescribeSpec({
                 channels = mapOf(
                     Severity.INFO to setOf(Channel.CONSOLE),
                     Severity.WARNING to setOf(Channel.PUSH, Channel.TABLET),
+                    Severity.HIGH to setOf(Channel.PUSH, Channel.TABLET),
                     Severity.CRITICAL to setOf(Channel.PUSH, Channel.TABLET, Channel.WARD_BOARD, Channel.CONSOLE),
                 ),
                 escalationTimeouts = mapOf(
                     Severity.INFO to Duration.ofMinutes(30),
                     Severity.WARNING to Duration.ofMinutes(5),
+                    Severity.HIGH to Duration.ofMinutes(2),
                     Severity.CRITICAL to Duration.ZERO,
                 ),
                 fingerprint = "abc123",
             )
 
             config.residentId shouldBe "maria"
-            config.channels.size shouldBe 3
+            // Antes decia 3. Un numero magico que hay que actualizar cada vez que
+            // el dominio gana un nivel es una aserción sobre nada; lo que importa
+            // es que ninguna severidad quede sin canales — un aviso que no sabe
+            // por donde salir no avisa.
+            config.channels.keys shouldBe Severity.entries.toSet()
             config.fingerprint shouldBe "abc123"
         }
 

@@ -27,8 +27,18 @@ public enum class SceneState {
     LYING,
     /** In bed, not lying (sitting up, etc). */
     IN_BED,
-    /** Sitting on the edge of the bed. */
+    /** Sitting up in bed, not on the edge. */
     SITTING_IN_BED,
+
+    /**
+     * Sentado en el borde de la cama.
+     *
+     * Es la posicion previa a la caida y la que las plantillas de riesgo marcan
+     * como critica al entrar. No estaba en el DAG, asi que el mapeo la devolvia
+     * como SITTING_IN_BED: la regla mas importante del catalogo de riesgo de
+     * caida perdia su sujeto al cruzar de vuelta.
+     */
+    BED_EDGE,
     /** Standing next to the bed. */
     STANDING,
     /** Walking/moving. */
@@ -37,6 +47,17 @@ public enum class SceneState {
     IN_BATHROOM,
     /** In the hallway. */
     IN_HALLWAY,
-    /** On the floor (always critical). */
+    /**
+     * En el piso.
+     *
+     * Que tan grave es esto NO se decide aca. Decia "always critical", y una
+     * afirmacion de politica escrita adentro de un contrato de escena es
+     * exactamente lo que la separacion politica/mecanismo existe para impedir:
+     * el motor observa que la persona esta en el piso, y el perfil del residente
+     * dice que hacer al respecto — como con cualquier otro estado.
+     *
+     * Las plantillas traen una regla por defecto para este estado, y el director
+     * la puede cambiar.
+     */
     ON_FLOOR,
 }

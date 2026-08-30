@@ -37,6 +37,7 @@ public fun ObservationKind.toPersonState(): PersonState = when (this) {
     ObservationKind.OUT_OF_ROOM    -> PersonState.Absent        // Left room, location undetermined
     ObservationKind.HEARTBEAT      -> PersonState.Lying         // Heartbeat doesn't change state
     ObservationKind.STAFF_IN_ROOM  -> PersonState.Lying         // Staff doesn't affect person state
+    ObservationKind.ON_FLOOR       -> PersonState.OnFloor
     ObservationKind.UNCLASSIFIED   -> PersonState.Unknown(UnknownCause.SCENE)
 
     // ── Scene state events (don't change PersonState) ─────────
@@ -85,6 +86,7 @@ public fun ObservationKind.toSceneStateChange(): ((SceneState) -> SceneState)? =
     }
 
     // ── Person state events (don't affect scene state) ────────
+    ObservationKind.ON_FLOOR,
     ObservationKind.IN_BED, ObservationKind.SITTING_IN_BED, ObservationKind.ATTEMPTING_EXIT,
     ObservationKind.BED_EDGE, ObservationKind.STANDING, ObservationKind.IN_BATHROOM,
     ObservationKind.IN_ROOM, ObservationKind.IN_HALLWAY, ObservationKind.OUTDOOR,

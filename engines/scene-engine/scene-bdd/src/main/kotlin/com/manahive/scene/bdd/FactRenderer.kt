@@ -74,6 +74,7 @@ class TimelineBuilder {
         is PersonState.Lying -> "Lying"
         is PersonState.SittingInBed -> "SittingInBed"
         is PersonState.Standing -> "Standing"
+        is PersonState.OnFloor -> "OnFloor"
         is PersonState.InBathroom -> "InBathroom"
         is PersonState.InRoom -> "InRoom"
         is PersonState.AttemptingExit -> "AttemptingExit"

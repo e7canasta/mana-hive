@@ -207,7 +207,7 @@ De noche pasan muchas cosas críticas a la vez. Agruparlas por episodio y dejar 
 
 > **Nada es excluyente entre sí. La única dimensión aparte es el cierre.**
 
-Para el MVP el cierre tiene dos disparadores: **personal en la habitación**, y —cuando el aspecto declara un estado seguro— la llegada a ese estado. Es exactamente `ClosureCondition { STAFF_ONLY, SAFE_ONLY, STAFF_OR_SAFE }`, que ya existe y no cambia.
+Para el MVP el cierre tiene dos disparadores: **personal en la habitación**, y —cuando el aspecto declara un estado seguro— la llegada a ese estado. Es exactamente `ClosureCondition { STAFF_AND_SAFE, SAFE_ONLY, STAFF_OR_SAFE }`, que ya existe y no cambia.
 
 **Consecuencia de diseño:** la absorción por severidad es un **invariante de Sentinel**, no una regla que el perfil tenga que declarar. Se deriva de comparar la severidad del evento con la del episodio abierto. Conviene revisar si el campo `umbrellaEvents` de `AlertRule` —hoy un `Set` por regla— sigue haciendo falta, o si esta comparación lo reemplaza entero.
 
@@ -289,7 +289,7 @@ sequenceDiagram
             },
             "BED_EDGE": {
               "onEntry": [
-                { "window": "always", "severity": "CRITICAL", "closure": "STAFF_ONLY",
+                { "window": "always", "severity": "CRITICAL", "closure": "STAFF_AND_SAFE",
                   "notify": { "channels": ["PUSH","TABLET","WARD_BOARD"], "escalateAfter": "PT0S" },
                   "record": { "before": "PT30S", "after": "PT2M", "quality": "HIGH" } }
               ]
@@ -326,7 +326,7 @@ sequenceDiagram
               "stableFor": "PT3S",
               "dwell": [
                 { "window": "night", "alertAfter": "PT1M", "severity": "CRITICAL",
-                  "closure": "STAFF_ONLY",
+                  "closure": "STAFF_AND_SAFE",
                   "notify": { "channels": ["PUSH","TABLET"], "escalateAfter": "PT2M" } }
               ]
             }
@@ -373,7 +373,7 @@ sequenceDiagram
 
 - **Duraciones en ISO-8601** (`PT1.5S`, `PT10M`). Sin ambigüedad de unidad, parseables por `java.time.Duration.parse`.
 - **`observeOnly: true`** es el bloque vacío del DSL: lo veo, lo anoto, no alerto. Es también el default de todo estado no mencionado.
-- **`closesEpisodes: true`** en staff le da referente real a `ClosureCondition.STAFF_ONLY`. Hoy es un enum opaco: el sistema promete "cierra cuando llega el staff" sin tener forma de saber que llegó.
+- **`closesEpisodes: true`** en staff le da referente real a `ClosureCondition.STAFF_AND_SAFE`. Hoy es un enum opaco: el sistema promete "cierra cuando llega el staff" sin tener forma de saber que llegó.
 - **`provenance.reason` es obligatorio.** El hub ya lo exige hoy con un `require` cuyo mensaje dice *"a change of watch nobody can explain"*. Sube del ajuste al perfil.
 - **No hay `mobilityAid`.** Si usa andador, es porque el perfil tiene `subjects.walker`. Deja de ser una etiqueta y pasa a ser estructura.
 
@@ -455,7 +455,7 @@ resolve(perfil) → { scene, sentinel, harbor, recorder }
   "residentId": "elena", "fingerprint": "sha256:4f2a…",
   "transitionRules": {
     "BED_EDGE": { "id": "alert-bed_edge", "triggerOn": "ENTRY",
-                  "severity": "CRITICAL", "closure": "STAFF_ONLY", "requiresNvr": true }
+                  "severity": "CRITICAL", "closure": "STAFF_AND_SAFE", "requiresNvr": true }
   },
   "dwellRules": {
     "IN_BATHROOM": { "id": "alert-in_bathroom", "triggerOn": "DWELL",
@@ -466,7 +466,7 @@ resolve(perfil) → { scene, sentinel, harbor, recorder }
                "severity": "CRITICAL", "closure": "STAFF_OR_SAFE" }
   },
   "sceneStateRules": {
-    "bed.left":   { "id": "alert-bed-left-down", "severity": "CRITICAL", "closure": "STAFF_ONLY" },
+    "bed.left":   { "id": "alert-bed-left-down", "severity": "CRITICAL", "closure": "STAFF_AND_SAFE" },
     "wheelchair": { "id": "alert-wheelchair-out", "severity": "WARNING", "closure": "SAFE_ONLY" }
   }
 }
@@ -617,6 +617,50 @@ Módulo `platform/profile-api`. Es `pure-domain`, así que el guard de pureza ga
 `subjects.bed.aspects.railLeft.states.DOWN.dwell[0].warningAfter` — no el primero: quien arma un perfil quiere la lista entera, no una carrera de un error por vez.
 
 Y protege en la frontera las invariantes que hoy los overrides saltean: entrada/permanencia/no-retorno excluyentes, preaviso antes del plazo, ventana declarada, motivo obligatorio, `unknownIsInitial`, y come-back rechazado en aspectos binarios por redundante.
+
+---
+
+## 11. Correcciones al relevamiento
+
+Tres cosas que este documento afirmaba mal y se verificaron contra el codigo al implementar.
+
+### 11.1 El wiki esta desactualizado respecto del codigo
+
+Los DTO se escribieron a partir de `docs/wiki/3.x`, y el wiki miente en dos lugares. La fuente es el codigo:
+
+| El wiki dice | El codigo dice |
+|---|---|
+| `Severity: CRITICAL, HIGH, WARNING, INFO` | `Severity { INFO, WARNING, CRITICAL }` — **tres niveles, no hay HIGH** |
+| `ClosureCondition: SAFE_ONLY, STAFF_ONLY, STAFF_OR_SAFE` | `{ SAFE_ONLY, STAFF_AND_SAFE, STAFF_OR_SAFE }` — **no existe STAFF_ONLY** |
+
+`STAFF_AND_SAFE` no es un detalle: exige **las dos cosas** —que entre el personal *y* que la situacion vuelva a ser segura— y es el cierre correcto de una caida. Ni alcanza con que alguien pase por la habitacion, ni con que la persona se levante sola.
+
+Agregar un cuarto nivel de severidad es una decision clinica con consecuencias en Harbor y en la rampa de Sentinel. Queda planteada, no tomada.
+
+### 11.2 `sceneStateRules` es un stub, no una via funcionando
+
+Este documento decia que la caneria estaba lista desde Scene para adelante. Es cierto en Scene, y **no** en Sentinel:
+
+```kotlin
+// SentinelCalibration.kt — el campo existe y tiene accessor…
+public val sceneStateRules: Map<String, AlertRule>
+public fun sceneStateRuleFor(field: String): AlertRule? = sceneStateRules[field]
+```
+
+…pero `sceneStateRuleFor` **no lo llama nadie**, y las tres construcciones del calibration lo pasan `emptyMap()`. El campo esta declarado; el evaluador no lo lee. La fase 4 incluye entonces hacer que Sentinel evalue eventos de campo de escena, que es mas trabajo del que este documento estimaba.
+
+Hay ademas un problema de tipo: `AlertRule.trigger` es un `StateKind` no-nulo, y una regla sobre `bed.left` no tiene `StateKind` que poner. Lo correcto es que `AlertRule` apunte a la identidad abierta; se midio el radio (28 usos, y `Episode.trigger` y `SentinelSignal.trigger` viajan con el) y se dejo para su propio cambio, no mezclado con el perfil.
+
+### 11.3 La caida: el estado es mecanismo, la gravedad es politica
+
+El enum del DAG documentaba `ON_FLOOR` como *"always critical"*. Una afirmacion de politica adentro de un contrato de escena es exactamente lo que la separacion politica/mecanismo existe para impedir.
+
+Lo implementado: el motor solo sabe que el estado existe. La gravedad la declara **la plantilla**, con el mismo DSL que cualquier otro estado, y el director la edita:
+
+- `STANDARD`: `onFloor { }` — declarada, observada, sin alerta. Este nivel no alerta por nada y la caida no es una excepcion escondida.
+- `NIGHT_WANDERING`, `FALL_RISK`, `CRITICAL`, `PRODUCTION`: `CRITICAL`, `alertOnEntry()`, cierre `STAFF_AND_SAFE`.
+
+Un test que afirmaba *"todas las reglas de este catalogo son WARNING"* fue reescrito: era una foto del catalogo, no una invariante, y un nivel de riesgo de caida donde nada llega a critico es justamente lo que habia que revisar.
 
 ---
 

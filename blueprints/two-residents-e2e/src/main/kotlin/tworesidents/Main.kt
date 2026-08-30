@@ -86,7 +86,11 @@ fun calibrationsFor(profile: ResidentProfileConfig, catalog: DagCatalog, who: St
             budget { warning(1) }
             notice { channels = setOf(Channel.CONSOLE); escalationTimeout = Duration.ofMinutes(30) }
             alert { channels = setOf(Channel.PUSH); escalationTimeout = Duration.ofMinutes(5) }
-            incident { channels = setOf(Channel.PUSH); escalationTimeout = Duration.ZERO }
+            call {
+            channels = setOf(Channel.PUSH, Channel.TABLET)
+            escalationTimeout = Duration.ofMinutes(2)
+        }
+        incident { channels = setOf(Channel.PUSH); escalationTimeout = Duration.ZERO }
         },
         recorder = recordingCalibration { resident(who) },
     )

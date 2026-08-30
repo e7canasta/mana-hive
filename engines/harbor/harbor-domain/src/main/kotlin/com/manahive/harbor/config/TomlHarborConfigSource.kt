@@ -102,11 +102,13 @@ public class TomlHarborConfigSource(
             channels = mapOf(
                 Severity.INFO to setOf(Channel.CONSOLE),
                 Severity.WARNING to setOf(Channel.PUSH, Channel.TABLET),
+                Severity.HIGH to setOf(Channel.PUSH, Channel.TABLET),
                 Severity.CRITICAL to setOf(Channel.PUSH, Channel.TABLET, Channel.WARD_BOARD, Channel.CONSOLE),
             ),
             escalationTimeouts = mapOf(
                 Severity.INFO to Duration.ofMinutes(30),
                 Severity.WARNING to warningTimeout,
+                Severity.HIGH to Duration.ofMinutes(2),
                 Severity.CRITICAL to Duration.ZERO,
             ),
             fingerprint = "",

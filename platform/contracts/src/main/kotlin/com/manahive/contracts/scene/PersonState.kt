@@ -43,6 +43,17 @@ public sealed interface PersonState {
     public data object Absent : PersonState
 
     // ── Furniture ─────────────────────────────────────────────────────
+    /**
+     * En el piso.
+     *
+     * No es una postura mas: es el desenlace que todo este sistema existe para
+     * detectar. Vivio en el DAG de escena desde el principio —marcado alli como
+     * "always critical"— pero no tenia lugar en [StateKind], asi que el mapeo lo
+     * degradaba a Standing con el comentario "closest mapping". Una caida
+     * viajaba por el sistema disfrazada de persona parada.
+     */
+    public data object OnFloor : PersonState
+
     public data object InChair : PersonState
     public data object InWheelchair : PersonState
 
@@ -59,7 +70,7 @@ public enum class UnknownCause { SIGNAL_LOST, SCENE }
  */
 public enum class StateKind {
     LYING, SITTING_IN_BED, ATTEMPTING_EXIT, BED_EDGE,
-    STANDING, IN_BATHROOM, IN_ROOM, IN_HALLWAY, OUTDOOR, ABSENT,
+    STANDING, ON_FLOOR, IN_BATHROOM, IN_ROOM, IN_HALLWAY, OUTDOOR, ABSENT,
     IN_CHAIR, IN_WHEELCHAIR,
     UNKNOWN,
 }
@@ -71,6 +82,7 @@ public val PersonState.kind: StateKind
         PersonState.AttemptingExit -> StateKind.ATTEMPTING_EXIT
         PersonState.BedEdge        -> StateKind.BED_EDGE
         PersonState.Standing       -> StateKind.STANDING
+        PersonState.OnFloor        -> StateKind.ON_FLOOR
         PersonState.InBathroom     -> StateKind.IN_BATHROOM
         PersonState.InRoom         -> StateKind.IN_ROOM
         PersonState.InHallway      -> StateKind.IN_HALLWAY
@@ -100,6 +112,7 @@ public fun personStateFromKind(kind: StateKind): PersonState = when (kind) {
     StateKind.ATTEMPTING_EXIT -> PersonState.AttemptingExit
     StateKind.BED_EDGE -> PersonState.BedEdge
     StateKind.STANDING -> PersonState.Standing
+    StateKind.ON_FLOOR -> PersonState.OnFloor
     StateKind.IN_BATHROOM -> PersonState.InBathroom
     StateKind.IN_ROOM -> PersonState.InRoom
     StateKind.IN_HALLWAY -> PersonState.InHallway

@@ -111,7 +111,11 @@ public data class HarborCalibration(
                     channels = setOf(Channel.PUSH, Channel.TABLET)
                     escalationTimeout = 5.minutes
                 }
-                incident {
+                call {
+            channels = setOf(Channel.PUSH, Channel.TABLET)
+            escalationTimeout = Duration.ofMinutes(2)
+        }
+        incident {
                     channels = setOf(Channel.PUSH, Channel.TABLET, Channel.WARD_BOARD, Channel.CONSOLE)
                     escalationTimeout = 0.seconds
                 }

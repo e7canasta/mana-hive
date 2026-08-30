@@ -51,21 +51,9 @@ object SceneTestDsl {
 
     // --- StateKind -> PersonState mapping ---
 
-    fun StateKind.toPersonState(): PersonState = when (this) {
-        StateKind.LYING          -> PersonState.Lying
-        StateKind.SITTING_IN_BED -> PersonState.SittingInBed
-        StateKind.ATTEMPTING_EXIT -> PersonState.AttemptingExit
-        StateKind.BED_EDGE       -> PersonState.BedEdge
-        StateKind.STANDING       -> PersonState.Standing
-        StateKind.IN_BATHROOM    -> PersonState.InBathroom
-        StateKind.IN_ROOM        -> PersonState.InRoom
-        StateKind.IN_HALLWAY     -> PersonState.InHallway
-        StateKind.OUTDOOR        -> PersonState.Outdoor
-        StateKind.ABSENT         -> PersonState.Absent
-        StateKind.IN_CHAIR       -> PersonState.InChair
-        StateKind.IN_WHEELCHAIR  -> PersonState.InWheelchair
-        StateKind.UNKNOWN        -> PersonState.Unknown(UnknownCause.SCENE)
-    }
+    /** Delegado en la funcion canonica de contracts. */
+    fun StateKind.toPersonState(): PersonState =
+        com.manahive.contracts.scene.personStateFromKind(this)
 
     // --- DigitalTwin builder ---
 

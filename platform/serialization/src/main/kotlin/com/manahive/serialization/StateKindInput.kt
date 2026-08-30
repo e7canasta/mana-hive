@@ -56,6 +56,7 @@ sealed interface StateKindInput {
                 "Absent" -> SerializationResult.Success(PersonState.Absent)
                 "InChair" -> SerializationResult.Success(PersonState.InChair)
                 "InWheelchair" -> SerializationResult.Success(PersonState.InWheelchair)
+                "OnFloor" -> SerializationResult.Success(PersonState.OnFloor)
                 else -> SerializationResult.Failure(
                     SerializationError.InvalidState(name, VALID_PERSON_STATES)
                 )
@@ -73,6 +74,7 @@ fun StateKind.toPersonState(): PersonState = when (this) {
     StateKind.ATTEMPTING_EXIT -> PersonState.AttemptingExit
     StateKind.BED_EDGE -> PersonState.BedEdge
     StateKind.STANDING -> PersonState.Standing
+    StateKind.ON_FLOOR -> PersonState.OnFloor
     StateKind.IN_BATHROOM -> PersonState.InBathroom
     StateKind.IN_ROOM -> PersonState.InRoom
     StateKind.IN_HALLWAY -> PersonState.InHallway
@@ -89,6 +91,7 @@ fun PersonState.toStateKind(): StateKind = when (this) {
     is PersonState.AttemptingExit -> StateKind.ATTEMPTING_EXIT
     is PersonState.BedEdge -> StateKind.BED_EDGE
     is PersonState.Standing -> StateKind.STANDING
+    is PersonState.OnFloor -> StateKind.ON_FLOOR
     is PersonState.InBathroom -> StateKind.IN_BATHROOM
     is PersonState.InRoom -> StateKind.IN_ROOM
     is PersonState.InHallway -> StateKind.IN_HALLWAY

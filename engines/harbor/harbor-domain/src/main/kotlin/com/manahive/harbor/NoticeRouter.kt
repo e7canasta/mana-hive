@@ -139,6 +139,29 @@ public class DefaultNoticeRouter : NoticeRouter {
                     conclusion = "push to ward nurse, tablet to shift nurse",
                 ))
             }
+            Severity.HIGH -> {
+                // Va al mismo personal que un aviso, pero por los dos canales a la
+                // vez y sin esperar: la diferencia con WARNING no es a quien se le
+                // avisa sino que aca alguien tiene que ir, y el tablero de guardia
+                // queda afuera porque no es una emergencia que deba ver todo el ala.
+                steps.add(RoutingStep(
+                    recipients = findWardNurses(coverage),
+                    channel = Channel.PUSH,
+                    timeout = Duration.ZERO,
+                    reason = "high, immediate push — someone must attend",
+                ))
+                steps.add(RoutingStep(
+                    recipients = findShiftNurses(coverage),
+                    channel = Channel.TABLET,
+                    timeout = Duration.ofMinutes(2),
+                    reason = "high, tablet backup",
+                ))
+                explanation.add(ExplanationStep(
+                    rule = "high-routing",
+                    observed = "severity=HIGH",
+                    conclusion = "push and tablet, attendance expected, no ward board",
+                ))
+            }
             Severity.CRITICAL -> {
                 steps.add(RoutingStep(
                     recipients = findWardNurses(coverage),
@@ -169,6 +192,7 @@ public class DefaultNoticeRouter : NoticeRouter {
         val escalationTimeout = when (notice.severity) {
             Severity.INFO -> null
             Severity.WARNING -> Duration.ofMinutes(5)
+            Severity.HIGH -> Duration.ofMinutes(2)
             Severity.CRITICAL -> Duration.ZERO
         }
 

@@ -58,21 +58,9 @@ public class TwinConfig {
         bed = BedId("bed-$bed"),
         night = night,
         occupant = occupant,
-        state = when (state) {
-            StateKind.LYING          -> com.manahive.contracts.scene.PersonState.Lying
-            StateKind.SITTING_IN_BED -> com.manahive.contracts.scene.PersonState.SittingInBed
-            StateKind.ATTEMPTING_EXIT -> com.manahive.contracts.scene.PersonState.AttemptingExit
-            StateKind.BED_EDGE       -> com.manahive.contracts.scene.PersonState.BedEdge
-            StateKind.STANDING       -> com.manahive.contracts.scene.PersonState.Standing
-            StateKind.IN_BATHROOM    -> com.manahive.contracts.scene.PersonState.InBathroom
-            StateKind.IN_ROOM        -> com.manahive.contracts.scene.PersonState.InRoom
-            StateKind.IN_HALLWAY     -> com.manahive.contracts.scene.PersonState.InHallway
-            StateKind.OUTDOOR        -> com.manahive.contracts.scene.PersonState.Outdoor
-            StateKind.ABSENT         -> com.manahive.contracts.scene.PersonState.Absent
-            StateKind.IN_CHAIR       -> com.manahive.contracts.scene.PersonState.InChair
-            StateKind.IN_WHEELCHAIR  -> com.manahive.contracts.scene.PersonState.InWheelchair
-            StateKind.UNKNOWN        -> com.manahive.contracts.scene.PersonState.Unknown(UnknownCause.SCENE)
-        },
+        // Delegado en la funcion canonica de contracts: habia cinco copias de
+        // este mapeo en el repo y cada estado nuevo obligaba a tocarlas todas.
+        state = com.manahive.contracts.scene.personStateFromKind(state),
         stateSince = since,
         signal = SignalHealth(
             monitor = monitor,

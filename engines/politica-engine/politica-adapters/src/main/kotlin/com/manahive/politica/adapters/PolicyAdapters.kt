@@ -95,6 +95,7 @@ public fun PolicyCalibration.toHarborCalibration(): HarborCalibration = harborCa
 
     notice { applySeverityConfig(policy, Severity.INFO, setOf(Channel.CONSOLE), Duration.ofMinutes(30)) }
     alert { applySeverityConfig(policy, Severity.WARNING, setOf(Channel.PUSH, Channel.TABLET), Duration.ofMinutes(5)) }
+    call { applySeverityConfig(policy, Severity.HIGH, setOf(Channel.PUSH, Channel.TABLET), Duration.ofMinutes(2)) }
     incident {
         applySeverityConfig(
             policy,
@@ -176,6 +177,7 @@ private fun StateKind.toPersonState(): PersonState = when (this) {
     StateKind.SITTING_IN_BED -> PersonState.SittingInBed
     StateKind.BED_EDGE -> PersonState.BedEdge
     StateKind.STANDING -> PersonState.Standing
+    StateKind.ON_FLOOR -> PersonState.OnFloor
     StateKind.IN_BATHROOM -> PersonState.InBathroom
     StateKind.IN_ROOM -> PersonState.InRoom
     StateKind.IN_HALLWAY -> PersonState.InHallway

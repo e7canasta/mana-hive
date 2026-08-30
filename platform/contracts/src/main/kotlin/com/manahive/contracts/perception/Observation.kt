@@ -28,6 +28,16 @@ public enum class ObservationKind {
     // ── Out of bed ────────────────────────────────────────────
     STANDING, IN_BATHROOM, IN_ROOM, IN_HALLWAY, OUTDOOR,
 
+    /**
+     * En el piso.
+     *
+     * Faltaba. El estado existia en el DAG de escena y en las politicas, pero
+     * ninguna observacion podia producirlo: el edge server literalmente no tenia
+     * como reportar una caida, y el unico desenlace que este sistema existe para
+     * detectar no tenia puerta de entrada.
+     */
+    ON_FLOOR,
+
     // ── Furniture ─────────────────────────────────────────────
     IN_CHAIR, IN_WHEELCHAIR,
 

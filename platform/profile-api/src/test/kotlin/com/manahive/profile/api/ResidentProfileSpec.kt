@@ -52,7 +52,7 @@ private val ELENA = ResidentProfileDto(
                         "BED_EDGE" to StateRuleDto(
                             onEntry = listOf(
                                 RuleDto(
-                                    severity = Severity.CRITICAL, closure = Closure.STAFF_ONLY,
+                                    severity = Severity.CRITICAL, closure = Closure.STAFF_AND_SAFE,
                                     notify = NotifyDto(
                                         listOf(Channel.PUSH, Channel.TABLET, Channel.WARD_BOARD), "PT0S",
                                     ),
@@ -91,7 +91,7 @@ private val ELENA = ResidentProfileDto(
                             dwell = listOf(
                                 RuleDto(
                                     window = "night", alertAfter = "PT1M",
-                                    severity = Severity.CRITICAL, closure = Closure.STAFF_ONLY,
+                                    severity = Severity.CRITICAL, closure = Closure.STAFF_AND_SAFE,
                                     notify = NotifyDto(listOf(Channel.PUSH, Channel.TABLET), "PT2M"),
                                 ),
                             ),

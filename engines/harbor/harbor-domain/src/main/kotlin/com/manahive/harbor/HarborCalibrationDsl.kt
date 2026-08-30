@@ -21,6 +21,10 @@ import java.time.Duration
  *         channels = setOf(Channel.PUSH, Channel.TABLET)
  *         escalationTimeout = 5.minutes
  *     }
+ *     call {
+ *         channels = setOf(Channel.PUSH, Channel.TABLET)
+ *         escalationTimeout = 2.minutes
+ *     }
  *     incident {
  *         channels = setOf(Channel.PUSH, Channel.TABLET, Channel.WARD_BOARD, Channel.CONSOLE)
  *         escalationTimeout = 0.seconds
@@ -65,6 +69,16 @@ public class HarborCalibrationBuilder {
 
     /** Configure alerts (require confirmation). */
     public fun alert(init: SeverityConfig.() -> Unit): Unit = severity(Severity.WARNING, init)
+
+    /**
+     * Configura el llamado: alguien tiene que ir a la habitacion.
+     *
+     * Es el escalon entre [alert] —que avisa sin esperar que nadie se mueva— y
+     * [incident] —que es una emergencia. Ahi vive la mayor parte del trabajo
+     * nocturno real: la baranda que quedo baja, el andador fuera de alcance, el
+     * bano que se esta estirando.
+     */
+    public fun call(init: SeverityConfig.() -> Unit): Unit = severity(Severity.HIGH, init)
 
     /** Configure incidents (require immediate action). */
     public fun incident(init: SeverityConfig.() -> Unit): Unit = severity(Severity.CRITICAL, init)
@@ -135,6 +149,18 @@ public class NotificationBudgetConfigBuilder {
     /** Set max notifications per shift for INFO severity. */
     public fun info(max: Int) {
         budgets[Severity.INFO] = BudgetEntry(maxPerShift = max)
+    }
+
+    /**
+     * Tope por turno para los llamados (HIGH).
+     *
+     * Sin entrada no hay tope, y eso es peor de lo que parece: HIGH es el nivel
+     * que manda a alguien a caminar hasta la habitacion, asi que es el que mas
+     * cuesta cuando se dispara de mas. Que sea configurable no lo hace opcional
+     * — lo hace explicito. CRITICAL sigue sin tope, por diseño.
+     */
+    public fun call(max: Int) {
+        budgets[Severity.HIGH] = BudgetEntry(maxPerShift = max)
     }
 
     internal fun build(): Map<Severity, BudgetEntry> = budgets.toMap()

@@ -5,6 +5,8 @@ import com.manahive.contracts.dag.SceneState
 import com.manahive.contracts.policy.TransitionKey
 import com.manahive.contracts.scene.StateKind
 import java.time.Duration
+import com.manahive.contracts.dag.toStateKind
+import com.manahive.contracts.dag.toSceneState
 
 /**
  * Factory to create TransitionTable from SceneDag.
@@ -103,30 +105,6 @@ public object SceneDagToTransitionTable {
         return sceneState.toStateKind()
     }
 
-    private fun SceneState.toStateKind(): StateKind? = when (this) {
-        SceneState.LYING -> StateKind.LYING
-        SceneState.IN_BED -> StateKind.LYING
-        SceneState.SITTING_IN_BED -> StateKind.SITTING_IN_BED
-        SceneState.STANDING -> StateKind.STANDING
-        SceneState.WALKING -> StateKind.IN_ROOM
-        SceneState.IN_BATHROOM -> StateKind.IN_BATHROOM
-        SceneState.IN_HALLWAY -> StateKind.IN_HALLWAY
-        SceneState.ON_FLOOR -> StateKind.STANDING // Closest mapping — ON_FLOOR is critical, treated as standing
-    }
-
-    private fun StateKind.toSceneState(): SceneState? = when (this) {
-        StateKind.LYING -> SceneState.LYING
-        StateKind.SITTING_IN_BED -> SceneState.SITTING_IN_BED
-        StateKind.ATTEMPTING_EXIT -> SceneState.STANDING
-        StateKind.BED_EDGE -> SceneState.SITTING_IN_BED
-        StateKind.STANDING -> SceneState.STANDING
-        StateKind.IN_BATHROOM -> SceneState.IN_BATHROOM
-        StateKind.IN_ROOM -> SceneState.WALKING
-        StateKind.IN_HALLWAY -> SceneState.IN_HALLWAY
-        StateKind.OUTDOOR -> SceneState.IN_HALLWAY
-        StateKind.ABSENT -> null
-        StateKind.IN_CHAIR -> SceneState.STANDING
-        StateKind.IN_WHEELCHAIR -> SceneState.STANDING
-        StateKind.UNKNOWN -> null
-    }
+    // El mapeo vive en contracts, junto a los enums que une: es una decision
+    // de dominio, no un detalle de como se arma esta tabla.
 }

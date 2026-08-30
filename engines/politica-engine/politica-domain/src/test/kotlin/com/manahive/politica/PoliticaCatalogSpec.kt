@@ -19,6 +19,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import java.time.Duration
 import java.time.Instant
+import com.manahive.contracts.policy.TriggerOn
 
 /**
  * Tests the canonical resolution path: DagCatalog + AlarmProfile → PolicyCalibration.
@@ -102,10 +103,22 @@ class PoliticaCatalogSpec : BehaviorSpec({
                 standing.exceeded shouldBe Duration.ofMinutes(15)
             }
 
-            Then("alert rules have WARNING severity") {
-                calibration.sentinel.alertRules.values.forEach { rule ->
-                    rule.severity shouldBe Severity.WARNING
-                }
+            // Antes esto afirmaba que *todas* las reglas eran WARNING. Era una foto
+            // del catalogo, no una invariante: un nivel de riesgo de caida en el que
+            // nada llega a critico es justamente lo que hay que revisar. Ahora dice
+            // lo que quiere decir — las reglas por permanencia avisan, la caida
+            // alerta — y deja de romperse cada vez que el catalogo gana un estado.
+            Then("las reglas por permanencia avisan; la caida alerta") {
+                calibration.sentinel.alertRules
+                    .filterKeys { it != StateKind.ON_FLOOR }
+                    .values.forEach { rule ->
+                        rule.severity shouldBe Severity.WARNING
+                    }
+
+                val caida = calibration.sentinel.alertRules[StateKind.ON_FLOOR]
+                caida shouldNotBe null
+                caida!!.severity shouldBe Severity.CRITICAL
+                caida.triggerOn shouldBe TriggerOn.ENTRY
             }
 
             Then("LYING → STANDING has recording window (2min before, 5min after)") {
@@ -157,10 +170,22 @@ class PoliticaCatalogSpec : BehaviorSpec({
                 sitting.exceeded shouldBe Duration.ofMinutes(20)
             }
 
-            Then("alert rules have WARNING severity") {
-                calibration.sentinel.alertRules.values.forEach { rule ->
-                    rule.severity shouldBe Severity.WARNING
-                }
+            // Antes esto afirmaba que *todas* las reglas eran WARNING. Era una foto
+            // del catalogo, no una invariante: un nivel de riesgo de caida en el que
+            // nada llega a critico es justamente lo que hay que revisar. Ahora dice
+            // lo que quiere decir — las reglas por permanencia avisan, la caida
+            // alerta — y deja de romperse cada vez que el catalogo gana un estado.
+            Then("las reglas por permanencia avisan; la caida alerta") {
+                calibration.sentinel.alertRules
+                    .filterKeys { it != StateKind.ON_FLOOR }
+                    .values.forEach { rule ->
+                        rule.severity shouldBe Severity.WARNING
+                    }
+
+                val caida = calibration.sentinel.alertRules[StateKind.ON_FLOOR]
+                caida shouldNotBe null
+                caida!!.severity shouldBe Severity.CRITICAL
+                caida.triggerOn shouldBe TriggerOn.ENTRY
             }
         }
     }
