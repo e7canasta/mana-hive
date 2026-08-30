@@ -17,6 +17,10 @@
 - ✅ Stream NOTICE en NatsTopology
 - ✅ NVR Simulator funciona end-to-end
 - ✅ Flujo completo: Service → NVR → ClipCreated
+- ✅ **BUG FIX: event-bridge NO está embebido en mana-hub** (causaba episodios duplicados)
+- ✅ Bridge standalone (puerto 8090) separado de mana-hub (puerto 8080)
+- ✅ IntegrationController y PolicyIntegrationController usan ObjectMapper local
+- ✅ BridgeProfileNotifier crea RestClient internamente (sin bean Spring)
 
 ### Lo que falta
 - 🔴 Sender externo (NoticeEvent.Sent)
