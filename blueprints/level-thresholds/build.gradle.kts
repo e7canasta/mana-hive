@@ -4,7 +4,7 @@ plugins {
 }
 
 application {
-    mainClass.set("levelnw.MainKt")
+    mainClass.set("levelthresholds.MainKt")
 }
 
 dependencies {
