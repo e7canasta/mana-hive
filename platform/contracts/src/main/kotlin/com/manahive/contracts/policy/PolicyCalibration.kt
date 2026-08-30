@@ -4,6 +4,7 @@ import com.manahive.contracts.common.Channel
 import com.manahive.contracts.common.Fingerprint
 import com.manahive.contracts.scene.StateKind
 import com.manahive.kernel.ResidentId
+import com.manahive.kernel.RuleId
 import java.time.Duration
 
 /**
@@ -47,6 +48,23 @@ public data class ScenePolicy(
     val dwellThresholds: Map<StateKind, DwellThreshold>,
     val comeBackThresholds: Map<StateKind, DwellThreshold> = emptyMap(),
     val confidence: ConfidenceConfig,
+    /**
+     * Debounce por campo de escena, indexado por `sujeto.aspecto`.
+     *
+     * `SceneCalibration.sceneHysteresis` existe desde hace rato y
+     * `SceneInterpreterImpl` ya lo consulta por campo — pero llegaba vacio
+     * siempre, porque [PolicyCalibration] no tenia donde transportarlo. La
+     * canieria estaba puesta y desconectada del tanque.
+     */
+    val sceneHysteresis: Map<String, Duration> = emptyMap(),
+    /**
+     * Permanencia por campo de escena, indexada por `sujeto.aspecto`.
+     *
+     * Es lo que hace calculable "la baranda lleva un minuto abajo". Sin esto, el
+     * reloj por campo que se agrego en la fase 1 mide un tiempo que nadie
+     * compara contra ningun umbral.
+     */
+    val sceneThresholds: Map<String, DwellThreshold> = emptyMap(),
 )
 
 /**
@@ -57,6 +75,31 @@ public data class ScenePolicy(
 public data class SentinelPolicy(
     val alertRules: Map<StateKind, AlertRule>,
     val comeBackRules: Map<StateKind, AlertRule> = emptyMap(),
+    /**
+     * Reglas sobre campos de escena, indexadas por `sujeto.aspecto`.
+     *
+     * `SentinelCalibration.sceneStateRules` y su accessor `sceneStateRuleFor`
+     * existen, pero las tres construcciones les pasaban `emptyMap()` y nadie los
+     * llamaba: era un stub, no una via funcionando. Este es el transporte que
+     * les faltaba para dejar de serlo.
+     */
+    val sceneStateRules: Map<String, SceneFieldRule> = emptyMap(),
+    /**
+     * Los estados cuya entrada **cierra** los episodios abiertos, como
+     * `sujeto.aspecto.estado` — p.ej. `staff.presence.PRESENT`.
+     *
+     * Es lo que le da referente real a las condiciones de cierre que mencionan
+     * al personal. Sin esto, `STAFF_AND_SAFE` es una promesa sin mecanismo: el
+     * sistema dice "cierra cuando llegue el personal" y no tiene forma de
+     * enterarse de que llego.
+     *
+     * Es un conjunto y no una bandera sobre el personal a proposito. Hoy el
+     * unico que cierra es `staff.presence.PRESENT`, y eso estaba **cableado en
+     * el motor**: cerraba porque el codigo decia que cerraba, no porque lo
+     * dijera la politica. Si mañana el director decide que la baranda subida
+     * tambien cierra, es una edicion del perfil y no un release.
+     */
+    val closingStates: Set<String> = emptySet(),
 )
 
 /**
@@ -78,6 +121,20 @@ public data class HarborPolicy(
 public data class RecorderPolicy(
     /** Recording windows keyed by transition (from → to). */
     val transitionWindows: Map<TransitionKey, TransitionWindow>,
+    /**
+     * Ventanas de video pedidas por una **regla**, indexadas por su id.
+     *
+     * Una regla puede pedir video sin que lo pida la transicion que la precede:
+     * el borde de la cama de Elena graba al entrar, y la baranda baja podria
+     * grabar sin que ninguna transicion de postura la acompañe. Antes solo
+     * existian ventanas por transicion, asi que de una regla con `record`
+     * sobrevivia `requiresNvr` —"hay que grabar"— y se perdia el cuanto y el
+     * con que calidad, que es justamente la orden.
+     *
+     * Lleva [RecordWindow] y no [TransitionWindow] porque incluye la calidad, y
+     * la calidad la decide el perfil. El adapter la deducia de la severidad.
+     */
+    val ruleWindows: Map<RuleId, RecordWindow> = emptyMap(),
 )
 
 /**

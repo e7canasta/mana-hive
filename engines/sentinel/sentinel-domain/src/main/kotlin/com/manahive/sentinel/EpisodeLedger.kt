@@ -1,6 +1,7 @@
 package com.manahive.sentinel
 
 import com.manahive.contracts.policy.AlertRule
+import com.manahive.contracts.policy.SceneFieldRule
 import com.manahive.contracts.policy.Severity
 import com.manahive.contracts.policy.ClosureCondition
 import com.manahive.contracts.scene.StateKind
@@ -69,8 +70,15 @@ public data class Episode(
     val bed: BedId,
     val residentId: ResidentId,
     val openedAt: Instant,
-    /** The trigger that opened this episode. */
-    val trigger: StateKind,
+    /**
+     * El estado de la persona que abrio este episodio.
+     *
+     * Null cuando lo abrio un campo de escena: la baranda baja no es una postura
+     * y no hay [StateKind] que la nombre. Ver [triggerField].
+     */
+    val trigger: StateKind?,
+    /** El campo `sujeto.aspecto` que lo abrio, si no fue una postura. */
+    val triggerField: String? = null,
     /** Severity from the rule that opened this episode. */
     val severity: Severity,
     /** How this episode closes. */
@@ -111,6 +119,48 @@ public data class Episode(
                     EpisodeEvent.Opened(
                         episodeId = episodeId,
                         trigger = rule.trigger,
+                        severity = rule.severity,
+                        at = at,
+                    ),
+                ),
+                staffPresent = false,
+                lastSafeState = null,
+                alertedRules = setOf(rule.id),
+            )
+        }
+
+        /**
+         * Abrir un episodio a partir de una regla de campo de escena.
+         *
+         * Es una fabrica aparte y no un parametro opcional de [open] porque no
+         * hay ningun estado de persona que poner: el sujeto del episodio es la
+         * baranda, no la postura. Poner `UNKNOWN` para reusar la otra hubiera
+         * sido afirmar algo falso sobre el residente.
+         */
+        public fun openForField(
+            bed: BedId,
+            residentId: ResidentId,
+            at: Instant,
+            rule: SceneFieldRule,
+        ): Episode {
+            val episodeId = EpisodeId("${bed.value}-${UUID.randomUUID()}")
+            return Episode(
+                id = episodeId,
+                bed = bed,
+                residentId = residentId,
+                openedAt = at,
+                trigger = null,
+                triggerField = rule.field,
+                severity = rule.severity,
+                closureCondition = rule.closureCondition,
+                // Un campo de escena vuelve solo: la baranda se sube. Es
+                // reversible en el mismo sentido que una postura segura.
+                reversible = true,
+                eventLog = listOf(
+                    EpisodeEvent.Opened(
+                        episodeId = episodeId,
+                        trigger = null,
+                        triggerField = rule.field,
                         severity = rule.severity,
                         at = at,
                     ),
@@ -171,6 +221,27 @@ public data class Episode(
         ),
     )
 
+    /**
+     * Elevar por una regla de campo de escena.
+     *
+     * La baranda baja puede elevar un episodio que abrio una postura, y al reves:
+     * la severidad es el mecanismo de composicion y no distingue quien fue el
+     * sujeto. Lo unico que no viaja es el `trigger`, que sigue siendo el de quien
+     * abrio el episodio — elevarlo no lo reescribe.
+     */
+    public fun escalate(rule: SceneFieldRule, at: Instant): Episode = copy(
+        severity = rule.severity,
+        closureCondition = rule.closureCondition,
+        alertedRules = alertedRules + rule.id,
+        eventLog = eventLog + EpisodeEvent.Escalated(
+            episodeId = id,
+            from = severity,
+            to = rule.severity,
+            ruleId = rule.id,
+            at = at,
+        ),
+    )
+
     /** Close the episode. Records event in log. */
     public fun close(cause: ClosureCause, at: Instant): Episode = copy(
         eventLog = eventLog + EpisodeEvent.Closed(
@@ -211,9 +282,11 @@ public sealed interface EpisodeEvent {
     /** Episode opened. */
     public data class Opened(
         override val episodeId: EpisodeId,
-        val trigger: StateKind,
+        val trigger: StateKind?,
         val severity: Severity,
         override val at: Instant,
+        /** El campo `sujeto.aspecto` que lo abrio, si no fue una postura. */
+        val triggerField: String? = null,
     ) : EpisodeEvent
 
     /** Staff arrived in the room. */

@@ -20,6 +20,8 @@ import com.manahive.scene.core.TransitionTable
  * - confidence.heartbeatTimeout → heartbeatTimeout
  * - dwellThresholds → dwellThresholds
  * - comeBackThresholds → comeBackThresholds
+ * - sceneHysteresis → sceneHysteresis (debounce por campo: la baranda, la silla)
+ * - sceneThresholds → sceneThresholds (permanencia por campo)
  *
  * Every field of [PolicyCalibration.scene] must appear here. There used to be
  * a second adapter with the same name in politica-adapters; each carried half
@@ -40,4 +42,8 @@ public fun PolicyCalibration.toSceneCalibration(
     heartbeatTimeout = scene.confidence.heartbeatTimeout,
     dwellThresholds = scene.dwellThresholds,
     comeBackThresholds = scene.comeBackThresholds,
+    // El interprete ya consultaba `sceneHysteresisFor(field)` y el barredor ya
+    // medía permanencia por campo; los dos leian mapas que nadie llenaba.
+    sceneHysteresis = scene.sceneHysteresis,
+    sceneThresholds = scene.sceneThresholds,
 )

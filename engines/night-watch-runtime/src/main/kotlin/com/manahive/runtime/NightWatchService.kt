@@ -14,6 +14,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.manahive.contracts.EventEnvelope
 import com.manahive.contracts.perception.Observation
 import com.manahive.contracts.policy.PolicyChangeDetected
+import com.manahive.profile.api.ResidentProfileChanged
 import com.manahive.contracts.policy.WatchLevel
 import com.manahive.contracts.policy.catalogFor
 import com.manahive.hub.policy.LevelTemplate
@@ -34,6 +35,7 @@ import org.springframework.stereotype.Component
 import jakarta.annotation.PostConstruct
 import jakarta.annotation.PreDestroy
 import java.time.Instant
+import java.io.File
 
 /**
  * Wires the [NightWatchRuntime] to NATS.
@@ -48,7 +50,18 @@ class NightWatchService(
     private val census: Census,
     private val status: RuntimeStatusHolder,
     private val events: BusEvents,
+    @org.springframework.beans.factory.annotation.Value("\${manahive.profiles.dir:profiles}")
+    private val profilesDir: String = "profiles",
 ) {
+    /**
+     * El camino del perfil: documento entero -> proyeccion -> cuatro calibraciones.
+     *
+     * Convive con [handlePolicyChange], que es el camino viejo de plantilla mas
+     * parches. Los dos escriben en el mismo runtime, y el que gana es el ultimo
+     * que llega — a proposito: durante la migracion una habitacion puede estar
+     * en uno o en el otro, y no hay que elegir para todo el edificio a la vez.
+     */
+    private val calibrator = ProfileCalibrator(runtime, census)
     private val log = LoggerFactory.getLogger(javaClass)
     private val mapper = NatsObjectMapper.mapper
     private val dispatchers = mutableListOf<Dispatcher>()
@@ -61,6 +74,11 @@ class NightWatchService(
         // vuelve. Antes esto llamaba a jetStream() y subscribe() acá mismo, así
         // que el servicio no arrancaba si NATS no estaba — y en un sistema 24/7
         // el orden de arranque no puede ser una precondición.
+        // El arranque en frio va **antes** que el bus: un residente con perfil en
+        // disco queda vigilado aunque NATS todavia no este. Al reves, el sistema
+        // quedaba ciego hasta que alguien tocara una politica a mano.
+        ProfileSeed(calibrator, File(profilesDir)).load()
+
         status.transition(RuntimeState.WAITING_FOR_BUS, "esperando al bus")
         // Recién ahora el servicio existe: se engancha a los eventos del bus.
         events.onConnected { onBusAvailable() }
@@ -90,6 +108,7 @@ class NightWatchService(
             dispatchers.clear()
             subscribeToObservations(connection)
             subscribeToPolicyChanges(connection)
+            subscribeToProfiles(connection)
             status.transition(RuntimeState.RUNNING, "consumiendo del bus")
             log.info("Night-watch runtime consumiendo: {} residentes activos", runtime.size)
         } catch (e: Exception) {
@@ -115,6 +134,11 @@ class NightWatchService(
      */
     @Scheduled(fixedRate = 30_000)
     fun sweep() {
+        // El borde horario primero: si a las 22:00 cambian las reglas, el
+        // barrido de esta vuelta tiene que medir con las de la noche y no con
+        // las del dia.
+        calibrator.reprojectOnWindowEdge()
+
         if (runtime.size == 0) return
         val now = Instant.now()
         val results = runtime.tickAll(now)
@@ -261,6 +285,21 @@ class NightWatchService(
     } catch (e: Exception) {
         log.error("No se pudo publicar {} en {}: {}", type, subject, e.message)
         null
+    }
+
+    private fun subscribeToProfiles(connection: Connection) {
+        val dispatcher = connection.createDispatcher { msg ->
+            try {
+                val envelope = mapper.readValue<EventEnvelope>(String(msg.data))
+                val change = mapper.readValue<ResidentProfileChanged>(envelope.payloadJson)
+                calibrator.accept(change.profile)
+            } catch (e: Exception) {
+                log.error("No se pudo procesar el perfil: {}", e.message)
+            }
+        }
+        dispatcher.subscribe(Subjects.residentProfile())
+        dispatchers += dispatcher
+        log.info("Suscripto a perfiles en {}", Subjects.residentProfile())
     }
 
     private fun handlePolicyChange(change: PolicyChangeDetected) {

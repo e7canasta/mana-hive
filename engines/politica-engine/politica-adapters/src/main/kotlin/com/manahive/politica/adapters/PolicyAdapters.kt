@@ -1,6 +1,7 @@
 package com.manahive.politica.adapters
 
 import com.manahive.contracts.policy.PolicyCalibration
+import com.manahive.contracts.policy.RecordQuality
 import com.manahive.contracts.policy.Severity
 import com.manahive.contracts.policy.TransitionWindow
 import com.manahive.contracts.policy.TriggerOn
@@ -79,6 +80,12 @@ public fun PolicyCalibration.toSentinelCalibration(): SentinelCalibration = sent
             confirmationWindow = rule.confirmationWindow
         }
     }
+
+    // Las reglas de campo de escena. El slot y su accessor existian desde hacia
+    // rato, pero el adapter no las pasaba y las tres construcciones les daban
+    // emptyMap(): era un stub, no una via funcionando.
+    this@toSentinelCalibration.sentinel.sceneStateRules.values.forEach { sceneRule(it) }
+    this@toSentinelCalibration.sentinel.closingStates.forEach { closingState(it) }
 }
 
 // ── Harbor Adapter ──────────────────────────────────────────────────────────
@@ -137,14 +144,37 @@ public fun PolicyCalibration.toRecordingCalibration(
 ): RecordingCalibration = recordingCalibration {
     resident(this@toRecordingCalibration.residentId.value)
 
+    val ventanas = this@toRecordingCalibration.recorder.ruleWindows
+
     this@toRecordingCalibration.sentinel.alertRules.values.forEach { rule ->
+        // La ventana la pide la regla. Cuando el perfil no dice nada, se cae a
+        // la de siempre — pero mientras el perfil hablaba, el adapter no lo
+        // escuchaba: grababa 30s/2m para todo y deducia la calidad de la
+        // severidad, o sea que la politica de video no estaba en la politica.
+        val pedida = ventanas[rule.id]
         rule("rec-${rule.id.value}") {
             trigger { episodeOpened(rule.severity) }
             recordingWindow {
-                before = Duration.ofSeconds(30)
-                after = Duration.ofMinutes(2)
+                before = pedida?.before ?: Duration.ofSeconds(30)
+                after = pedida?.after ?: Duration.ofMinutes(2)
             }
-            quality = if (rule.severity == Severity.CRITICAL) Quality.FULL else Quality.HD
+            quality = pedida?.quality?.toRecorderQuality()
+                ?: if (rule.severity == Severity.CRITICAL) Quality.FULL else Quality.HD
+            monitors = listOf(monitorId)
+        }
+    }
+
+    // Las reglas de campo: la baranda, la silla. Solo producen orden de grabar
+    // si el perfil la pidio — `requiresNvr` sin ventana era media orden.
+    this@toRecordingCalibration.sentinel.sceneStateRules.values.forEach { rule ->
+        val pedida = ventanas[rule.id] ?: return@forEach
+        rule("rec-${rule.id.value}") {
+            trigger { episodeOpened(rule.severity) }
+            recordingWindow {
+                before = pedida.before
+                after = pedida.after
+            }
+            quality = pedida.quality.toRecorderQuality()
             monitors = listOf(monitorId)
         }
     }
@@ -168,6 +198,19 @@ public fun PolicyCalibration.toRecordingCalibration(
 }
 
 // ── Internal helpers ────────────────────────────────────────────────────────
+
+/**
+ * La calidad que pidio el perfil, en el vocabulario del recorder.
+ *
+ * Son dos escalas distintas a proposito: el director dice "alta" y el recorder
+ * sabe que eso son 1920x1080 a 30fps. Traducir aca es lo correcto; que el
+ * director tuviera que elegir un bitrate, no.
+ */
+private fun RecordQuality.toRecorderQuality(): Quality = when (this) {
+    RecordQuality.LOW -> Quality.SD
+    RecordQuality.STANDARD -> Quality.HD
+    RecordQuality.HIGH -> Quality.FULL
+}
 
 /**
  * Convert StateKind to PersonState for recorder trigger matching.

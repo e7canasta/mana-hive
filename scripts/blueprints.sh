@@ -20,8 +20,10 @@ fails=0
 
 for bp in $BPS; do
   log="$LOGDIR/$bp.log"
-  ./gradlew ":blueprints:$bp:run" --console=plain > "$log" 2>&1
+  # timeout por blueprint: uno que no termina no puede llevarse a los once.
+  timeout "${BP_TIMEOUT:-180}" ./gradlew ":blueprints:$bp:run" --console=plain > "$log" 2>&1
   rc=$?
+  [ "$rc" = "124" ] && echo "  (timeout tras ${BP_TIMEOUT:-180}s)" >> "$log"
   ko=$(grep -c "❌" "$log" || true)
   sum=$(grep -oE "[0-9]+ checks?, [0-9]+ fallidos?" "$log" | tail -1)
   [ -z "$sum" ] && sum=$(grep -E "✅" "$log" | tail -1 | sed 's/^ *//' | cut -c1-52)

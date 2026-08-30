@@ -112,9 +112,19 @@ public data class SceneState(
     }
 
     public companion object {
-        public const val STAFF: String = "staff"
-        public const val WHEELCHAIR: String = "wheelchair"
-        public const val WALKER: String = "walker"
+        // La identidad de un campo de escena es `sujeto.aspecto`, la misma forma
+        // que usa el perfil del residente. Una sola convencion en las dos puntas
+        // significa que no hace falta traducir, y una traduccion es justamente
+        // donde se pierden cosas: el perfil dice `bed.left` y el motor escucha
+        // `bed.left`.
+        //
+        // El aspecto no es decorativo. Un sujeto tiene varios ejes ortogonales
+        // —la silla esta presente *y* fuera de alcance a la vez— y una clave
+        // plana como "wheelchair" no puede distinguirlos. Nombrarlo desde el
+        // principio deja lugar a `wheelchair.reach` sin renombrar nada.
+        public const val STAFF: String = "staff.presence"
+        public const val WHEELCHAIR: String = "wheelchair.presence"
+        public const val WALKER: String = "walker.presence"
         public const val BED_LEFT: String = "bed.left"
         public const val BED_RIGHT: String = "bed.right"
 

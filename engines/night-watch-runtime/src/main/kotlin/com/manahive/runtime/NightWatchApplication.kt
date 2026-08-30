@@ -1,10 +1,5 @@
 package com.manahive.runtime
 
-import com.manahive.contracts.policy.WatchLevel
-import com.manahive.kernel.BedId
-import com.manahive.kernel.MonitorId
-import com.manahive.kernel.NightId
-import com.manahive.kernel.ResidentId
 import com.manahive.messaging.BusConnector
 import com.manahive.messaging.BusEvents
 import com.manahive.messaging.NatsConfig
@@ -23,12 +18,19 @@ class NightWatchApplication {
     @Bean
     fun objectMapper() = NatsObjectMapper.mapper
 
+    /**
+     * El censo sale del disco, no del codigo.
+     *
+     * Estaba cableado con dos residentes de ejemplo: instalar el sistema en una
+     * habitacion real requeria recompilar. Ahora se lee de
+     * `manahive.profiles.dir`/census.json, al lado de los perfiles.
+     */
     @Bean
-    fun census(): Census {
-        // POC defaults. In production, loaded from the housing census.
+    fun census(
+        @Value("\${manahive.profiles.dir:profiles}") profilesDir: String,
+    ): Census {
         val census = Census()
-        census.register(BedId("bed-4"), ResidentId("jose"), NightId("night-jose-301"), MonitorId("CAMERA_MAIN"))
-        census.register(BedId("bed-5"), ResidentId("elena"), NightId("night-elena-401"), MonitorId("CAMERA_ROOM_401"))
+        CensusSeed(census, java.io.File(profilesDir, "census.json")).load()
         return census
     }
 

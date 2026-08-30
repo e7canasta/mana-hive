@@ -44,6 +44,39 @@ public data class AlertRule(
 )
 
 /**
+ * La regla que vigila un **campo de escena**: la baranda, la silla, el andador.
+ *
+ * Es un tipo aparte de [AlertRule] y no un caso suyo, por una razon concreta:
+ * [AlertRule.trigger] es un [StateKind] no-nulo, y una regla sobre `bed.left` no
+ * tiene ningun `StateKind` que poner. Las tres salidas eran meter `UNKNOWN`
+ * —afirmar que la persona esta en estado desconocido, que es falso—, volver
+ * `trigger` nullable —28 usos, y arrastra `Episode.trigger` y
+ * `SentinelSignal.trigger`— o darle a estas reglas el tipo que les corresponde.
+ *
+ * Aca la identidad **es el campo**: `bed.left` en el estado `DOWN` no viene desde
+ * ningun lado ni va hacia ningun lado, esta o no esta. Por eso tampoco hay
+ * `triggerOn`: un flag no tiene familias de disparo, tiene un estado y un plazo.
+ *
+ * @property field la identidad `sujeto.aspecto`, p.ej. `bed.left`
+ * @property state el valor que se vigila, p.ej. `DOWN`
+ */
+public data class SceneFieldRule(
+    public val id: RuleId,
+    public val field: String,
+    public val state: String,
+    public val severity: Severity,
+    public val closureCondition: ClosureCondition,
+    public val requiresConfirmation: Boolean = false,
+    public val requiresNvr: Boolean = false,
+    public val confirmationWindow: Duration? = null,
+) {
+    init {
+        require(field.isNotBlank()) { "un campo de escena sin nombre no se puede vigilar" }
+        require(state.isNotBlank()) { "una regla de campo tiene que decir que valor vigila" }
+    }
+}
+
+/**
  * Que tan grave es lo que paso, en el idioma de quien tiene que responder.
  *
  * Los niveles no son etiquetas: cada uno responde dos preguntas distintas

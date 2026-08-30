@@ -128,7 +128,16 @@ fun main() {
         println("  ❌ CONTRATO DEL BUS ROTO — $checks checks, $failed fallidos")
     }
     println("═══════════════════════════════════════════════════════════════")
-    if (failed > 0) kotlin.system.exitProcess(1)
+
+    // Salida explicita, y no caerse del final de main.
+    //
+    // `nc.use { }` cierra la conexion, pero el cliente de NATS deja hilos
+    // no-daemon vivos y el JVM no termina solo: este blueprint quedaba colgado
+    // *despues* de imprimir su veredicto, y como es el ultimo de la lista
+    // colgaba a `scripts/blueprints.sh` entero. El sintoma era peor que el bug:
+    // el runner parecia lento, no roto, y a los diez minutos alguien lo mataba
+    // y perdia el resultado de los once.
+    kotlin.system.exitProcess(if (failed > 0) 1 else 0)
 }
 
 // ── 1. Politica: entra un cambio, sale una calibracion ──────────────────────

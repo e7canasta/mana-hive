@@ -60,7 +60,19 @@ public sealed interface SentinelSignal {
         override val rulesFingerprint: String,
         public val episode: EpisodeId,
         public val rule: RuleId,
-        public val trigger: StateKind,
+        /**
+         * El estado de la persona que abrio el episodio.
+         *
+         * Null cuando lo abrio un **campo de escena** —la baranda, la silla— que
+         * no es un estado de la persona y no tiene [StateKind] que lo nombre. Las
+         * alternativas eran poner `UNKNOWN`, que afirma que la persona esta en
+         * estado desconocido y es falso, o volver la identidad abierta, que es
+         * correcto pero es su propio cambio. Null dice lo que pasa: este episodio
+         * no lo abrio una postura.
+         */
+        public val trigger: StateKind?,
+        /** El campo `sujeto.aspecto` que lo abrio, si fue un campo de escena. */
+        public val field: String? = null,
         public val severity: Severity,
         public val reversible: Boolean,
         public val requiresNvr: Boolean,
@@ -152,7 +164,15 @@ public sealed interface SentinelSignal {
         override val resident: ResidentId?,
         override val at: Instant,
         override val rulesFingerprint: String,
-        public val state: StateKind,
+        /**
+         * El estado de la persona que se acerca a su plazo.
+         *
+         * Null cuando el preaviso es de un **campo de escena** —la baranda lleva
+         * medio minuto abajo— que no es una postura. Ver [field].
+         */
+        public val state: StateKind?,
+        /** El campo `sujeto.aspecto`, si el preaviso no es de una postura. */
+        public val field: String? = null,
         public val elapsed: Duration,
         public val threshold: Duration,
     ) : SentinelSignal
@@ -236,7 +256,10 @@ public fun SentinelSignal.toMap(): Map<String, Any?> = linkedMapOf<String, Any?>
         is SentinelSignal.EpisodeOpened -> {
             put("episode", episode.value)
             put("rule", rule.value)
-            put("trigger", trigger.name)
+            // "none" y no la ausencia de la clave: un consumidor viejo que hace
+            // get("trigger").asText() sigue leyendo un string y no explota.
+            put("trigger", trigger?.name ?: "none")
+            field?.let { put("field", it) }
             put("severity", severity.name)
             put("reversible", reversible)
             put("requiresNvr", requiresNvr)
@@ -265,7 +288,10 @@ public fun SentinelSignal.toMap(): Map<String, Any?> = linkedMapOf<String, Any?>
             put("evidenceSeq", evidence.seq)
         }
         is SentinelSignal.DwellPreWarning -> {
-            put("state", state.name)
+            // Igual que en EpisodeOpened: "none" y no la ausencia de la clave,
+            // para que un consumidor viejo siga leyendo un string.
+            put("state", state?.name ?: "none")
+            field?.let { put("field", it) }
             put("elapsed", elapsed.toString())
             put("threshold", threshold.toString())
         }

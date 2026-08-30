@@ -243,25 +243,49 @@ public data class RecordDto(
  * abierto, asi que no es una etiqueta decorativa: es el mecanismo de composicion.
  */
 public object Severity {
+    /** Queda en el registro. No se entera nadie y no va nadie. */
     public const val INFO: String = "INFO"
+
+    /** Se entera el personal de turno. Nadie tiene que ir. */
     public const val WARNING: String = "WARNING"
+
+    /**
+     * Se entera el personal de turno y **alguien tiene que ir**, sin urgencia.
+     *
+     * Es el escalon donde vive la mayor parte del trabajo nocturno de un
+     * geriatrico: la baranda que quedo baja, el andador fuera de alcance, el
+     * bano que se esta estirando. Sin el, todo eso o se subestima como aviso o
+     * se infla a critico — y un sistema que grita siempre deja de escucharse.
+     */
+    public const val HIGH: String = "HIGH"
+
+    /** Se entera todo el mundo, ya, y hay que ir ahora. */
     public const val CRITICAL: String = "CRITICAL"
 
-    public val ALL: Set<String> = setOf(INFO, WARNING, CRITICAL)
+    public val ALL: Set<String> = setOf(INFO, WARNING, HIGH, CRITICAL)
 
     /**
      * Orden de gravedad. Sirve para decidir si un evento eleva un episodio
      * abierto, lo integra como neutro, o no cambia nada.
      *
-     * Son tres niveles porque son los que el dominio tiene hoy
-     * (`com.manahive.contracts.policy.Severity`). Agregar un cuarto es una
-     * decision clinica con consecuencias en Harbor y en la rampa de Sentinel,
-     * no un valor mas en un enum.
+     * Coincide con `com.manahive.contracts.policy.Severity.rank` a proposito:
+     * si los dos ordenes divergieran, un perfil valido de este lado produciria
+     * una composicion de episodios distinta del otro.
      */
     public fun rank(severity: String): Int = when (severity) {
-        INFO -> 0; WARNING -> 1; CRITICAL -> 2
+        INFO -> 0; WARNING -> 1; HIGH -> 2; CRITICAL -> 3
         else -> -1
     }
+
+    /**
+     * Si este nivel espera que alguien vaya a la habitacion.
+     *
+     * Es la segunda pregunta que contesta la severidad, y la que separa a [HIGH]
+     * de [WARNING]: los dos avisan al mismo turno, pero solo uno pide que se
+     * levanten.
+     */
+    public fun requiresAttendance(severity: String): Boolean =
+        severity == HIGH || severity == CRITICAL
 }
 
 /**

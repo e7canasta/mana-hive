@@ -7,7 +7,7 @@ import java.time.format.DateTimeParseException
 /**
  * Un problema encontrado en un perfil, con la ruta exacta donde esta.
  *
- * La ruta importa: `subjects.bed.aspects.railLeft.states.DOWN.dwell[0]` le dice
+ * La ruta importa: `subjects.bed.aspects.left.states.DOWN.dwell[0]` le dice
  * al que implementa donde mirar. "Perfil invalido" no le dice nada.
  */
 public data class ProfileProblem(

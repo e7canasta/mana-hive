@@ -7,15 +7,27 @@ Lo que digo acá con seguridad, lo verifiqué. Lo que no, está marcado como **[
 
 ## 0. Estado del árbol
 
-**Nada commiteado.** 36 archivos tocados sobre `main`.
+Sin commitear. Fase 3 paso 1 + **fases 4 y 6 completas** + dos bugs vivos arreglados.
 
 | Verificación | Resultado |
 |---|---|
-| `./gradlew test -x :hub:hub-service:test` | 534 tests, 14 módulos, 0 fallas |
-| `./gradlew :hub:hub-service:test` | exit 0 (lento: Spring + NATS, ~3 min) |
-| 11 blueprints | 11 en verde, 0 ❌ |
+| `./gradlew check` (todo, con hub-service) | **649 tests, 0 fallas** (eran 534) |
+| purity guard, konsist | pasan |
+| `scripts/blueprints.sh` | **11/11 en verde, en 26 segundos** |
 
-Si algo falla al retomar, empezar por acá antes de tocar nada.
+**Trampa nueva, cuesta 20 minutos:** `:hub:hub-service:test` **se cuelga sin NATS**, no se saltea. Es la respuesta a la pregunta abierta del §8: no hay `assumeTrue`, hay un cliente esperando un broker que no está. Levantar NATS **antes** de correr `check`:
+
+```bash
+nats-server -p 4222 -m 8222 -js -sd /tmp/natsdata &
+```
+
+**Trampa vieja que volví a pisar:** `pkill -f <patrón>` matchea el propio comando y mata la shell. Vale para `nats-server` **y para `GradleWrapperMain`**. Matar por PID.
+
+**El runner de blueprints estaba roto y parecía lento.** `blueprints/nats-e2e` **no terminaba**: imprimía su veredicto —*14 checks, 0 fallidos*— y el JVM se quedaba vivo. `nc.use { }` sí cierra la conexión, pero el cliente de NATS deja hilos no-daemon y el proceso no sale solo. Como `nats-e2e` es el último de la lista, colgaba al runner entero.
+
+El síntoma era peor que el bug: parecía que los blueprints tardaban más de diez minutos, y a los diez minutos alguien mataba el proceso y **perdía el resultado de los once**. Arreglado con `exitProcess` explícito, y el runner ahora corre cada blueprint bajo `timeout` (`BP_TIMEOUT`, 180s por defecto) para que uno que no termina no pueda volver a llevarse a los otros diez.
+
+**De 10+ minutos colgado a 26 segundos.**
 
 ---
 
@@ -88,7 +100,13 @@ Los niveles contestan **dos preguntas**: quién se entera, y si alguien tiene qu
 - `ProfileEndpoints` — las cinco firmas que tienen que exponer.
 - `ResidentProfileChanged` — el evento de novedad.
 - `ProfileValidation.validate()` — **la misma validación que corremos nosotros**, devuelve todos los problemas con ruta exacta.
-- `ResidentProfileSpec` — el perfil de Elena completo, ejemplo ejecutable.
+- `ProfileExamples.ELENA` — el perfil de Elena completo, ejemplo ejecutable.
+  **Movido al source principal** en la sesión siguiente: vivía en `ResidentProfileSpec`,
+  y los tests no se publican en el jar, así que el equipo externo tenía que copiar
+  un JSON de un documento — que es exactamente cómo un contrato se desactualiza.
+  De paso, la baranda baja pasó de `CRITICAL` a `HIGH`: es el ejemplo textual que
+  justifica el nivel intermedio en la decisión #9, y tenerlo en `CRITICAL` dejaba
+  al ejemplo canónico contradiciendo al modelo.
 
 ### 3.5 El contrato del bus, escrito
 
@@ -110,22 +128,73 @@ Blueprint nuevo que prueba el contrato del bus contra NATS real con JetStream. T
 
 ## 4. El roadmap que queda
 
-### Fase 3 — El perfil reemplaza a los parches ← **empezar por acá**
+### Fase 3 — El perfil reemplaza a los parches
 
 Mueren `AlarmProfile`, `PolicyOverride`, `PolicySource`, `applyOverrides()` y las tres capas de precedencia. `resolve()` deja de ser un merge y pasa a ser una proyección.
 
-- **Radio medido: 24 archivos** tocan `AlarmProfile`.
-- El tipo de dominio ya existe (`ResidentProfile`); falta el mapper DTO→dominio y el resolver.
-- **Hacerlo en tres pasos** para no romper: camino nuevo al lado del viejo → migrar llamadores → borrar.
-- El mapper necesita que `politica-domain` dependa de `platform:profile-api` (los dos son `pure-domain`, está permitido).
+**Radio medido de nuevo: 26 archivos** tocan `AlarmProfile` (no 24 — la cuenta vieja era corta).
 
-### Fase 4 — Sentinel lee las reglas de cama, silla y andador
+#### Paso 1 — camino nuevo al lado del viejo ✅ **hecho**
 
-**Corrección importante a lo que dije antes:** yo reporté que la cañería estaba lista. Es cierto en Scene y **falso en Sentinel**.
+Nada del camino viejo se tocó: `PolicyResolver` sigue intacto y sigue siendo el único que corre en producción.
 
-- `SentinelCalibration.sceneStateRules: Map<String, AlertRule>` existe y tiene accessor `sceneStateRuleFor(field)`, pero **nadie lo llama** y las tres construcciones lo pasan `emptyMap()`. Es un stub, no una vía funcionando.
-- `PolicyCalibration` no tiene dónde transportar los campos de escena: hay que agregarlo a `ScenePolicy` y `SentinelPolicy`.
-- **Problema de tipo:** `AlertRule.trigger` es un `StateKind` **no-nulo**, y una regla sobre `bed.left` no tiene `StateKind` que poner. Radio medido: **28 usos**, y `Episode.trigger` y `SentinelSignal.trigger` viajan con él. Lo correcto es que apunte a la identidad abierta; conviene que sea **su propio cambio**, no mezclado con el perfil.
+- `politica-domain` ahora depende de `platform:profile-api`. Los dos son `pure-domain` y el purity guard pasa.
+- **`ProfileMapper`** (`politica/profile/ProfileMapper.kt`) — `ResidentProfileDto` → `ResidentProfile`. Devuelve `ProfileMapping.Accepted | Rejected`, nunca tira: un perfil malo es un dato que llegó mal, no un error del programa, y quien lo mandó merece la lista entera de problemas con la ruta de cada uno. **Un perfil se toma entero o no se toma** — aceptar la mitad sería reintroducir el modelo de parches por la puerta de atrás.
+- **`ProfileProjection`** (`politica/profile/ProfileProjection.kt`) — `ResidentProfile` + ventana activa → `Explained<PolicyCalibration>`.
+- 41 tests nuevos. El spec de la proyección se verificó por mutación (invertir el criterio del plazo de escalada hace fallar exactamente un test).
+
+**Tres decisiones que se tomaron acá y conviene no reabrir:**
+
+1. **Las ventanas horarias eligen, no mezclan.** A las 22:00 se toma la regla de `night` **entera** —plazo, severidad, cierre y notificación— y se descarta la de `always`. No se mergean campos. El spec lo fija: de día el baño es `WARNING`/`SAFE_ONLY` a los 15 min, de noche es `CRITICAL`/`STAFF_OR_SAFE` a los 8. Es otra regla, no el mismo umbral con otro número.
+2. **La huella es `(residente, versión, ventana)`.** Con perfiles inmutables la versión *identifica* al documento en vez de resumirlo, así que la deuda 5.1 se disuelve sola en el camino nuevo: el spec prueba que subir de versión mueve la huella aunque no cambie ningún número, que es justo lo que la huella vieja no hacía.
+3. **`requiresConfirmation` y `requiresNvr` salen del documento.** Antes se deducían de la severidad (`requiresNvr = severity == CRITICAL`). Ahora los contestan `notify` y `record` del propio perfil. Deducirlos de la severidad *era* el síntoma de que la política de video y de notificación no estaba en la política.
+
+#### Paso 2 — migrar llamadores ← **empezar por acá**
+
+Ninguno migrado todavía. `ProfileProjection` compila, está probado y **no lo llama nadie**.
+
+El orden sugerido, de menos a más acoplado: `PolicyEventParser` → `PoliticaBdd` → `NightWatchService` → hub. `PolicyProjection.kt` del hub se borra entero en la fase 5, así que no vale la pena migrarlo: conviene saltearlo y esperar.
+
+#### Paso 3 — borrar
+
+Cuando no quede ningún llamador. **Ojo con `TemplateId`**: vive dentro de `AlarmProfile.kt` y lo usa `Provenance`, o sea que sobrevive al borrado y hay que mudarlo antes. Lo mismo `CatalogVersion`, que usa `DagCatalog`.
+
+### Fase 4 — Sentinel lee las reglas de cama, silla y andador ✅ **completa**
+
+La corrección de la sesión anterior era correcta: `sceneStateRules` existía y era un stub. Ahora es una vía funcionando de punta a punta, sin bus.
+
+**El transporte que faltaba, en tres lugares que se cortaban a la vez** —cada corte bastaba solo para que la baranda no llegara:
+
+1. `PolicyCalibration` no tenía dónde llevarla → `ScenePolicy` ganó `sceneHysteresis` y `sceneThresholds`; `SentinelPolicy` ganó `sceneStateRules`.
+2. El DSL de Sentinel no tenía cómo declararla → `sentinelCalibration { sceneRule(...) }`.
+3. Los adapters no la pasaban → `toSceneCalibration` y `toSentinelCalibration` la pasan.
+
+**El problema de tipo se resolvió sin la cirugía de 28 usos.** `AlertRule.trigger` sigue siendo un `StateKind` no-nulo. Las reglas de campo tienen su propio tipo, **`SceneFieldRule`**, que no tiene `trigger` porque la identidad *es* el campo, ni `triggerOn` porque un flag no tiene familias de disparo. El slot de `SentinelCalibration` estaba tipado `Map<String, AlertRule>` y **nadie lo llenaba ni lo leía**, así que retiparlo salió gratis.
+
+> Meter `StateKind.UNKNOWN` en el `trigger` de una regla de baranda hubiera sido afirmar que la persona está en estado desconocido. Era la salida barata y era otra mentira.
+
+**Una sola convención de clave: `sujeto.aspecto`.** Las constantes de campo del gemelo se alinearon a esa forma —`staff.presence`, `wheelchair.presence`, `walker.presence`, `bed.left`, `bed.right`— y el aspecto del perfil de Elena pasó de `railLeft` a `left`. El perfil dice `bed.left` y el motor escucha `bed.left`: **no hay tabla de traducción**, que es donde se pierden las cosas. Nombrar el aspecto además deja lugar a `wheelchair.reach` sin renombrar nada, y una clave plana `wheelchair` no puede sostener dos ejes.
+
+**Probado:** `SceneFieldProjectionSpec` (15) y `ProfileToEnginesSpec` (9), que es el recorrido completo documento → cuatro calibraciones.
+
+**El evaluador la consume.** `SceneDwellExceeded` era un no-op con el comentario *"not yet judged by sentinel"*; ahora abre episodio, y la composición la decide la severidad igual que con las posturas: la baranda `HIGH` eleva un episodio `WARNING` abierto por `BED_EDGE`, y una de nivel menor entra sin elevarlo. Spec: `SceneFieldEpisodeSpec`, 7 tests.
+
+**El `trigger` se resolvió con nullable, no con tipo sellado.** `Episode.trigger` y `SentinelSignal.EpisodeOpened.trigger` son `StateKind?`, y ambos ganaron un `field: String?` al lado. Un episodio abierto por la baranda tiene `trigger = null` y `triggerField = "bed.left"`.
+
+- Meter `StateKind.UNKNOWN` era afirmar que la persona está en estado desconocido: falso.
+- El tipo sellado `EpisodeTrigger` es el modelo correcto a largo plazo, pero arrastra los codecs y **cambia el formato de cable**, y no sabemos si hay consumidores afuera (ver §8).
+- Nullable no cambia el formato para ningún caso que exista hoy: `put("trigger", trigger?.name ?: "none")` sigue emitiendo un string, así que un consumidor viejo que hace `get("trigger").asText()` no explota.
+- Sólo hubo **dos** errores de compilación en todo el árbol. `notifiableStatesFor(null)` devuelve conjunto vacío: un episodio abierto por un campo no tiene paraguas de estados de persona.
+
+**Los tres huecos que quedaban, cerrados.** Eran de la misma familia: *el perfil lo decía y el motor no lo escuchaba*.
+
+1. **El cierre lo gobierna el perfil.** `SentinelPolicy.closingStates` transporta los estados que cierran, como `staff.presence.PRESENT`, y `SceneStateChanged` —que era no-op con el comentario *"harbor's concern, not sentinel's"*— los consulta. Es de Harbor **avisar**; cerrar un episodio es del que lleva los episodios. Antes cerraba porque el código decía que cerraba: si mañana el director decide que la baranda subida también cierra, ahora es una edición del perfil y no un release. Es un conjunto y no una bandera sobre el personal justamente por eso.
+2. **La ventana de video sale de la regla.** `RecorderPolicy.ruleWindows`, indexada por `RuleId`, cubre las dos familias —las del residente y las de campo— con la misma clave. El adapter grababa 30s/2m para todo y deducía la calidad de la severidad; ahora usa lo que pidió el perfil y sólo cae al default si el perfil calla. `LOW/STANDARD/HIGH` → `SD/HD/FULL`: el director dice "alta", el recorder sabe que son 1920×1080.
+3. **`SceneDwellWarning` emite preaviso.** Con `DwellPreWarning.state` nullable y `field` al lado, igual que `EpisodeOpened`. Sólo avisa si hay regla: un campo que nadie vigila no genera preaviso de algo que después no va a pasar.
+
+**Probado:** `ProfileClosesTheLoopSpec` (12) y `SceneFieldEpisodeSpec` (14, ampliado).
+
+> Un test mío estaba mal y el código tenía razón: con `SAFE_ONLY` la entrada del personal **no** cierra —cierra que el residente vuelva a estado seguro—. Quedó como caso explícito.
 
 ### Fase 5 — Frontera externa
 
@@ -134,9 +203,11 @@ Mueren `AlarmProfile`, `PolicyOverride`, `PolicySource`, `applyOverrides()` y la
 - **Renombrar nuestro módulo `hub/`** → `policy-gateway`. Hoy se llama igual que el sistema de registro real y externo, y con un contrato de frontera explícito esa confusión se vuelve cara.
 - Ventanas horarias por re-emisión en el borde horario.
 
-### Fase 6 — La notificación vuelve a la política
+### Fase 6 — Notificación de vuelta a la política ✅ **en el camino nuevo**
 
-Hoy `PolicyResolver` emite `HarborPolicy(emptyMap(), emptyMap())` y los canales por severidad están **hardcodeados en `PolicyAdapters`**. O sea: la política de notificación no está en la política, y nadie que no lea Kotlin puede saber a quién se le avisa.
+`ProfileProjection` llena `HarborPolicy` desde el `notify` de cada regla: los canales se unen por severidad y el plazo de escalada toma el más corto. `toHarborCalibration` ya prefería los valores de la política sobre sus defaults, así que con el perfil dejó de inventar. Probado en `ProfileToEnginesSpec`.
+
+Sigue hardcodeado en el camino viejo, que es el que corre: `PolicyResolver` emite `HarborPolicy(emptyMap(), emptyMap())` y el adapter cae a sus defaults. Se cierra cuando se migren los llamadores.
 
 ---
 
@@ -155,6 +226,8 @@ private fun PolicyCalibration.fingerprint(): Fingerprint = buildFingerprint(
 ```
 
 No incluye versión de catálogo, ni template, ni Sentinel, ni Harbor, ni Recorder, ni `comeBackThresholds`. Cambiar una severidad, una condición de cierre o una ventana de grabación produce **el mismo fingerprint**. Con perfil inmutable esto se disuelve solo (la huella pasa a ser el hash del documento), por eso no lo parcheé.
+
+> **Estado:** resuelto en el camino nuevo — `ProfileProjection` firma con `(residente, versión, ventana)` y hay un test que lo fija. **Sigue vivo en el camino viejo**, que es el único que corre hoy: `DefaultPolicyChangeProcessor` se borra recién cuando se migren los llamadores (fase 3, paso 2).
 
 ### 5.2 El wiki miente
 
@@ -175,19 +248,49 @@ Los DTO se escribieron desde `docs/wiki/3.x` y hay dos desajustes con el código
 
 Había **cinco copias** de `StateKind→PersonState`. Se dedujeron dos (los DSL de test delegan en `personStateFromKind`). Quedan tres, y **dos de ellas difieren en el `UnknownCause`** que producen (`SCENE` vs `SIGNAL_LOST`), así que no son duplicados puros: unificarlas cambia comportamiento. Mirar antes de tocar.
 
-### 5.5 Lo que el mapeo escena↔políticas todavía pierde
+### 5.5 El mapeo escena↔políticas mentía — corregido, y el diagnóstico era otro
 
-Documentado en `contracts/dag/SceneStateMapping.kt`. Ninguno es tan grave como los dos ya arreglados:
+**Lo que decía este punto era cierto pero incompleto, y llevaba a la conclusión equivocada.**
 
-| StateKind | va a | por qué se pierde |
-|---|---|---|
-| `ATTEMPTING_EXIT` | `STANDING` | el intento de salir no es una posición del DAG |
-| `IN_CHAIR`, `IN_WHEELCHAIR` | `STANDING` | el DAG no distingue en qué está sentado |
-| `OUTDOOR` | `IN_HALLWAY` | el DAG no modela el afuera |
+Decía: `ATTEMPTING_EXIT → STANDING`, `IN_CHAIR/IN_WHEELCHAIR → STANDING`, `OUTDOOR → IN_HALLWAY`, y remataba con "ninguno es tan grave". Es más grave de lo que parece —el sistema *afirmaba* que alguien estaba parado cuando estaba sentado, y afirmaba "parado" del instante que precede a una caída— pero la conclusión natural, *"agreguemos los nodos que faltan al DAG"*, es incorrecta. Verificado en código:
+
+**El grafo que corre ya tiene los trece estados.** `TransitionTable.RELEASE_2` está escrito en `StateKind` y tiene `ATTEMPTING_EXIT`, `IN_CHAIR`, `IN_WHEELCHAIR` y `OUTDOOR` como nodos de primera clase con sus transiciones. No falta ningún nodo donde importa.
+
+**Lo que sobra es un segundo vocabulario.** `contracts.dag.SceneState` es un enum de 9 valores, más pobre, y `SceneStateMapping` es el puente que aplastaba. Ese puente lo cruzan sólo `SceneDagToTransitionTable` (que usa únicamente su propio test) y los `SceneDagSource`, que leen un TOML **que no existe en el repo**.
+
+**Y `SceneDag` no puede modelar la escena, se le agreguen los nodos que se le agreguen:** su constructor exige `require(!hasCycles())`, y la escena tiene ciclos por naturaleza. `STANDING → IN_CHAIR → STANDING` es cotidiano. Una estructura que prohíbe lo que la realidad hace todos los días no es el gemelo digital de nada. El nombre "DAG" es el error.
+
+**Hecho:** el puente dejó de mentir. `toSceneState()` devuelve `null` donde no hay nodo fiel, con el motivo escrito. Null significa "no tengo cómo representarlo"; `STANDING` significaba "está parado" y era falso. Spec: `SceneStateMappingHonestySpec`.
+
+**Pendiente:** borrar `SceneDag`, `SceneNode`, `SceneEdge`, `contracts.dag.SceneState`, `SceneStateMapping`, `SceneDagToTransitionTable` y los dos `SceneDagSource`. Es barato —nadie vivo los cruza— y deja una sola identidad de estado.
+
+### 5.5.b La caída no estaba en la tabla base — arreglado
+
+Encontrado en la misma pasada y **peor que el 5.5**, porque estaba vivo:
+
+> `TransitionTable.RELEASE_2` **no tenía ninguna arista hacia `ON_FLOOR`.** Sonda en vivo: `LYING→ON_FLOOR = false`.
+
+Las aristas vivían sólo en `ProductionDagCatalog`, que se aplica como *override* sobre la tabla base. O sea que la caída funcionaba por el camino de producción y **desaparecía en silencio** en cualquier uso de la tabla sola: el default de `SceneCalibration`, el de `BatchConfig`, `Main.kt`. Un motor arrancado así descartaba la observación por transición ilegal.
+
+Es el mismo defecto que ya se arregló dos veces —`ON_FLOOR` ausente de `StateKind`, `BED_EDGE` ausente del DAG— reapareciendo un nivel más abajo.
+
+**Hecho:** `RELEASE_2` tiene la caída desde las once posiciones físicas (incluida la silla de ruedas, que el catálogo tampoco contemplaba), la salida del piso, y la recuperación desde `UNKNOWN`. Spec: `FallReachabilitySpec`, 18 tests.
 
 ### 5.6 `mostProtective` no tiene casa todavía
 
 El hub aplica hoy *"gana el umbral más protector"* al colapsar capas (`PolicyProjection.kt`). Es una regla clínica real. En el modelo nuevo no tiene lugar en la resolución —no hay capas— y **pasa a ser validación de autoría**: cuando el director publica un perfil menos protector que su plantilla, el sistema se lo advierte y pide confirmación. Todavía no está implementado en ningún lado, y `PolicyProjection` se borra en la fase 5. **No perderlo.**
+
+### 5.7 Lo que la proyección todavía no puede transportar
+
+Empezó en cuatro y quedó en **una**:
+
+| Qué se pierde | Por qué |
+|---|---|
+| `wheelchair.presence.unknownAfter` | avisarle a mantenimiento que un sensor lleva media hora mudo |
+
+**Y no es un hueco de transporte: es una capacidad que no existe.** No hay canal de mantenimiento, y es un problema técnico que por diseño nunca abre un episodio de cuidado. Darle un slot en la calibración que nadie lee sería construir otro stub como el `sceneStateRules` que acabamos de sacar — un campo que existe, se llena y no cambia nada. Cuando exista el canal, se transporta.
+
+`ProfileProjection.unrepresentable(perfil)` sigue siendo la fuente: devuelve la lista con la ruta exacta y la explicación de la proyección la nombra. Mientras no esté vacía, el perfil dice más de lo que el motor escucha — y conviene que eso se pueda leer, no deducir.
 
 ---
 
@@ -237,7 +340,7 @@ curl -s http://127.0.0.1:8222/jsz     # health de JetStream
 
 Honestidad sobre los bordes de esta sesión:
 
-- **[verificar]** Si `PolicyBusIntegrationSpec` (hub-service) realmente ejercita NATS o se saltea con un `assumeTrue` cuando no hay broker. Pasa en verde en los dos casos, así que no prueba lo que parece.
+- ~~**[verificar]** Si `PolicyBusIntegrationSpec` (hub-service) realmente ejercita NATS o se saltea con un `assumeTrue`.~~ **Cerrada:** no se saltea — **se cuelga**. Sin broker el módulo queda esperando indefinidamente, no falla ni salta. Levantar NATS antes de `check` (ver §0).
 - **[verificar]** Si `SceneCalibration.sceneThresholds` se llena desde algún lado hoy. Cableé el sweeper para que lo lea **por campo**, pero el origen de esos umbrales es justamente el hueco de la fase 4.
 - **[verificar]** Si hay consumidores del bus fuera de este repo que se rompan al agregar `HIGH` a `Severity` o `ON_FLOOR` a los enums. Adentro está todo verde; afuera no miré.
 - No corrí el `night-watch-runtime` como servicio real contra NATS — el blueprint replica su lógica de publicación, pero **no es el servicio**.

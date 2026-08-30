@@ -1,6 +1,7 @@
 package com.manahive.sentinel
 
 import com.manahive.contracts.policy.AlertRule
+import com.manahive.contracts.policy.SceneFieldRule
 import com.manahive.contracts.policy.ClosureCondition
 import com.manahive.contracts.policy.EffectiveRules
 import com.manahive.contracts.policy.Severity
@@ -45,8 +46,22 @@ public data class SentinelCalibration(
     public val dwellRules: Map<StateKind, AlertRule>,
     /** Rules for come-back events (keyed by baseline state). COME_BACK rules only. */
     public val comeBackRules: Map<StateKind, AlertRule>,
-    /** Rules for scene state events (keyed by field). */
-    public val sceneStateRules: Map<String, AlertRule>,
+    /**
+     * Reglas sobre campos de escena, indexadas por `sujeto.aspecto`.
+     *
+     * Son [SceneFieldRule] y no [AlertRule] porque `AlertRule.trigger` es un
+     * [StateKind] no-nulo y una regla sobre `bed.left` no tiene ninguno que
+     * poner. El slot estaba tipado como `Map<String, AlertRule>` y las tres
+     * construcciones le pasaban `emptyMap()`, asi que nunca se noto.
+     */
+    public val sceneStateRules: Map<String, SceneFieldRule>,
+    /**
+     * Los estados cuya entrada cierra episodios, como `sujeto.aspecto.estado`.
+     *
+     * Le da referente real a `STAFF_AND_SAFE`: sin esto el motor promete cerrar
+     * cuando llegue el personal y no tiene como enterarse de que llego.
+     */
+    public val closingStates: Set<String> = emptySet(),
     /** All rule IDs for this resident. */
     public val ruleIds: Set<RuleId>,
     /** Rules fingerprint for reproducibility. */
@@ -100,8 +115,12 @@ public data class SentinelCalibration(
     /** Find the rule for a come-back event (keyed by baseline state). */
     public fun comeBackRuleFor(baseline: StateKind): AlertRule? = comeBackRules[baseline]
 
+    /** Si entrar a [state] en [field] cierra los episodios abiertos. */
+    public fun closesEpisodes(field: String, state: String): Boolean =
+        "$field.$state" in closingStates
+
     /** Find the rule for a scene state event. */
-    public fun sceneStateRuleFor(field: String): AlertRule? = sceneStateRules[field]
+    public fun sceneStateRuleFor(field: String): SceneFieldRule? = sceneStateRules[field]
 
     /**
      * Find the notifiable states for a given trigger (umbrella events).
@@ -111,8 +130,14 @@ public data class SentinelCalibration(
      * it is. Umbrella membership is a property of the state, independent of which
      * fact opened the episode.
      */
-    public fun notifiableStatesFor(trigger: StateKind): Set<StateKind> =
-        rulesForState(trigger).flatMapTo(mutableSetOf()) { it.umbrellaEvents }
+    public fun notifiableStatesFor(trigger: StateKind?): Set<StateKind> {
+        // Un episodio abierto por un campo de escena no tiene paraguas de
+        // estados de persona: su sujeto es la baranda, no la postura. Devolver
+        // el paraguas de algun estado inventado meteria eventos ajenos abajo de
+        // el.
+        if (trigger == null) return emptySet()
+        return rulesForState(trigger).flatMapTo(mutableSetOf()) { it.umbrellaEvents }
+    }
 }
 
 // ── DSL ──────────────────────────────────────────────────────────────────────
@@ -150,6 +175,8 @@ public fun sentinelCalibration(init: SentinelCalibrationBuilder.() -> Unit): Sen
 public class SentinelCalibrationBuilder {
     private var residentId: ResidentId? = null
     private val rules = mutableMapOf<RuleId, AlertRuleBuilder>()
+    private val sceneRules = mutableMapOf<String, SceneFieldRule>()
+    private val closing = mutableSetOf<String>()
 
     public fun resident(id: String) {
         residentId = ResidentId(id)
@@ -187,6 +214,26 @@ public class SentinelCalibrationBuilder {
         AlertRuleBuilder(RuleId(id), trigger, triggerOn).apply(init).also { rules[RuleId(id)] = it }
     }
 
+    /**
+     * Una regla sobre un campo de escena: la baranda, la silla, el andador.
+     *
+     * [field] es la identidad `sujeto.aspecto` que emite el gemelo —`bed.left`—
+     * y [state] el valor vigilado —`DOWN`—. No lleva `trigger` ni `triggerOn`:
+     * un flag no viene desde ningun lado, esta o no esta.
+     */
+    public fun sceneRule(rule: SceneFieldRule) {
+        sceneRules[rule.field] = rule
+    }
+
+    /**
+     * Un estado cuya entrada cierra los episodios abiertos.
+     *
+     * [state] es `sujeto.aspecto.estado`, p.ej. `staff.presence.PRESENT`.
+     */
+    public fun closingState(state: String) {
+        closing += state
+    }
+
     internal fun build(): SentinelCalibration {
         val id = requireNotNull(residentId) { "resident() must be called" }
         val builtRules = rules.values.map { it.build() }
@@ -200,9 +247,14 @@ public class SentinelCalibrationBuilder {
             transitionRules = transition,
             dwellRules = dwell,
             comeBackRules = comeBack,
-            sceneStateRules = emptyMap(),
-            ruleIds = builtRules.map { it.id }.toSet(),
-            fingerprint = builtRules.joinToString(",") { it.id.value },
+            sceneStateRules = sceneRules.toMap(),
+            closingStates = closing.toSet(),
+            // Las reglas de campo entran en la identidad y en la huella: si no,
+            // dos calibraciones que difieren solo en la baranda serian
+            // indistinguibles, que es el defecto que la huella existe para evitar.
+            ruleIds = builtRules.map { it.id }.toSet() + sceneRules.values.map { it.id },
+            fingerprint = (builtRules.map { it.id.value } + sceneRules.values.map { it.id.value })
+                .sorted().joinToString(","),
         )
     }
 }

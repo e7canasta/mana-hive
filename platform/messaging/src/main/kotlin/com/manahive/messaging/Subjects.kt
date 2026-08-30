@@ -15,6 +15,15 @@ public object Subjects {
     public fun alarmEvent(alert: AlertId): String = "alarm.event.v1.${alert.value}"
     public fun effectiveRules(resident: ResidentId): String = "hub.policy.effective-rules.v1.${resident.value}"
     public fun policyChangeDetected(): String = "hub.policy.change.v1"
+
+    /**
+     * La novedad del perfil completo de un residente.
+     *
+     * Cae bajo [POLICY_WILDCARD] a proposito: viaja por el stream de politica
+     * que ya existe, sin topologia nueva. Lleva el perfil **entero**, nunca un
+     * delta — si el mensaje se pierde, el arranque en frio lo recupera.
+     */
+    public fun residentProfile(): String = "hub.policy.profile.v1"
     public fun recordingCommand(bed: BedId): String = "recorder.command.v1.${bed.value}"
     public fun evidenceRecord(bed: BedId): String = "evidence.record.v1.${bed.value}"
 

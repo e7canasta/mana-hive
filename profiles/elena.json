@@ -1,0 +1,215 @@
+{
+  "profileId" : "elena@v8",
+  "residentId" : "elena",
+  "version" : 8,
+  "supersedes" : 7,
+  "validFrom" : "2026-08-29T22:00:00Z",
+  "provenance" : {
+    "template" : "FALL_RISK",
+    "templateVersion" : "2.1.0",
+    "authoredBy" : "dr-mendez",
+    "authoredAt" : "2026-08-29T14:31:12Z",
+    "reason" : "Post-caida del 27/8: adelanto el aviso de bano y exijo barandas."
+  },
+  "windows" : [ {
+    "id" : "night",
+    "from" : "22:00",
+    "to" : "07:00"
+  } ],
+  "subjects" : {
+    "resident" : {
+      "kind" : "dag",
+      "aspects" : {
+        "posture" : {
+          "unknownIsInitial" : true,
+          "unknownAfter" : null,
+          "confidence" : {
+            "BED_EDGE" : 0.9,
+            "STANDING" : 0.85
+          },
+          "transitions" : [ {
+            "from" : "LYING",
+            "to" : "BED_EDGE",
+            "stableFor" : "PT1.5S",
+            "record" : {
+              "before" : "PT30S",
+              "after" : "PT2M",
+              "quality" : "HIGH"
+            }
+          }, {
+            "from" : "BED_EDGE",
+            "to" : "STANDING",
+            "stableFor" : "PT1.5S",
+            "record" : null
+          } ],
+          "states" : {
+            "LYING" : {
+              "observeOnly" : false,
+              "closesEpisodes" : false,
+              "stableFor" : null,
+              "onEntry" : [ ],
+              "dwell" : [ ],
+              "comeBack" : [ {
+                "window" : "always",
+                "warningAfter" : "PT10M",
+                "alertAfter" : "PT20M",
+                "severity" : "CRITICAL",
+                "closure" : "STAFF_OR_SAFE",
+                "notify" : {
+                  "channels" : [ "PUSH", "TABLET" ],
+                  "escalateAfter" : "PT5M"
+                },
+                "record" : null
+              } ]
+            },
+            "BED_EDGE" : {
+              "observeOnly" : false,
+              "closesEpisodes" : false,
+              "stableFor" : null,
+              "onEntry" : [ {
+                "window" : "always",
+                "warningAfter" : null,
+                "alertAfter" : null,
+                "severity" : "CRITICAL",
+                "closure" : "STAFF_AND_SAFE",
+                "notify" : {
+                  "channels" : [ "PUSH", "TABLET", "WARD_BOARD" ],
+                  "escalateAfter" : "PT0S"
+                },
+                "record" : {
+                  "before" : "PT30S",
+                  "after" : "PT2M",
+                  "quality" : "HIGH"
+                }
+              } ],
+              "dwell" : [ ],
+              "comeBack" : [ ]
+            },
+            "STANDING" : {
+              "observeOnly" : true,
+              "closesEpisodes" : false,
+              "stableFor" : null,
+              "onEntry" : [ ],
+              "dwell" : [ ],
+              "comeBack" : [ ]
+            }
+          }
+        },
+        "location" : {
+          "unknownIsInitial" : true,
+          "unknownAfter" : null,
+          "confidence" : { },
+          "transitions" : [ ],
+          "states" : {
+            "IN_BATHROOM" : {
+              "observeOnly" : false,
+              "closesEpisodes" : false,
+              "stableFor" : null,
+              "onEntry" : [ ],
+              "dwell" : [ {
+                "window" : "always",
+                "warningAfter" : "PT10M",
+                "alertAfter" : "PT15M",
+                "severity" : "WARNING",
+                "closure" : "SAFE_ONLY",
+                "notify" : null,
+                "record" : null
+              }, {
+                "window" : "night",
+                "warningAfter" : "PT5M",
+                "alertAfter" : "PT8M",
+                "severity" : "CRITICAL",
+                "closure" : "STAFF_OR_SAFE",
+                "notify" : null,
+                "record" : null
+              } ],
+              "comeBack" : [ ]
+            }
+          }
+        }
+      }
+    },
+    "bed" : {
+      "kind" : "flags",
+      "aspects" : {
+        "left" : {
+          "unknownIsInitial" : true,
+          "unknownAfter" : null,
+          "confidence" : { },
+          "transitions" : [ ],
+          "states" : {
+            "DOWN" : {
+              "observeOnly" : false,
+              "closesEpisodes" : false,
+              "stableFor" : "PT3S",
+              "onEntry" : [ ],
+              "dwell" : [ {
+                "window" : "night",
+                "warningAfter" : null,
+                "alertAfter" : "PT1M",
+                "severity" : "HIGH",
+                "closure" : "STAFF_AND_SAFE",
+                "notify" : {
+                  "channels" : [ "PUSH", "TABLET" ],
+                  "escalateAfter" : "PT2M"
+                },
+                "record" : null
+              } ],
+              "comeBack" : [ ]
+            }
+          }
+        }
+      }
+    },
+    "wheelchair" : {
+      "kind" : "flags",
+      "aspects" : {
+        "presence" : {
+          "unknownIsInitial" : true,
+          "unknownAfter" : "PT30M",
+          "confidence" : { },
+          "transitions" : [ ],
+          "states" : {
+            "OUT_OF_REACH" : {
+              "observeOnly" : false,
+              "closesEpisodes" : false,
+              "stableFor" : "PT5S",
+              "onEntry" : [ ],
+              "dwell" : [ {
+                "window" : "always",
+                "warningAfter" : "PT2M",
+                "alertAfter" : "PT5M",
+                "severity" : "WARNING",
+                "closure" : "SAFE_ONLY",
+                "notify" : null,
+                "record" : null
+              } ],
+              "comeBack" : [ ]
+            }
+          }
+        }
+      }
+    },
+    "staff" : {
+      "kind" : "flags",
+      "aspects" : {
+        "presence" : {
+          "unknownIsInitial" : true,
+          "unknownAfter" : null,
+          "confidence" : { },
+          "transitions" : [ ],
+          "states" : {
+            "PRESENT" : {
+              "observeOnly" : true,
+              "closesEpisodes" : true,
+              "stableFor" : null,
+              "onEntry" : [ ],
+              "dwell" : [ ],
+              "comeBack" : [ ]
+            }
+          }
+        }
+      }
+    }
+  }
+}

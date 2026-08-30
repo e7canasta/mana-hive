@@ -29,6 +29,12 @@ public data class TransitionTable(
         private val BED_TRANSITION: Duration = Duration.ofMillis(1500)
         private val ROOM_TRANSITION: Duration = Duration.ofMillis(2000)
 
+        /** Una caida hay que creerla rapido; no cero, para no morder ruido. */
+        private val FALL: Duration = Duration.ofMillis(800)
+
+        /** Salir del piso es mas lento de confirmar que caerse. */
+        private val GET_UP: Duration = Duration.ofMillis(1500)
+
         /** Release 1: the five-state table the 03:00 fall needs. */
         public val RELEASE_1: TransitionTable = TransitionTable(
             mapOf(
@@ -43,11 +49,12 @@ public data class TransitionTable(
         )
 
         /**
-         * Release 2: the thirteen-state table for the clinical catalog.
+         * Release 2: la tabla clinica completa.
          *
          * IN BED: Lying, SittingInBed, AttemptingExit, BedEdge
          * OUT OF BED: Standing, InBathroom, InRoom, InHallway, Outdoor, Absent
          * FURNITURE: InChair, InWheelchair
+         * FLOOR: OnFloor
          * UNKNOWN: Unknown
          *
          * Clinical rules (permissive — sensors report what they see):
@@ -156,9 +163,47 @@ public data class TransitionTable(
                 TransitionKey(StateKind.IN_WHEELCHAIR, StateKind.IN_HALLWAY) to ROOM_TRANSITION,
                 TransitionKey(StateKind.IN_WHEELCHAIR, StateKind.OUTDOOR) to ROOM_TRANSITION,
 
+                // ── La caida ────────────────────────────────────────────
+                // Se cae desde cualquier posicion fisica, asi que ON_FLOOR es
+                // alcanzable desde todas. Sin estas aristas el interprete
+                // descartaba la observacion por transicion ilegal y la caida no
+                // llegaba a ningun lado.
+                //
+                // Estaban en ProductionDagCatalog pero NO aca, o sea que la
+                // caida sobrevivia unicamente si alguien cargaba ese catalogo:
+                // cualquier uso de la tabla base —el default de SceneCalibration,
+                // el de BatchConfig, Main.kt— la perdia en silencio. La tabla que
+                // el clinico lee tiene que contener la caida.
+                //
+                // Histeresis corta —una caida hay que creerla rapido— pero no
+                // cero, para no morder ruido del sensor.
+                TransitionKey(StateKind.LYING, StateKind.ON_FLOOR) to FALL,
+                TransitionKey(StateKind.SITTING_IN_BED, StateKind.ON_FLOOR) to FALL,
+                TransitionKey(StateKind.ATTEMPTING_EXIT, StateKind.ON_FLOOR) to FALL,
+                TransitionKey(StateKind.BED_EDGE, StateKind.ON_FLOOR) to FALL,
+                TransitionKey(StateKind.STANDING, StateKind.ON_FLOOR) to FALL,
+                TransitionKey(StateKind.IN_BATHROOM, StateKind.ON_FLOOR) to FALL,
+                TransitionKey(StateKind.IN_ROOM, StateKind.ON_FLOOR) to FALL,
+                TransitionKey(StateKind.IN_HALLWAY, StateKind.ON_FLOOR) to FALL,
+                TransitionKey(StateKind.OUTDOOR, StateKind.ON_FLOOR) to FALL,
+                TransitionKey(StateKind.IN_CHAIR, StateKind.ON_FLOOR) to FALL,
+                TransitionKey(StateKind.IN_WHEELCHAIR, StateKind.ON_FLOOR) to FALL,
+
+                // Y se sale del piso: se levanta solo, o alguien lo levanta y lo
+                // sienta o lo acuesta. Sin salida, ON_FLOOR es un pozo y el
+                // episodio no puede cerrar por vuelta a estado seguro.
+                TransitionKey(StateKind.ON_FLOOR, StateKind.STANDING) to GET_UP,
+                TransitionKey(StateKind.ON_FLOOR, StateKind.LYING) to GET_UP,
+                TransitionKey(StateKind.ON_FLOOR, StateKind.IN_CHAIR) to GET_UP,
+                TransitionKey(StateKind.ON_FLOOR, StateKind.IN_WHEELCHAIR) to GET_UP,
+
                 // ── Unknown recovery ────────────────────────────────────
                 TransitionKey(StateKind.UNKNOWN, StateKind.LYING) to ROOM_TRANSITION,
                 TransitionKey(StateKind.UNKNOWN, StateKind.STANDING) to ROOM_TRANSITION,
+                // Se puede perder de vista a alguien que esta en el piso y
+                // recuperarlo ahi mismo. Sin esta arista, una caida que empieza
+                // con el sensor dudando nunca se puede confirmar.
+                TransitionKey(StateKind.UNKNOWN, StateKind.ON_FLOOR) to FALL,
             ),
         )
 

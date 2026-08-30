@@ -1,6 +1,7 @@
 package com.manahive.sentinel
 
 import com.manahive.contracts.policy.AlertRule
+import com.manahive.contracts.policy.SceneFieldRule
 import com.manahive.contracts.policy.ClosureCondition
 import com.manahive.contracts.policy.TriggerOn
 import com.manahive.contracts.scene.SceneEvent
@@ -89,9 +90,23 @@ internal class SentinelEvaluatorImpl(
 
             // ── No-ops: these facts do not open or affect episodes ─────
             is SceneEvent.NightOpened -> noOp(fact, "night lifecycle — not an episode trigger", state)
-            is SceneEvent.SceneStateChanged -> noOp(fact, "scene state change — harbor's concern, not sentinel's", state)
-            is SceneEvent.SceneDwellWarning -> noOp(fact, "scene dwell warning — not yet judged by sentinel", state)
-            is SceneEvent.SceneDwellExceeded -> noOp(fact, "scene dwell exceeded — not yet judged by sentinel", state)
+            is SceneEvent.SceneStateChanged -> {
+                val result = evaluateSceneChange(fact, state, now)
+                signals.addAll(result.signals)
+                explanation.addAll(result.explanation)
+                state = result.episodes
+            }
+            is SceneEvent.SceneDwellWarning -> {
+                val result = evaluateSceneDwellWarning(fact, state, now)
+                signals.addAll(result.signals)
+                explanation.addAll(result.explanation)
+            }
+            is SceneEvent.SceneDwellExceeded -> {
+                val result = evaluateSceneField(fact, state, now)
+                signals.addAll(result.signals)
+                explanation.addAll(result.explanation)
+                state = result.episodes
+            }
             is SceneEvent.SignalLost -> noOp(fact, "sensor silence — See SPEC-06: plausibly an episode, not yet implemented", state)
             is SceneEvent.SignalRecovered -> noOp(fact, "sensor recovered — no action needed", state)
             is SceneEvent.NightClosed -> noOp(fact, "night lifecycle — not an episode trigger", state)
@@ -270,6 +285,214 @@ internal class SentinelEvaluatorImpl(
             originalSeverity = open.severity,
         )
         return EvalResult(episodes = episodes, signals = listOf(signal))
+    }
+
+    // ── Campos de escena: la baranda, la silla, el andador ────────────
+
+    /**
+     * El plazo de un campo de escena venció.
+     *
+     * Es la contraparte de [evaluateDeadline] para lo que no es una postura. La
+     * baranda que lleva un minuto abajo de noche abre episodio igual que una
+     * permanencia: lo que cambia es el sujeto, no la mecanica.
+     *
+     * Esto era un no-op con el comentario *"not yet judged by sentinel"*. Lo era
+     * porque la regla no llegaba: el slot `sceneStateRules` existia, su accessor
+     * existia, y las tres construcciones le pasaban `emptyMap()`. Ahora llega.
+     */
+    private fun evaluateSceneField(
+        fact: SceneEvent.SceneDwellExceeded,
+        episodes: EpisodeLedger,
+        now: Instant,
+    ): EvalResult {
+        val rule = calibration.sceneStateRuleFor(fact.field)
+            ?: return EvalResult(
+                episodes = episodes,
+                explanation = listOf(
+                    ExplanationStep(
+                        rule = "scene:${fact.field}",
+                        observed = "plazo vencido en ${fact.field}",
+                        // Un campo sin regla se observa y no alerta. Es un valor
+                        // legitimo del perfil, no un hueco.
+                        conclusion = "sin regla para este campo: se observa y no alerta",
+                    ),
+                ),
+            )
+
+        val open = episodes.openForBed(fact.bed)
+            ?: return openFieldEpisode(fact.bed, rule, now, episodes)
+
+        // Ya hay un episodio abierto. La severidad decide sola: algo mayor lo
+        // eleva, algo menor o igual entra como parte del mismo. Es la misma
+        // composicion que usan las posturas — no hace falta condicion cruzada.
+        if (rule.severity.rank > open.severity.rank) {
+            val desde = open.severity
+            return EvalResult(
+                episodes = episodes.open(open.escalate(rule, now)),
+                signals = listOf(
+                    SentinelSignal.EpisodeOpened(
+                        bed = fact.bed,
+                        resident = calibration.residentId,
+                        at = now,
+                        rulesFingerprint = calibration.fingerprint,
+                        episode = open.id,
+                        rule = rule.id,
+                        // El episodio lo abrio otra cosa; esta señal dice quien
+                        // lo elevo, y quien lo elevo fue un campo.
+                        trigger = null,
+                        field = rule.field,
+                        severity = rule.severity,
+                        reversible = true,
+                        requiresNvr = rule.requiresNvr,
+                        confirmationWindow = rule.confirmationWindow,
+                    ),
+                ),
+                explanation = listOf(
+                    ExplanationStep(
+                        rule = rule.id.value,
+                        observed = "${fact.field} = ${rule.state}",
+                        conclusion = "episodio elevado: $desde -> ${rule.severity}",
+                    ),
+                ),
+            )
+        }
+
+        return EvalResult(
+            episodes = episodes,
+            explanation = listOf(
+                ExplanationStep(
+                    rule = rule.id.value,
+                    observed = "${fact.field} = ${rule.state}",
+                    conclusion = "entra al episodio abierto (${open.severity}) sin elevarlo",
+                ),
+            ),
+        )
+    }
+
+    /**
+     * Un campo de escena cambio de valor.
+     *
+     * Lo unico que Sentinel juzga aca es si el estado nuevo **cierra**
+     * episodios. Eso lo decide el perfil, no este codigo: `staff.presence.PRESENT`
+     * cierra porque el documento dice `closesEpisodes`, y si mañana el director
+     * agrega otro estado que cierre, no hace falta tocar el motor.
+     *
+     * Era un no-op con el comentario *"harbor's concern, not sentinel's"*. Es de
+     * Harbor **avisar**, pero cerrar un episodio es del que lleva los episodios.
+     */
+    private fun evaluateSceneChange(
+        fact: SceneEvent.SceneStateChanged,
+        episodes: EpisodeLedger,
+        now: Instant,
+    ): EvalResult {
+        if (!calibration.closesEpisodes(fact.field, fact.to)) {
+            return EvalResult(episodes = episodes)
+        }
+
+        val open = episodes.openForBed(fact.bed) ?: return EvalResult(episodes = episodes)
+        val updated = open.withStaffPresent(now)
+
+        if (updated.canClose()) {
+            val cause = when (updated.closureCondition) {
+                ClosureCondition.STAFF_OR_SAFE -> ClosureCause.STAFF_PRESENT
+                else -> ClosureCause.STAFF_AND_SAFE
+            }
+            return handleClose(updated, episodes, now, cause)
+        }
+
+        return EvalResult(
+            episodes = episodes.open(updated),
+            explanation = listOf(
+                ExplanationStep(
+                    rule = "closing:${fact.field}.${fact.to}",
+                    observed = "${fact.field} paso a ${fact.to}",
+                    // STAFF_AND_SAFE exige las dos cosas: que alguien haya
+                    // entrado y que la situacion sea segura. Que entre el
+                    // personal cumple una mitad.
+                    conclusion = "presencia registrada; el episodio sigue abierto hasta que sea seguro",
+                ),
+            ),
+        )
+    }
+
+    /**
+     * Preaviso de un campo de escena.
+     *
+     * La contraparte de [evaluateDwellWarning] para lo que no es una postura.
+     * Solo avisa si hay regla: un campo que nadie vigila no genera preaviso de
+     * algo que despues no va a pasar.
+     */
+    private fun evaluateSceneDwellWarning(
+        fact: SceneEvent.SceneDwellWarning,
+        episodes: EpisodeLedger,
+        now: Instant,
+    ): EvalResult {
+        // Un preaviso no toca episodios: se devuelve el registro tal cual llego.
+        calibration.sceneStateRuleFor(fact.field) ?: return EvalResult(episodes = episodes)
+        val elapsed = java.time.Duration.between(fact.since, now)
+        return EvalResult(
+            episodes = episodes,
+            signals = listOf(
+                SentinelSignal.DwellPreWarning(
+                    bed = fact.bed,
+                    resident = calibration.residentId,
+                    at = now,
+                    rulesFingerprint = calibration.fingerprint,
+                    state = null,
+                    field = fact.field,
+                    elapsed = elapsed,
+                    threshold = fact.threshold,
+                ),
+            ),
+            explanation = listOf(
+                ExplanationStep(
+                    rule = "scene-dwell-warning",
+                    observed = "${fact.field} lleva $elapsed (umbral: ${fact.threshold})",
+                    conclusion = "preaviso: el campo se acerca a su plazo",
+                ),
+            ),
+        )
+    }
+
+    private fun openFieldEpisode(
+        bed: BedId,
+        rule: SceneFieldRule,
+        now: Instant,
+        episodes: EpisodeLedger,
+    ): EvalResult {
+        val episode = Episode.openForField(
+            bed = bed,
+            residentId = calibration.residentId,
+            at = now,
+            rule = rule,
+        )
+
+        val signal = SentinelSignal.EpisodeOpened(
+            bed = bed,
+            resident = calibration.residentId,
+            at = now,
+            rulesFingerprint = calibration.fingerprint,
+            episode = episode.id,
+            rule = rule.id,
+            trigger = null,
+            field = rule.field,
+            severity = rule.severity,
+            reversible = true,
+            requiresNvr = rule.requiresNvr,
+            confirmationWindow = rule.confirmationWindow,
+        )
+
+        return EvalResult(
+            episodes = episodes.open(episode),
+            signals = listOf(signal),
+            explanation = listOf(
+                ExplanationStep(
+                    rule = rule.id.value,
+                    observed = "${rule.field} = ${rule.state}",
+                    conclusion = "episodio abierto: ${rule.severity}",
+                ),
+            ),
+        )
     }
 
     // ── Dwell warning (informational, no episode) ─────────────────────
