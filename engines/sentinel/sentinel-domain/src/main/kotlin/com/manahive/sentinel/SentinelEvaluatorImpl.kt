@@ -388,7 +388,30 @@ internal class SentinelEvaluatorImpl(
             )
 
         val open = episodes.openForBed(fact.bed)
-            ?: return openFieldEpisode(fact.bed, rule, now, episodes)
+            ?: return if (episodes.isStaffPresent(fact.bed)) {
+                val signal = SentinelSignal.SuppressedWithRecord(
+                    bed = fact.bed,
+                    resident = calibration.residentId,
+                    at = now,
+                    rulesFingerprint = calibration.fingerprint,
+                    rule = rule.id,
+                    cause = SuppressionCause.STAFF_PRESENT,
+                    evidence = EventRef(stream = "scene.fact.v1.${fact.bed.value}", seq = 0),
+                )
+                EvalResult(
+                    episodes = episodes,
+                    signals = listOf(signal),
+                    explanation = listOf(
+                        ExplanationStep(
+                            rule = rule.id.value,
+                            observed = "scene field ${fact.field} while staff present at ${fact.bed.value}",
+                            conclusion = "suppressed: staff present, no episode opened",
+                        ),
+                    ),
+                )
+            } else {
+                openFieldEpisode(fact.bed, rule, now, episodes)
+            }
 
         // Ya hay un episodio abierto. Si la severidad es mayor, eleva silenciosamente.
         // No genera signal nuevo — el episodio ya está registrado.

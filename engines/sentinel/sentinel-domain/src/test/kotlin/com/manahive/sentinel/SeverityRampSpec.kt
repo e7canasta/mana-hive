@@ -102,7 +102,7 @@ class SeverityRampSpec : BehaviorSpec({
             val result = evaluator.evaluate(vence, abierto, now.plusSeconds(600))
 
             Then("escala a CRITICAL — antes esto no era alcanzable por una regla temporizada") {
-                val signal = result.value.signals.single().shouldBeInstanceOf<SentinelSignal.EpisodeOpened>()
+                val signal = result.value.signals.single().shouldBeInstanceOf<SentinelSignal.EpisodeComplicated>()
                 signal.severity shouldBe Severity.CRITICAL
             }
 

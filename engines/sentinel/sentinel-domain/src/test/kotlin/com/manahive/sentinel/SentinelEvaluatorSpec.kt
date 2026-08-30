@@ -379,9 +379,9 @@ class SentinelEvaluatorSpec : BehaviorSpec({
         When("evaluated") {
             val result = evaluator.evaluate(escalateFact, afterOpen.value.episodes, now.plusSeconds(10))
 
-            Then("emits EpisodeOpened with escalated severity") {
-                val opened = result.value.signals[0] as SentinelSignal.EpisodeOpened
-                opened.severity shouldBe Severity.CRITICAL
+            Then("emits EpisodeComplicated with escalated severity") {
+                val complicated = result.value.signals[0] as SentinelSignal.EpisodeComplicated
+                complicated.severity shouldBe Severity.CRITICAL
             }
 
             Then("episode escalated") {
