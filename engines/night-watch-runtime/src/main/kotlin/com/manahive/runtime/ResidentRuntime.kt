@@ -121,7 +121,7 @@ class ResidentRuntime(
                 "Observación tardía descartada para {}: {} < {}",
                 residentId.value, obs.observedAt, last,
             )
-            return Outbound(emptyList(), emptyList(), emptyList(), emptyList())
+            return Outbound(emptyList(), emptyList(), emptyList(), emptyList(), emptyList())
         }
         lastObservedAt = obs.observedAt
 
@@ -166,17 +166,33 @@ class ResidentRuntime(
 
         // Stage 4: Recorder
         val recorderCommands = mutableListOf<RecordingCommand>()
+        val evidenceRecords = mutableListOf<com.manahive.recorder.EvidenceRecord>()
+
+        // Sweep signals (e.g. EpisodeOpened from dwell/comeback)
+        for (signal in sweepSignals) {
+            val trigger = SentinelSignalTrigger(signal, bed, signal.at)
+            val result = recorderEngine.evaluate(trigger, recordingLedger, signal.at)
+            recordingLedger = result.value.ledger
+            recorderCommands.addAll(result.value.commands)
+            evidenceRecords.addAll(result.value.evidenceRecords)
+        }
+
+        // Scene events
         for (fact in sceneFacts) {
             val trigger = SceneEventTrigger(fact, bed, fact.at)
             val result = recorderEngine.evaluate(trigger, recordingLedger, fact.at)
             recordingLedger = result.value.ledger
             recorderCommands.addAll(result.value.commands)
+            evidenceRecords.addAll(result.value.evidenceRecords)
         }
+
+        // Observation signals (e.g. EpisodeClosed from auto-recovery)
         for (signal in signals) {
             val trigger = SentinelSignalTrigger(signal, bed, signal.at)
             val result = recorderEngine.evaluate(trigger, recordingLedger, signal.at)
             recordingLedger = result.value.ledger
             recorderCommands.addAll(result.value.commands)
+            evidenceRecords.addAll(result.value.evidenceRecords)
         }
 
         return Outbound(
@@ -184,6 +200,7 @@ class ResidentRuntime(
             signals = sweepSignals + signals,
             harborCommands = sweepCommands + commands,
             recorderCommands = recorderCommands,
+            evidenceRecords = evidenceRecords,
         )
     }
 
@@ -217,7 +234,7 @@ class ResidentRuntime(
             eval.value.commands.forEach { commands += NoticeFor(signal, it) }
         }
 
-        return Outbound(sceneFacts, signals, commands, emptyList())
+        return Outbound(sceneFacts, signals, commands, emptyList(), emptyList())
     }
 
     /**
@@ -241,6 +258,7 @@ data class Outbound(
     val signals: List<SentinelSignal>,
     val harborCommands: List<NoticeFor>,
     val recorderCommands: List<RecordingCommand>,
+    val evidenceRecords: List<com.manahive.recorder.EvidenceRecord>,
 )
 
 /**

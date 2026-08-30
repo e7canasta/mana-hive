@@ -175,6 +175,11 @@ class NightWatchServiceCore(
         for (command in out.recorderCommands) {
             publisher.publishRecordingCommand(bed, command)
         }
+
+        log.info("[EVIDENCE] evidenceRecords={}", out.evidenceRecords.size)
+        for (record in out.evidenceRecords) {
+            publisher.publishEvidenceRecord(bed, record)
+        }
     }
 
     private fun parseWatchLevel(value: String): WatchLevel? =

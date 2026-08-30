@@ -5,6 +5,7 @@ import com.manahive.contracts.scene.SceneEvent
 import com.manahive.contracts.sentinel.SentinelSignal
 import com.manahive.harbor.NoticeCommand
 import com.manahive.recorder.RecordingCommand
+import com.manahive.recorder.EvidenceRecord
 
 /**
  * Composite [EventPublisher] that fans out to multiple publishers.
@@ -35,5 +36,9 @@ class CompositePublisher(
 
     override fun publishRecordingCommand(bed: BedId, command: RecordingCommand) {
         delegates.forEach { it.publishRecordingCommand(bed, command) }
+    }
+
+    override fun publishEvidenceRecord(bed: BedId, record: EvidenceRecord) {
+        delegates.forEach { it.publishEvidenceRecord(bed, record) }
     }
 }

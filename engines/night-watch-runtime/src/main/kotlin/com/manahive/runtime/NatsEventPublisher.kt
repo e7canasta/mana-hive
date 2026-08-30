@@ -15,6 +15,8 @@ import com.manahive.messaging.BusEvents
 import com.manahive.messaging.NatsObjectMapper
 import com.manahive.messaging.Subjects
 import com.manahive.recorder.RecordingCommand
+import com.manahive.recorder.EvidenceRecord
+import com.manahive.recorder.batch.toJson
 import com.manahive.serialization.SceneEventSerializer
 import com.manahive.serialization.SentinelSignalSerializer
 import org.slf4j.LoggerFactory
@@ -60,6 +62,10 @@ class NatsEventPublisher(
 
     override fun publishRecordingCommand(bed: BedId, command: RecordingCommand) {
         emit(Subjects.recordingCommand(bed), "RecordingCommand", SystemClock.instant(), mapper.writeValueAsString(command))
+    }
+
+    override fun publishEvidenceRecord(bed: BedId, record: EvidenceRecord) {
+        emit(Subjects.evidenceRecord(bed), "EvidenceRecord", record.at, mapper.writeValueAsString(record.toJson()))
     }
 
     private fun emit(subject: String, type: String, at: java.time.Instant, payload: String): EventRef? {

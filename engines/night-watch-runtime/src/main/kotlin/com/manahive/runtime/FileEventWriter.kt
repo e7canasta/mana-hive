@@ -7,10 +7,13 @@ import com.manahive.contracts.scene.SceneEvent
 import com.manahive.contracts.sentinel.SentinelSignal
 import com.manahive.harbor.NoticeCommand
 import com.manahive.recorder.RecordingCommand
+import com.manahive.recorder.EvidenceRecord
+import com.manahive.recorder.batch.toJson
 import com.manahive.batchio.SceneEventWriter
 import com.manahive.batchio.SentinelSignalWriter
 import com.manahive.batchio.HarborCommandWriter
 import com.manahive.recorder.batch.RecordingEventWriter
+import com.manahive.recorder.batch.writeTo
 import com.manahive.serialization.SceneEventSerializer
 import com.manahive.serialization.SentinelSignalSerializer
 import com.manahive.serialization.NoticeCommandSerializer
@@ -36,6 +39,7 @@ class FileEventWriter(
     private val sentinelSignals = mutableListOf<SentinelSignal>()
     private val harborCommands = mutableListOf<NoticeCommand>()
     private val recorderCommands = mutableListOf<RecordingCommand>()
+    private val evidenceRecords = mutableListOf<EvidenceRecord>()
 
     override fun publishSceneEvent(bed: BedId, event: SceneEvent) {
         sceneEvents += event
@@ -81,12 +85,24 @@ class FileEventWriter(
         )
     }
 
+    override fun publishEvidenceRecord(bed: BedId, record: EvidenceRecord) {
+        evidenceRecords += record
+        events += mapOf(
+            "type" to "EvidenceRecord",
+            "bed" to bed.value,
+            "at" to record.at.toString(),
+            "offset" to java.time.Duration.between(startTime, record.at).toString(),
+            "payload" to mapper.valueToTree<JsonNode>(record.toJson()),
+        )
+    }
+
     fun flush() {
         outputDir.mkdirs()
         SceneEventWriter.write(File(outputDir, "scene.out"), sceneEvents, startTime)
         SentinelSignalWriter.write(File(outputDir, "sentinel.out"), sentinelSignals, startTime)
         HarborCommandWriter.write(File(outputDir, "harbor.out"), harborCommands)
         RecordingEventWriter.write(File(outputDir, "recorder.out"), recorderCommands, startTime)
+        evidenceRecords.writeTo(File(outputDir, "evidence.out"))
         writeJsonl()
     }
 

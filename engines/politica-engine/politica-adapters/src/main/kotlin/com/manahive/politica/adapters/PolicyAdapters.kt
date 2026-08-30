@@ -14,6 +14,7 @@ import com.manahive.harbor.harborCalibration
 import com.manahive.kernel.BedId
 import com.manahive.kernel.MonitorId
 import com.manahive.recorder.Quality
+import com.manahive.recorder.EvidenceType
 import com.manahive.recorder.RecordingCalibration
 import com.manahive.recorder.recordingCalibration
 import com.manahive.scene.adapter.toSceneCalibration as toSceneCalibrationFromPolicy
@@ -194,6 +195,27 @@ public fun PolicyCalibration.toRecordingCalibration(
             quality = Quality.HD
             monitors = listOf(monitorId)
         }
+    }
+
+    // Evidence rules: emit EvidenceRecord for each episode opened
+    // Per-specific alert rules
+    this@toRecordingCalibration.sentinel.alertRules.values.forEach { rule ->
+        evidenceRule("ev-${rule.id.value}") {
+            trigger { episodeOpened(rule.severity) }
+            evidenceType = EvidenceType.INCIDENT
+        }
+    }
+    // ComeBack rules also produce episodes
+    this@toRecordingCalibration.sentinel.comeBackRules.values.forEach { rule ->
+        evidenceRule("ev-cb-${rule.id.value}") {
+            trigger { episodeOpened(rule.severity) }
+            evidenceType = EvidenceType.INCIDENT
+        }
+    }
+    // Catch-all: ANY episode opened produces evidence (fallback for rules without specific evidence)
+    evidenceRule("ev-any-episode") {
+        trigger { episodeOpened() }
+        evidenceType = EvidenceType.INCIDENT
     }
 }
 
