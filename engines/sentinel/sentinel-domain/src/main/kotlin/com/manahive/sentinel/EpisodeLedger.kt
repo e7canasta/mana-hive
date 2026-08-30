@@ -33,10 +33,13 @@ public data class EpisodeLedger(
     public val open: Map<BedId, Episode>,
     /** Closed episodes for audit trail. */
     public val closed: List<Episode> = emptyList(),
+    /** Staff presence per bed even when no episode is open — needed to
+     *  suppress new episodes while staff is attending. */
+    public val staffPresentBeds: Set<BedId> = emptySet(),
 ) {
     public companion object {
         public fun empty(residentId: ResidentId): EpisodeLedger =
-            EpisodeLedger(residentId, open = emptyMap(), closed = emptyList())
+            EpisodeLedger(residentId, open = emptyMap(), closed = emptyList(), staffPresentBeds = emptySet())
     }
 
     /** Find the open episode for a specific bed. */
@@ -54,6 +57,14 @@ public data class EpisodeLedger(
             closed = closed + episode,
         )
     }
+
+    public fun isStaffPresent(bed: BedId): Boolean = bed in staffPresentBeds
+
+    public fun withStaffPresentAt(bed: BedId): EpisodeLedger =
+        copy(staffPresentBeds = staffPresentBeds + bed)
+
+    public fun withStaffAbsentAt(bed: BedId): EpisodeLedger =
+        copy(staffPresentBeds = staffPresentBeds - bed)
 }
 
 /**

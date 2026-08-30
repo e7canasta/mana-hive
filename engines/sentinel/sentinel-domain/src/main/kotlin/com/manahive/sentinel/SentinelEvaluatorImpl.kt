@@ -9,7 +9,9 @@ import com.manahive.contracts.scene.StateKind
 import com.manahive.contracts.scene.kind
 import com.manahive.contracts.sentinel.SentinelSignal
 import com.manahive.contracts.sentinel.ClosureCause
+import com.manahive.contracts.sentinel.SuppressionCause
 import com.manahive.kernel.BedId
+import com.manahive.kernel.EventRef
 import com.manahive.kernel.EngineVersion
 import com.manahive.kernel.Explained
 import com.manahive.kernel.ExplanationStep
@@ -144,6 +146,30 @@ internal class SentinelEvaluatorImpl(
         val rule = calibration.transitionRuleFor(state)
             ?: return noRuleResult(state, episodes)
 
+        // Staff presente → suprimir apertura (no abrir episodio vigilado)
+        if (episodes.isStaffPresent(bed)) {
+            val signal = SentinelSignal.SuppressedWithRecord(
+                bed = bed,
+                resident = calibration.residentId,
+                at = now,
+                rulesFingerprint = calibration.fingerprint,
+                rule = rule.id,
+                cause = SuppressionCause.STAFF_PRESENT,
+                evidence = EventRef(stream = "scene.fact.v1.${bed.value}", seq = 0),
+            )
+            return EvalResult(
+                episodes = episodes,
+                signals = listOf(signal),
+                explanation = listOf(
+                    ExplanationStep(
+                        rule = rule.id.value,
+                        observed = "transition to $state while staff present at ${bed.value}",
+                        conclusion = "suppressed: staff present, no episode opened",
+                    ),
+                ),
+            )
+        }
+
         // Sentinel ALWAYS opens episodes — is notification budget Harbor's concern
         return openEpisode(bed, rule, now, episodes)
     }
@@ -185,7 +211,18 @@ internal class SentinelEvaluatorImpl(
         episodes: EpisodeLedger,
         now: Instant,
     ): EvalResult {
-        val open = episodes.openForBed(fact.bed) ?: return EvalResult(episodes = episodes)
+        // Guardar presencia aunque no haya episodio — para suprimir aperturas futuras
+        val withPresence = episodes.withStaffPresentAt(fact.bed)
+        val open = withPresence.openForBed(fact.bed) ?: return EvalResult(
+            episodes = withPresence,
+            explanation = listOf(
+                ExplanationStep(
+                    rule = "staff-presence",
+                    observed = "staff present at ${fact.bed.value}",
+                    conclusion = "staff marked present (no open episode to close)",
+                ),
+            ),
+        )
 
         val updated = open.withStaffPresent(now)
 
@@ -194,11 +231,11 @@ internal class SentinelEvaluatorImpl(
                 ClosureCondition.STAFF_OR_SAFE -> ClosureCause.STAFF_PRESENT
                 else -> ClosureCause.STAFF_AND_SAFE
             }
-            return handleClose(updated, episodes, now, cause)
+            return handleClose(updated, withPresence, now, cause)
         }
 
         return EvalResult(
-            episodes = episodes.open(updated),
+            episodes = withPresence.open(updated),
             explanation = listOf(
                 ExplanationStep(
                     rule = "staff-presence",
@@ -214,12 +251,22 @@ internal class SentinelEvaluatorImpl(
         episodes: EpisodeLedger,
         now: Instant,
     ): EvalResult {
-        val open = episodes.openForBed(fact.bed) ?: return EvalResult(episodes = episodes)
+        val withAbsent = episodes.withStaffAbsentAt(fact.bed)
+        val open = withAbsent.openForBed(fact.bed) ?: return EvalResult(
+            episodes = withAbsent,
+            explanation = listOf(
+                ExplanationStep(
+                    rule = "staff-left",
+                    observed = "staff left ${fact.bed.value}",
+                    conclusion = "staff marked absent (no open episode)",
+                ),
+            ),
+        )
 
         val updated = open.withStaffAbsent(now)
 
         return EvalResult(
-            episodes = episodes.open(updated),
+            episodes = withAbsent.open(updated),
             explanation = listOf(
                 ExplanationStep(
                     rule = "staff-left",
@@ -251,9 +298,30 @@ internal class SentinelEvaluatorImpl(
         now: Instant,
     ): EvalResult {
         val open = episodes.openForBed(bed)
-            ?: return rule
-                ?.let { openEpisode(bed, it, now, episodes) }
-                ?: EvalResult(episodes = episodes)
+            ?: return if (episodes.isStaffPresent(bed) && rule != null) {
+                val signal = SentinelSignal.SuppressedWithRecord(
+                    bed = bed,
+                    resident = calibration.residentId,
+                    at = now,
+                    rulesFingerprint = calibration.fingerprint,
+                    rule = rule.id,
+                    cause = SuppressionCause.STAFF_PRESENT,
+                    evidence = EventRef(stream = "scene.fact.v1.${bed.value}", seq = 0),
+                )
+                EvalResult(
+                    episodes = episodes,
+                    signals = listOf(signal),
+                    explanation = listOf(
+                        ExplanationStep(
+                            rule = rule.id.value,
+                            observed = "$triggerOn $state deadline while staff present at ${bed.value}",
+                            conclusion = "suppressed: staff present, no episode opened",
+                        ),
+                    ),
+                )
+            } else {
+                rule?.let { openEpisode(bed, it, now, episodes) } ?: EvalResult(episodes = episodes)
+            }
 
         // The deadline elapsed, so a timed rule may now escalate — this is the
         // moment the transition path deliberately refused to act on. Without it
