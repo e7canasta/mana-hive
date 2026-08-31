@@ -4,6 +4,11 @@ import com.manahive.messaging.BusConnector
 import com.manahive.messaging.BusEvents
 import com.manahive.messaging.NatsConfig
 import com.manahive.messaging.NatsObjectMapper
+import com.manahive.runtime.control.ControlEventPublisher
+import com.manahive.runtime.control.HiveControlService
+import com.manahive.runtime.control.HiveControlServiceImpl
+import com.manahive.runtime.control.HubProfileFetcherAdapter
+import com.manahive.runtime.control.NatsControlEventPublisher
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
@@ -47,11 +52,18 @@ class NightWatchApplication {
      * y todos los componentes comparten la misma referencia.
      */
     @Bean
+    fun calibrator(
+        runtime: NightWatchRuntime,
+        census: Census,
+    ): ProfileCalibrator = ProfileCalibrator(runtime, census)
+
+    @Bean
     fun nightWatchServiceCore(
         runtime: NightWatchRuntime,
         census: Census,
         publisher: EventPublisher,
-    ): NightWatchServiceCore = NightWatchServiceCore(runtime, census, publisher, com.manahive.kernel.SystemClock)
+        calibrator: ProfileCalibrator,
+    ): NightWatchServiceCore = NightWatchServiceCore(runtime, census, publisher, com.manahive.kernel.SystemClock, calibrator)
 
     @Bean
     fun timeSink(
@@ -92,6 +104,28 @@ class NightWatchApplication {
         // JetStream is created when the bus connects
         // NatsEventPublisher needs it at publish time, not at creation time
         return NatsEventPublisher(events)
+    }
+
+    @Bean
+    fun controlEventPublisher(events: BusEvents): ControlEventPublisher = NatsControlEventPublisher(events)
+
+    @Bean
+    fun hiveControlService(
+        calibrator: ProfileCalibrator,
+        census: Census,
+        runtime: NightWatchRuntime,
+        controlEventPublisher: ControlEventPublisher,
+        @org.springframework.beans.factory.annotation.Value("\${hub.url:http://hub-service:8080}") hubUrl: String,
+    ): HiveControlService {
+        // Fowler: DIP — calibrator es singleton compartido (mismo puntero que core)
+        return HiveControlServiceImpl(
+            calibrator = calibrator,
+            runtime = runtime,
+            census = census,
+            profileFetcher = HubProfileFetcherAdapter(hubUrl),
+            controlPublisher = controlEventPublisher,
+            clock = java.time.Clock.systemUTC(),
+        )
     }
 }
 

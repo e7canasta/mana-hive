@@ -59,6 +59,33 @@ fun main(args: Array<String>) {
     println("Conectado NATS: ${conn.status} url=$natsUrl")
     println()
 
+    // Fowler: HiveControl via NATS — full cold reload + ack en hive.control.v1
+    if (clean) {
+        try {
+            // Suscripción efímera al ack
+            val ackLatch = java.util.concurrent.CountDownLatch(1)
+            val ackSub = conn.createDispatcher { msg ->
+                try {
+                    val env = natsMapper.readValue<com.manahive.contracts.EventEnvelope>(String(msg.data))
+                    if (env.type == "HiveControlEvent") ackLatch.countDown()
+                } catch (_: Exception) {}
+            }
+            ackSub.subscribe("hive.control.v1")
+            // Publicar comando reload full (reset twin+ledger, fetch si existe, fallback con oldCals)
+            val hiveCmd = mapOf("action" to "reload", "residentId" to residentId, "bedId" to bed, "reloadProfile" to true)
+            val envelope = com.manahive.contracts.EventEnvelope(eventId = UUID.randomUUID().toString(), type = "HiveCommand", version = 1, occurredAt = Instant.now(), source = "simulator", payloadJson = natsMapper.writeValueAsString(hiveCmd))
+            conn.publish("test.hive.v1", natsMapper.writeValueAsBytes(envelope))
+            println("  → NATS HiveCommand reload $residentId/$bed en test.hive.v1 -> esperando hive.control.v1")
+            val acked = ackLatch.await(3, java.util.concurrent.TimeUnit.SECONDS)
+            if (acked) println("  → HiveControl ACK recibido (full twin+ledger reset)")
+            else println("  ⚠ HiveControl sin ACK en 3s (¿hive aún no actualizado? sigue con HTTP fallback)")
+            Thread.sleep(500)
+            conn.closeDispatcher(ackSub)
+        } catch (e: Exception) {
+            println("  ⚠ HiveControl NATS falló: ${e.message} (fallback HTTP ya hizo reset parcial)")
+        }
+    }
+
     var now = start
     @Suppress("UNCHECKED_CAST")
     val steps = data["steps"] as? List<Map<String, Any>> ?: emptyList()

@@ -8,7 +8,7 @@
     "bed" : "bed-4",
     "from" : "2026-09-03T22:00:00Z",
     "to" : "2026-09-04T00:32:00Z",
-    "generatedAt" : "2026-08-31T01:30:03.118925289Z"
+    "generatedAt" : "2026-08-31T02:32:43.197217558Z"
   },
   "steps" : [ {
     "useManual" : "2026-09-03T22:00:00Z"
@@ -31,7 +31,19 @@
   }, {
     "useSystem" : true
   } ],
-  "episodes" : [ ],
+  "episodes" : [ {
+    "id" : "bed-4-bce48a77-1a26-4ed5-a213-0e7dc21c4639",
+    "residentId" : "jose",
+    "bedId" : "bed-4",
+    "severity" : "WARNING",
+    "status" : "resolved",
+    "title" : "alert-sitting_in_bed: bed-4",
+    "detail" : "Trigger: SITTING_IN_BED",
+    "occurredAt" : "2026-09-03T23:15:00Z",
+    "escalationLevel" : 0,
+    "isPending" : false,
+    "pending" : false
+  } ],
   "sceneEvents" : [ {
     "eventType" : "SignalRecovered",
     "at" : "2026-09-03T22:00:00Z",
@@ -152,9 +164,199 @@
     "at" : "2026-09-03T22:00:00Z",
     "bed" : "bed-4",
     "residentId" : ""
+  }, {
+    "eventType" : "SignalLost",
+    "at" : "2026-09-03T22:00:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "SignalRecovered",
+    "at" : "2026-09-03T22:00:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "TransitionDetected",
+    "at" : "2026-09-03T22:00:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "SignalLost",
+    "at" : "2026-09-03T23:15:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "TransitionDetected",
+    "at" : "2026-09-03T23:15:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "SignalLost",
+    "at" : "2026-09-03T23:15:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "ComeBackExceeded",
+    "at" : "2026-09-03T23:32:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "TransitionDetected",
+    "at" : "2026-09-03T23:32:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "SignalLost",
+    "at" : "2026-09-03T22:00:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "SignalLost",
+    "at" : "2026-09-03T22:00:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "SignalLost",
+    "at" : "2026-09-03T22:00:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "SignalLost",
+    "at" : "2026-09-03T22:00:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "SignalLost",
+    "at" : "2026-09-03T22:00:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "SignalLost",
+    "at" : "2026-09-03T22:00:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "SignalLost",
+    "at" : "2026-09-03T22:00:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "SignalRecovered",
+    "at" : "2026-09-03T22:00:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "TransitionDetected",
+    "at" : "2026-09-03T22:00:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "SignalLost",
+    "at" : "2026-09-03T23:15:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "TransitionDetected",
+    "at" : "2026-09-03T23:15:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "ComeBackExceeded",
+    "at" : "2026-09-03T23:32:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "SignalLost",
+    "at" : "2026-09-03T23:32:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "TransitionDetected",
+    "at" : "2026-09-03T23:32:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "SignalLost",
+    "at" : "2026-09-03T22:00:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "SignalRecovered",
+    "at" : "2026-09-03T22:00:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "TransitionDetected",
+    "at" : "2026-09-03T22:00:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "SignalLost",
+    "at" : "2026-09-03T23:15:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "TransitionDetected",
+    "at" : "2026-09-03T23:15:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "ComeBackExceeded",
+    "at" : "2026-09-03T23:32:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "SignalLost",
+    "at" : "2026-09-03T23:32:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "TransitionDetected",
+    "at" : "2026-09-03T23:32:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "SignalLost",
+    "at" : "2026-09-03T22:00:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "SignalRecovered",
+    "at" : "2026-09-03T22:00:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "TransitionDetected",
+    "at" : "2026-09-03T22:00:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "SignalLost",
+    "at" : "2026-09-03T23:15:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "TransitionDetected",
+    "at" : "2026-09-03T23:15:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "ComeBackExceeded",
+    "at" : "2026-09-03T23:32:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "SignalLost",
+    "at" : "2026-09-03T23:32:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "TransitionDetected",
+    "at" : "2026-09-03T23:32:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
   } ],
   "signals" : [ {
-    "raw" : "{\"timestamp\":\"2026-08-31T01:30:03.116Z\",\"status\":404,\"error\":\"Not Found\",\"path\":\"/api/v1/admin/signals\"}"
+    "raw" : "{\"timestamp\":\"2026-08-31T02:32:43.194Z\",\"status\":404,\"error\":\"Not Found\",\"path\":\"/api/v1/admin/signals\"}"
   } ],
   "expect" : {
     "episodes" : [ {
@@ -165,5 +367,5 @@
     "minSceneEvents" : 2,
     "minSignals" : 1
   },
-  "verified" : false
+  "verified" : true
 }

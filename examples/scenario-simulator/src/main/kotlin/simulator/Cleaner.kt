@@ -3,8 +3,8 @@ package simulator
 object Cleaner {
     fun clean(hubUrl: String = "http://localhost:8080", residentId: String = "jose", hiveUrl: String = "http://localhost:18081") {
         try {
-            val (code, body) = Http.post("$hubUrl/api/v1/admin/clean?residentId=$residentId")
-            println("  → POST /api/v1/admin/clean?residentId=$residentId → $code $body")
+            val (code, body) = Http.post("$hubUrl/api/v1/admin/clean?residentId=$residentId&cleanProfiles=true")
+            println("  → POST /api/v1/admin/clean?residentId=$residentId&cleanProfiles=true → $code $body")
         } catch (e: Exception) {
             println("  ⚠ Clean hub falló: ${e.message}")
         }

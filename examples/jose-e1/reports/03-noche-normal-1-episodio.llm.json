@@ -1,0 +1,513 @@
+{
+  "meta" : {
+    "scenario" : "03-noche-normal-1-episodio",
+    "profile" : "/home/visiona/workspace/mana-dist/config/mana-hive/profiles/jose-v20.json",
+    "hubUrl" : "http://localhost:8080",
+    "natsUrl" : "nats://localhost:4222",
+    "residentId" : "jose",
+    "bed" : "bed-4",
+    "from" : "2026-09-05T22:00:00Z",
+    "to" : "2026-09-06T06:03:00Z",
+    "generatedAt" : "2026-08-31T01:39:10.510135912Z"
+  },
+  "steps" : [ {
+    "useManual" : "2026-09-05T22:00:00Z"
+  }, {
+    "obs" : {
+      "kind" : "IN_BED"
+    }
+  }, {
+    "advance" : "PT1H30M"
+  }, {
+    "obs" : {
+      "kind" : "SITTING_IN_BED"
+    }
+  }, {
+    "advance" : "PT4M"
+  }, {
+    "obs" : {
+      "kind" : "IN_BED"
+    }
+  }, {
+    "advance" : "PT2H56M"
+  }, {
+    "obs" : {
+      "kind" : "SITTING_IN_BED"
+    }
+  }, {
+    "advance" : "PT8M"
+  }, {
+    "advance" : "PT2M"
+  }, {
+    "obs" : {
+      "kind" : "STAFF_ENTERED"
+    }
+  }, {
+    "advance" : "PT2M"
+  }, {
+    "obs" : {
+      "kind" : "IN_BED"
+    }
+  }, {
+    "advance" : "PT2H18M"
+  }, {
+    "obs" : {
+      "kind" : "SITTING_IN_BED"
+    }
+  }, {
+    "advance" : "PT3M"
+  }, {
+    "obs" : {
+      "kind" : "IN_BED"
+    }
+  }, {
+    "useSystem" : true
+  } ],
+  "episodes" : [ {
+    "id" : "bed-4-52b40d78-a9d5-475d-8ad6-eb02a4481de5",
+    "residentId" : "jose",
+    "bedId" : "bed-4",
+    "severity" : "WARNING",
+    "status" : "resolved",
+    "title" : "comeback-lying: bed-4",
+    "detail" : "Trigger: LYING",
+    "occurredAt" : "2026-09-06T02:40:00Z",
+    "escalationLevel" : 0,
+    "isPending" : false,
+    "pending" : false
+  } ],
+  "sceneEvents" : [ {
+    "eventType" : "TransitionDetected",
+    "at" : "2026-09-05T22:00:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "SignalLost",
+    "at" : "2026-09-05T23:30:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "SignalLost",
+    "at" : "2026-09-05T23:34:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "TransitionDetected",
+    "at" : "2026-09-06T02:30:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "StaffPresenceDetected",
+    "at" : "2026-09-06T02:40:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "ComeBackWarning",
+    "at" : "2026-09-06T02:42:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "TransitionDetected",
+    "at" : "2026-09-06T02:42:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "SignalLost",
+    "at" : "2026-09-06T05:03:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "SignalRecovered",
+    "at" : "2026-09-05T22:00:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "TransitionDetected",
+    "at" : "2026-09-05T23:30:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "TransitionDetected",
+    "at" : "2026-09-05T23:34:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "SignalLost",
+    "at" : "2026-09-06T02:30:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "ComeBackExceeded",
+    "at" : "2026-09-06T02:40:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "SignalLost",
+    "at" : "2026-09-06T02:40:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "SignalLost",
+    "at" : "2026-09-06T05:00:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "TransitionDetected",
+    "at" : "2026-09-06T05:00:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "TransitionDetected",
+    "at" : "2026-09-06T05:03:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "SignalRecovered",
+    "at" : "2026-09-05T22:00:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "TransitionDetected",
+    "at" : "2026-09-05T22:00:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "SignalLost",
+    "at" : "2026-09-05T23:30:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "TransitionDetected",
+    "at" : "2026-09-05T23:30:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "SignalLost",
+    "at" : "2026-09-05T23:34:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "TransitionDetected",
+    "at" : "2026-09-05T23:34:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "SignalLost",
+    "at" : "2026-09-06T02:30:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "TransitionDetected",
+    "at" : "2026-09-06T02:30:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "ComeBackExceeded",
+    "at" : "2026-09-06T02:40:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "SignalLost",
+    "at" : "2026-09-06T02:40:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "StaffPresenceDetected",
+    "at" : "2026-09-06T02:40:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "ComeBackWarning",
+    "at" : "2026-09-06T02:42:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "TransitionDetected",
+    "at" : "2026-09-06T02:42:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "SignalLost",
+    "at" : "2026-09-06T05:00:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "TransitionDetected",
+    "at" : "2026-09-06T05:00:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "SignalLost",
+    "at" : "2026-09-06T05:03:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "TransitionDetected",
+    "at" : "2026-09-06T05:03:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "TransitionDetected",
+    "at" : "2026-09-05T22:00:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "SignalLost",
+    "at" : "2026-09-05T23:30:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "SignalLost",
+    "at" : "2026-09-05T23:34:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "SignalLost",
+    "at" : "2026-09-06T02:30:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "TransitionDetected",
+    "at" : "2026-09-06T02:30:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "StaffPresenceDetected",
+    "at" : "2026-09-06T02:40:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "ComeBackWarning",
+    "at" : "2026-09-06T02:42:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "TransitionDetected",
+    "at" : "2026-09-06T02:42:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "TransitionDetected",
+    "at" : "2026-09-06T05:00:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "SignalLost",
+    "at" : "2026-09-06T05:03:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "SignalRecovered",
+    "at" : "2026-09-05T22:00:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "TransitionDetected",
+    "at" : "2026-09-05T23:30:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "TransitionDetected",
+    "at" : "2026-09-05T23:34:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "ComeBackExceeded",
+    "at" : "2026-09-06T02:40:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "SignalLost",
+    "at" : "2026-09-06T02:40:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "SignalLost",
+    "at" : "2026-09-06T05:00:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "TransitionDetected",
+    "at" : "2026-09-06T05:03:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "SignalLost",
+    "at" : "2026-09-05T22:00:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "TransitionDetected",
+    "at" : "2026-09-05T23:30:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "SignalLost",
+    "at" : "2026-09-05T23:34:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "TransitionDetected",
+    "at" : "2026-09-05T23:34:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "SignalLost",
+    "at" : "2026-09-06T02:30:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "TransitionDetected",
+    "at" : "2026-09-06T02:30:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "ComeBackExceeded",
+    "at" : "2026-09-06T02:40:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "SignalLost",
+    "at" : "2026-09-06T02:40:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "ComeBackWarning",
+    "at" : "2026-09-06T02:42:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "TransitionDetected",
+    "at" : "2026-09-06T02:42:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "SignalLost",
+    "at" : "2026-09-06T05:00:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "TransitionDetected",
+    "at" : "2026-09-06T05:00:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "SignalLost",
+    "at" : "2026-09-06T05:03:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "TransitionDetected",
+    "at" : "2026-09-06T05:03:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "SignalLost",
+    "at" : "2026-09-05T22:00:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "SignalLost",
+    "at" : "2026-09-05T22:00:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "SignalLost",
+    "at" : "2026-09-05T22:00:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "SignalLost",
+    "at" : "2026-09-05T22:00:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "SignalLost",
+    "at" : "2026-09-05T22:00:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "TransitionDetected",
+    "at" : "2026-09-05T23:30:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "TransitionDetected",
+    "at" : "2026-09-05T23:34:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "ComeBackExceeded",
+    "at" : "2026-09-06T02:40:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "SignalLost",
+    "at" : "2026-09-06T02:40:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "ComeBackWarning",
+    "at" : "2026-09-06T02:42:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "SignalLost",
+    "at" : "2026-09-06T05:00:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "TransitionDetected",
+    "at" : "2026-09-06T05:03:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "SignalLost",
+    "at" : "2026-09-05T22:00:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "SignalLost",
+    "at" : "2026-09-05T23:34:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "SignalLost",
+    "at" : "2026-09-06T02:30:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "TransitionDetected",
+    "at" : "2026-09-06T02:30:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "TransitionDetected",
+    "at" : "2026-09-06T02:42:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "TransitionDetected",
+    "at" : "2026-09-06T05:00:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "SignalLost",
+    "at" : "2026-09-06T05:03:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  } ],
+  "signals" : [ {
+    "raw" : "{\"timestamp\":\"2026-08-31T01:39:10.508Z\",\"status\":404,\"error\":\"Not Found\",\"path\":\"/api/v1/admin/signals\"}"
+  } ],
+  "expect" : {
+    "episodes" : [ {
+      "status" : "pending",
+      "severity" : "WARNING",
+      "count" : 1
+    } ],
+    "minSceneEvents" : 4,
+    "minSignals" : 1
+  },
+  "verified" : false
+}

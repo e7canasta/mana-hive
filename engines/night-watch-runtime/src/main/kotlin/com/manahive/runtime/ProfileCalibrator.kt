@@ -108,6 +108,22 @@ class ProfileCalibrator(
     @Synchronized
     fun current(residentId: ResidentId): ResidentProfile? = vigentes[residentId]?.profile
 
+    @Synchronized
+    fun evict(residentId: ResidentId): ResidentProfile? {
+        val removed = vigentes.remove(residentId)?.profile
+        if (removed != null) log.info("Evicted vigente {} v{}", residentId.value, removed.version)
+        else log.warn("Evict {}: no vigente", residentId.value)
+        return removed
+    }
+
+    @Synchronized
+    fun fingerprint(residentId: ResidentId): String? {
+        val vigente = vigentes[residentId] ?: return null
+        return try {
+            ProfileProjection.project(vigente.profile, vigente.window).value.fingerprint.value
+        } catch (_: Exception) { null }
+    }
+
     private fun apply(profile: ResidentProfile, window: String): Boolean {
         val proyectada = ProfileProjection.project(profile, window)
         val existing = runtime.get(profile.residentId)

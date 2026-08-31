@@ -1,0 +1,191 @@
+{
+  "meta" : {
+    "scenario" : "04-staff-presente-suprime",
+    "profile" : "/home/visiona/workspace/mana-dist/config/mana-hive/profiles/jose-v21.json",
+    "hubUrl" : "http://localhost:8080",
+    "natsUrl" : "nats://localhost:4222",
+    "residentId" : "jose",
+    "bed" : "bed-4",
+    "from" : "2026-09-06T22:00:00Z",
+    "to" : "2026-09-06T23:20:00Z",
+    "generatedAt" : "2026-08-31T01:39:20.176242501Z"
+  },
+  "steps" : [ {
+    "useManual" : "2026-09-06T22:00:00Z"
+  }, {
+    "obs" : {
+      "kind" : "IN_BED"
+    }
+  }, {
+    "obs" : {
+      "kind" : "STAFF_ENTERED"
+    }
+  }, {
+    "advance" : "PT5M"
+  }, {
+    "obs" : {
+      "kind" : "SITTING_IN_BED"
+    }
+  }, {
+    "advance" : "PT15M"
+  }, {
+    "obs" : {
+      "kind" : "IN_BED"
+    }
+  }, {
+    "useSystem" : true
+  } ],
+  "episodes" : [ {
+    "id" : "bed-4-042119a9-e113-41b3-a27b-050799c02602",
+    "residentId" : "jose",
+    "bedId" : "bed-4",
+    "severity" : "WARNING",
+    "status" : "resolved",
+    "title" : "alert-sitting_in_bed: bed-4",
+    "detail" : "Trigger: SITTING_IN_BED",
+    "occurredAt" : "2026-09-06T22:05:00Z",
+    "escalationLevel" : 0,
+    "isPending" : false,
+    "pending" : false
+  } ],
+  "sceneEvents" : [ {
+    "eventType" : "SignalRecovered",
+    "at" : "2026-09-06T22:00:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "StaffPresenceDetected",
+    "at" : "2026-09-06T22:00:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "ComeBackExceeded",
+    "at" : "2026-09-06T22:20:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "TransitionDetected",
+    "at" : "2026-09-06T22:20:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "TransitionDetected",
+    "at" : "2026-09-06T22:00:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "SignalLost",
+    "at" : "2026-09-06T22:00:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "TransitionDetected",
+    "at" : "2026-09-06T22:05:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "SignalLost",
+    "at" : "2026-09-06T22:20:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "TransitionDetected",
+    "at" : "2026-09-06T22:00:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "StaffPresenceDetected",
+    "at" : "2026-09-06T22:00:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "ComeBackExceeded",
+    "at" : "2026-09-06T22:20:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "SignalLost",
+    "at" : "2026-09-06T22:20:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "TransitionDetected",
+    "at" : "2026-09-06T22:20:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "SignalRecovered",
+    "at" : "2026-09-06T22:00:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "SignalLost",
+    "at" : "2026-09-06T22:00:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "TransitionDetected",
+    "at" : "2026-09-06T22:05:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "SignalLost",
+    "at" : "2026-09-06T22:00:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "TransitionDetected",
+    "at" : "2026-09-06T22:05:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "ComeBackExceeded",
+    "at" : "2026-09-06T22:20:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "SignalLost",
+    "at" : "2026-09-06T22:20:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "TransitionDetected",
+    "at" : "2026-09-06T22:20:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "TransitionDetected",
+    "at" : "2026-09-06T22:05:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "ComeBackExceeded",
+    "at" : "2026-09-06T22:20:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "SignalLost",
+    "at" : "2026-09-06T22:20:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "SignalLost",
+    "at" : "2026-09-06T22:00:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "TransitionDetected",
+    "at" : "2026-09-06T22:20:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  } ],
+  "signals" : [ {
+    "raw" : "{\"timestamp\":\"2026-08-31T01:39:20.173Z\",\"status\":404,\"error\":\"Not Found\",\"path\":\"/api/v1/admin/signals\"}"
+  } ],
+  "expect" : {
+    "episodes" : [ ],
+    "minSceneEvents" : 2,
+    "minSignals" : 0
+  },
+  "verified" : false
+}

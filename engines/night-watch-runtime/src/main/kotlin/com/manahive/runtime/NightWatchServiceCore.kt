@@ -41,10 +41,10 @@ class NightWatchServiceCore(
     private val census: Census,
     private val publisher: EventPublisher,
     private var clock: Clock,
+    val calibrator: ProfileCalibrator = ProfileCalibrator(runtime, census),
 ) : NightWatchServiceContract, TimeSink {
 
     private val log = LoggerFactory.getLogger(javaClass)
-    internal val calibrator = ProfileCalibrator(runtime, census)
 
     val residentCount: Int get() = runtime.size
 

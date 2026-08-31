@@ -7,6 +7,8 @@ import com.manahive.messaging.NatsObjectMapper
 import com.manahive.messaging.NatsTopology
 import com.manahive.messaging.Subjects
 import com.manahive.profile.api.ResidentProfileChanged
+import com.manahive.runtime.control.HiveCommand
+import com.manahive.runtime.control.HiveControlService
 import io.nats.client.Connection
 import io.nats.client.Dispatcher
 import io.nats.client.JetStream
@@ -31,6 +33,7 @@ class NightWatchService(
     private val timeSink: TimeSink,
     private val status: RuntimeStatusHolder,
     private val events: BusEvents,
+    private val hiveControlService: HiveControlService,
     @org.springframework.beans.factory.annotation.Value("\${manahive.profiles.dir:profiles}")
     private val profilesDir: String = "profiles",
 ) {
@@ -64,6 +67,7 @@ class NightWatchService(
             subscribeToObservations(connection)
             subscribeToProfiles(connection)
             subscribeToTimeControl(connection)
+            subscribeToHiveControl(connection)
             status.transition(RuntimeState.RUNNING, "consumiendo del bus")
             log.info("Night-watch runtime consumiendo: {} residentes activos", core.residentCount)
         } catch (e: Exception) {
@@ -164,5 +168,26 @@ class NightWatchService(
         dispatcher.subscribe("test.time.v1")
         dispatchers += dispatcher
         log.info("Subscribed to time control on test.time.v1")
+    }
+
+    private fun subscribeToHiveControl(connection: Connection) {
+        val dispatcher = connection.createDispatcher { msg ->
+            try {
+                val envelope = mapper.readValue<com.manahive.contracts.EventEnvelope>(String(msg.data))
+                val cmd = mapper.readValue<HiveCommand>(envelope.payloadJson)
+                log.info("HiveControl command received: {} for {}", cmd.action, cmd.residentId ?: "*")
+                val result = when (cmd.action) {
+                    HiveCommand.RELOAD -> hiveControlService.reload(cmd)
+                    HiveCommand.RESET_FULL -> hiveControlService.resetFull(cmd)
+                    else -> hiveControlService.reset(cmd)
+                }
+                log.info("HiveControl completed: {} -> {}", cmd.action, result.type)
+            } catch (e: Exception) {
+                log.error("Failed to process hive control command: {}", e.message, e)
+            }
+        }
+        dispatcher.subscribe("test.hive.v1")
+        dispatchers += dispatcher
+        log.info("Subscribed to hive control on test.hive.v1 -> publishes hive.control.v1")
     }
 }
