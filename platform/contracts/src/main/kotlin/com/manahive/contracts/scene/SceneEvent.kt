@@ -17,6 +17,7 @@ public sealed interface SceneEvent {
     public val bed: BedId
     public val night: NightId
     public val at: Instant
+    public val twinSnapshot: TwinSnapshot? get() = null
 
     // ── Person State Facts ────────────────────────────────────────
 
@@ -26,12 +27,14 @@ public sealed interface SceneEvent {
         public val occupant: ResidentId?,
         public val initialState: PersonState,
         public val stateSince: Instant,
+        override val twinSnapshot: TwinSnapshot? = null,
     ) : SceneEvent
 
     public data class TransitionDetected(
         override val bed: BedId, override val night: NightId, override val at: Instant,
         public val from: PersonState,
         public val to: PersonState,
+        override val twinSnapshot: TwinSnapshot? = null,
     ) : SceneEvent
 
     /** Early warning at ~80% of the threshold: "on its way to expire". */
@@ -40,6 +43,7 @@ public sealed interface SceneEvent {
         public val state: PersonState,
         public val threshold: Duration,
         public val since: Instant,
+        override val twinSnapshot: TwinSnapshot? = null,
     ) : SceneEvent
 
     public data class DwellExceeded(
@@ -47,6 +51,7 @@ public sealed interface SceneEvent {
         public val state: PersonState,
         public val threshold: Duration,
         public val since: Instant,
+        override val twinSnapshot: TwinSnapshot? = null,
     ) : SceneEvent
 
     // ── Scene State Facts ─────────────────────────────────────────
@@ -57,6 +62,7 @@ public sealed interface SceneEvent {
         public val field: String,
         public val from: String,
         public val to: String,
+        override val twinSnapshot: TwinSnapshot? = null,
     ) : SceneEvent
 
     /** Early warning for scene dwell (e.g., staff present for 10 min). */
@@ -65,6 +71,7 @@ public sealed interface SceneEvent {
         public val field: String,
         public val threshold: Duration,
         public val since: Instant,
+        override val twinSnapshot: TwinSnapshot? = null,
     ) : SceneEvent
 
     /** Scene dwell exceeded (e.g., staff present for 30 min). */
@@ -73,6 +80,7 @@ public sealed interface SceneEvent {
         public val field: String,
         public val threshold: Duration,
         public val since: Instant,
+        override val twinSnapshot: TwinSnapshot? = null,
     ) : SceneEvent
 
     // ── Signal Facts ──────────────────────────────────────────────
@@ -81,11 +89,13 @@ public sealed interface SceneEvent {
     public data class StaffPresenceDetected(
         override val bed: BedId, override val night: NightId, override val at: Instant,
         public val staff: StaffId?,
+        override val twinSnapshot: TwinSnapshot? = null,
     ) : SceneEvent
 
     /** Staff left the room. Resident may be alone or taken away. */
     public data class StaffLeftDetected(
         override val bed: BedId, override val night: NightId, override val at: Instant,
+        override val twinSnapshot: TwinSnapshot? = null,
     ) : SceneEvent
 
     /** The system that patrols silence models the silence of its own eye. */
@@ -93,11 +103,13 @@ public sealed interface SceneEvent {
         override val bed: BedId, override val night: NightId, override val at: Instant,
         public val monitor: MonitorId,
         public val lastHeartbeat: Instant,
+        override val twinSnapshot: TwinSnapshot? = null,
     ) : SceneEvent
 
     public data class SignalRecovered(
         override val bed: BedId, override val night: NightId, override val at: Instant,
         public val monitor: MonitorId,
+        override val twinSnapshot: TwinSnapshot? = null,
     ) : SceneEvent
 
     // ── ComeBack Facts (Inverse Dwell) ─────────────────────────
@@ -116,6 +128,7 @@ public sealed interface SceneEvent {
         public val baseline: PersonState,
         public val threshold: Duration,
         public val since: Instant,
+        override val twinSnapshot: TwinSnapshot? = null,
     ) : SceneEvent
 
     /** Come-back exceeded: the resident has been away from baseline too long. */
@@ -124,6 +137,7 @@ public sealed interface SceneEvent {
         public val baseline: PersonState,
         public val threshold: Duration,
         public val since: Instant,
+        override val twinSnapshot: TwinSnapshot? = null,
     ) : SceneEvent
 
     // ── Lifecycle Facts ───────────────────────────────────────────
@@ -131,6 +145,7 @@ public sealed interface SceneEvent {
     public data class NightClosed(
         override val bed: BedId, override val night: NightId, override val at: Instant,
         public val summary: NightSummary,
+        override val twinSnapshot: TwinSnapshot? = null,
     ) : SceneEvent
 }
 

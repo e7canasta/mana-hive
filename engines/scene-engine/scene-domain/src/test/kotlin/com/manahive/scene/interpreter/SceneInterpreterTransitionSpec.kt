@@ -50,13 +50,17 @@ class SceneInterpreterTransitionSpec : BehaviorSpec({
 
                 Then("se emite TransitionDetected(LYING, BED_EDGE)") {
                     result.value.facts shouldHaveSize 1
-                    result.value.facts.first() shouldBe TransitionDetected(
+                    val fact = result.value.facts.first() as TransitionDetected
+                    fact.copy(twinSnapshot = null) shouldBe TransitionDetected(
                         bed = bed3,
                         night = night1,
                         at = time03_00_02,
                         from = PersonState.Lying,
                         to = PersonState.BedEdge,
                     )
+                    // TwinSnapshot must be present (Fowler VO) — verifies bugfix
+                    assert(fact.twinSnapshot != null) { "twinSnapshot must not be null" }
+                    assert(fact.twinSnapshot!!.state == PersonState.BedEdge)
                 }
 
                 Then("la explicacion contiene transition-table") {

@@ -8,7 +8,7 @@
     "bed" : "bed-4",
     "from" : "2026-09-03T22:00:00Z",
     "to" : "2026-09-04T00:32:00Z",
-    "generatedAt" : "2026-08-31T03:15:31.981311844Z"
+    "generatedAt" : "2026-08-31T04:22:46.768060528Z"
   },
   "steps" : [ {
     "useManual" : "2026-09-03T22:00:00Z"
@@ -32,7 +32,7 @@
     "useSystem" : true
   } ],
   "episodes" : [ {
-    "id" : "bed-4-78b9962b-cd37-44b5-adb4-9a1916a3d7f9",
+    "id" : "bed-4-7819b550-1d13-48f3-8c42-87e525010b09",
     "residentId" : "jose",
     "bedId" : "bed-4",
     "severity" : "WARNING",
@@ -48,43 +48,79 @@
     "eventType" : "TransitionDetected",
     "at" : "2026-09-03T22:00:00Z",
     "bed" : "bed-4",
-    "residentId" : "jose"
+    "residentId" : "jose",
+    "from" : "Unknown",
+    "to" : "Lying",
+    "trigger" : "",
+    "payload" : "{\"type\":\"TransitionDetected\",\"at\":\"2026-09-03T22:00:00Z\",\"bed\":\"bed-4\",\"night\":\"night-jose-301\",\"from\":\"Unknown\",\"to\":\"Lying\",\"twinSnapshot\":{\"state\":\"Lying\",\"stateSince\":\"2026-09-03T22:00:00Z\",\"scene\":1023,\"sceneStaff\":\"Unknown\",\"sceneWheelchair\":\"Unknown\",\"sceneWalker\":\"Unknown\",\"sceneBedLeft\":\"Unknown\",\"sceneBedRight\":\"Unknown\",\"sceneSince\":\"1970-01-01T00:00:00Z\",\"signalLost\":false,\"signalLastHeartbeat\":\"1970-01-01T00:00:00Z\",\"monitor\":\"m1\"}}",
+    "twinSnapshot" : "{\"scene\": 1023, \"state\": \"Lying\", \"monitor\": \"m1\", \"sceneSince\": \"1970-01-01T00:00:00Z\", \"sceneStaff\": \"Unknown\", \"signalLost\": false, \"stateSince\": \"2026-09-03T22:00:00Z\", \"sceneWalker\": \"Unknown\", \"sceneBedLeft\": \"Unknown\", \"sceneBedRight\": \"Unknown\", \"sceneWheelchair\": \"Unknown\", \"signalLastHeartbeat\": \"1970-01-01T00:00:00Z\"}",
+    "stateSince" : "2026-09-03T22:00:00Z",
+    "sceneSince" : "1970-01-01T00:00:00Z",
+    "signalLost" : "false",
+    "monitorId" : "m1"
   }, {
     "eventType" : "TransitionDetected",
     "at" : "2026-09-03T23:15:00Z",
     "bed" : "bed-4",
-    "residentId" : "jose"
+    "residentId" : "jose",
+    "from" : "Lying",
+    "to" : "SittingInBed",
+    "trigger" : "",
+    "payload" : "{\"type\":\"TransitionDetected\",\"at\":\"2026-09-03T23:15:00Z\",\"bed\":\"bed-4\",\"night\":\"night-jose-301\",\"from\":\"Lying\",\"to\":\"SittingInBed\",\"twinSnapshot\":{\"state\":\"SittingInBed\",\"stateSince\":\"2026-09-03T23:15:00Z\",\"scene\":1023,\"sceneStaff\":\"Unknown\",\"sceneWheelchair\":\"Unknown\",\"sceneWalker\":\"Unknown\",\"sceneBedLeft\":\"Unknown\",\"sceneBedRight\":\"Unknown\",\"sceneSince\":\"1970-01-01T00:00:00Z\",\"signalLost\":false,\"signalLastHeartbeat\":\"1970-01-01T00:00:00Z\",\"monitor\":\"m1\"}}",
+    "twinSnapshot" : "{\"scene\": 1023, \"state\": \"SittingInBed\", \"monitor\": \"m1\", \"sceneSince\": \"1970-01-01T00:00:00Z\", \"sceneStaff\": \"Unknown\", \"signalLost\": false, \"stateSince\": \"2026-09-03T23:15:00Z\", \"sceneWalker\": \"Unknown\", \"sceneBedLeft\": \"Unknown\", \"sceneBedRight\": \"Unknown\", \"sceneWheelchair\": \"Unknown\", \"signalLastHeartbeat\": \"1970-01-01T00:00:00Z\"}",
+    "stateSince" : "2026-09-03T23:15:00Z",
+    "sceneSince" : "1970-01-01T00:00:00Z",
+    "signalLost" : "false",
+    "monitorId" : "m1"
   }, {
     "eventType" : "ComeBackExceeded",
     "at" : "2026-09-03T23:32:00Z",
     "bed" : "bed-4",
-    "residentId" : "jose"
+    "residentId" : "jose",
+    "from" : "",
+    "to" : "",
+    "trigger" : "",
+    "payload" : "{\"type\":\"ComeBackExceeded\",\"at\":\"2026-09-03T23:32:00Z\",\"bed\":\"bed-4\",\"night\":\"night-jose-301\",\"baseline\":\"Lying\",\"threshold\":\"PT8M\",\"since\":\"2026-09-03T23:15:00Z\",\"twinSnapshot\":{\"state\":\"SittingInBed\",\"stateSince\":\"2026-09-03T23:15:00Z\",\"scene\":1023,\"sceneStaff\":\"Unknown\",\"sceneWheelchair\":\"Unknown\",\"sceneWalker\":\"Unknown\",\"sceneBedLeft\":\"Unknown\",\"sceneBedRight\":\"Unknown\",\"sceneSince\":\"1970-01-01T00:00:00Z\",\"signalLost\":false,\"signalLastHeartbeat\":\"1970-01-01T00:00:00Z\",\"monitor\":\"m1\"}}",
+    "twinSnapshot" : "{\"scene\": 1023, \"state\": \"SittingInBed\", \"monitor\": \"m1\", \"sceneSince\": \"1970-01-01T00:00:00Z\", \"sceneStaff\": \"Unknown\", \"signalLost\": false, \"stateSince\": \"2026-09-03T23:15:00Z\", \"sceneWalker\": \"Unknown\", \"sceneBedLeft\": \"Unknown\", \"sceneBedRight\": \"Unknown\", \"sceneWheelchair\": \"Unknown\", \"signalLastHeartbeat\": \"1970-01-01T00:00:00Z\"}",
+    "stateSince" : "2026-09-03T23:15:00Z",
+    "sceneSince" : "1970-01-01T00:00:00Z",
+    "signalLost" : "false",
+    "monitorId" : "m1"
   }, {
     "eventType" : "TransitionDetected",
     "at" : "2026-09-03T23:32:00Z",
     "bed" : "bed-4",
-    "residentId" : "jose"
+    "residentId" : "jose",
+    "from" : "SittingInBed",
+    "to" : "Lying",
+    "trigger" : "",
+    "payload" : "{\"type\":\"TransitionDetected\",\"at\":\"2026-09-03T23:32:00Z\",\"bed\":\"bed-4\",\"night\":\"night-jose-301\",\"from\":\"SittingInBed\",\"to\":\"Lying\",\"twinSnapshot\":{\"state\":\"Lying\",\"stateSince\":\"2026-09-03T23:32:00Z\",\"scene\":1023,\"sceneStaff\":\"Unknown\",\"sceneWheelchair\":\"Unknown\",\"sceneWalker\":\"Unknown\",\"sceneBedLeft\":\"Unknown\",\"sceneBedRight\":\"Unknown\",\"sceneSince\":\"1970-01-01T00:00:00Z\",\"signalLost\":false,\"signalLastHeartbeat\":\"1970-01-01T00:00:00Z\",\"monitor\":\"m1\"}}",
+    "twinSnapshot" : "{\"scene\": 1023, \"state\": \"Lying\", \"monitor\": \"m1\", \"sceneSince\": \"1970-01-01T00:00:00Z\", \"sceneStaff\": \"Unknown\", \"signalLost\": false, \"stateSince\": \"2026-09-03T23:32:00Z\", \"sceneWalker\": \"Unknown\", \"sceneBedLeft\": \"Unknown\", \"sceneBedRight\": \"Unknown\", \"sceneWheelchair\": \"Unknown\", \"signalLastHeartbeat\": \"1970-01-01T00:00:00Z\"}",
+    "stateSince" : "2026-09-03T23:32:00Z",
+    "sceneSince" : "1970-01-01T00:00:00Z",
+    "signalLost" : "false",
+    "monitorId" : "m1"
   } ],
   "signals" : [ {
     "type" : "EPISODE_OPENED",
     "at" : "2026-09-03T23:15:00Z",
     "bed" : "bed-4",
     "residentId" : "jose",
-    "episodeId" : "bed-4-78b9962b-cd37-44b5-adb4-9a1916a3d7f9",
+    "episodeId" : "bed-4-7819b550-1d13-48f3-8c42-87e525010b09",
     "severity" : "WARNING"
   }, {
     "type" : "UMBRELLA_EVENT",
     "at" : "2026-09-03T23:32:00Z",
     "bed" : "bed-4",
     "residentId" : "jose",
-    "episodeId" : "bed-4-78b9962b-cd37-44b5-adb4-9a1916a3d7f9",
+    "episodeId" : "bed-4-7819b550-1d13-48f3-8c42-87e525010b09",
     "severity" : ""
   }, {
     "type" : "EPISODE_CLOSED",
     "at" : "2026-09-03T23:32:00Z",
     "bed" : "bed-4",
     "residentId" : "jose",
-    "episodeId" : "bed-4-78b9962b-cd37-44b5-adb4-9a1916a3d7f9",
+    "episodeId" : "bed-4-7819b550-1d13-48f3-8c42-87e525010b09",
     "severity" : ""
   } ],
   "expect" : {

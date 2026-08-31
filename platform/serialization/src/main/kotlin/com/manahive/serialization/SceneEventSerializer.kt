@@ -103,6 +103,25 @@ object SceneEventSerializer {
             }
         }
 
+        // TwinSnapshot — Value Object sin domicilio (bed/night ya en envelope)
+        event.twinSnapshot?.let { snap ->
+            val snapMap = mutableMapOf<String, Any>(
+                "state" to (snap.state::class.simpleName!!),
+                "stateSince" to snap.stateSince.toString(),
+                "scene" to snap.scene.toBitmask().toInt(),
+                "sceneStaff" to (snap.scene.staff::class.simpleName!!),
+                "sceneWheelchair" to (snap.scene.wheelchair::class.simpleName!!),
+                "sceneWalker" to (snap.scene.walker::class.simpleName!!),
+                "sceneBedLeft" to (snap.scene.bed.left::class.simpleName!!),
+                "sceneBedRight" to (snap.scene.bed.right::class.simpleName!!),
+                "sceneSince" to snap.sceneSince.toString(),
+                "signalLost" to snap.signalLost,
+                "signalLastHeartbeat" to snap.signalLastHeartbeat.toString(),
+            )
+            snap.monitor?.let { snapMap["monitor"] = it.value }
+            map["twinSnapshot"] = snapMap
+        }
+
         return com.fasterxml.jackson.module.kotlin.jacksonObjectMapper()
             .writerWithDefaultPrettyPrinter()
             .writeValueAsString(map)

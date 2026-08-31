@@ -162,14 +162,28 @@ public data class DigitalTwin(
         warning = warning,
     )
 
-    /** Emits a TransitionDetected fact from this twin. */
-    public fun emitTransition(to: PersonState, at: Instant): TransitionDetected = TransitionDetected(
-        bed = bed,
-        night = night,
-        at = at,
-        from = state,
-        to = to,
+    public fun toSnapshot(): com.manahive.contracts.scene.TwinSnapshot = com.manahive.contracts.scene.TwinSnapshot(
+        state = state,
+        stateSince = stateSince,
+        scene = scene,
+        sceneSince = sceneSince,
+        signalLost = signal.lost,
+        signalLastHeartbeat = signal.lastHeartbeat,
+        monitor = signal.monitor,
     )
+
+    /** Emits a TransitionDetected fact from this twin. */
+    public fun emitTransition(to: PersonState, at: Instant): TransitionDetected {
+        val snapshot = copy(state = to, stateSince = at).toSnapshot()
+        return TransitionDetected(
+            bed = bed,
+            night = night,
+            at = at,
+            from = state,
+            to = to,
+            twinSnapshot = snapshot,
+        )
+    }
 
     /** Emits a SceneStateChanged fact from this twin. */
     public fun emitSceneStateChanged(field: String, from: String, to: String, at: Instant): SceneStateChanged = SceneStateChanged(
@@ -179,6 +193,7 @@ public data class DigitalTwin(
         field = field,
         from = from,
         to = to,
+        twinSnapshot = toSnapshot(),
     )
 
     /** Emits a SignalRecovered fact from this twin. */
@@ -187,6 +202,7 @@ public data class DigitalTwin(
         night = night,
         at = at,
         monitor = signal.monitor,
+        twinSnapshot = toSnapshot(),
     )
 
     /** Emits a DwellExceeded fact from this twin. */
@@ -197,6 +213,7 @@ public data class DigitalTwin(
         state = state,
         threshold = threshold,
         since = stateSince,
+        twinSnapshot = toSnapshot(),
     )
 
     /** Emits a DwellWarning fact from this twin. */
@@ -207,6 +224,7 @@ public data class DigitalTwin(
         state = state,
         threshold = threshold,
         since = stateSince,
+        twinSnapshot = toSnapshot(),
     )
 
     /** Emits a SignalLost fact from this twin. */
@@ -216,6 +234,7 @@ public data class DigitalTwin(
         at = at,
         monitor = signal.monitor,
         lastHeartbeat = signal.lastHeartbeat,
+        twinSnapshot = toSnapshot(),
     )
 
     /** Emits a ComeBackWarning fact from this twin. */
@@ -226,6 +245,7 @@ public data class DigitalTwin(
         baseline = baselineState,
         threshold = threshold,
         since = leftStateAt ?: stateSince,
+        twinSnapshot = toSnapshot(),
     )
 
     /** Emits a ComeBackExceeded fact from this twin. */
@@ -236,6 +256,7 @@ public data class DigitalTwin(
         baseline = baselineState,
         threshold = threshold,
         since = leftStateAt ?: stateSince,
+        twinSnapshot = toSnapshot(),
     )
 }
 

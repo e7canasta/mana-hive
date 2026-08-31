@@ -81,23 +81,29 @@ class LaCaidaDeLas03Spec : BehaviorSpec({
             }
 
             Then("facts[0] = TransitionDetected(LYING, BED_EDGE)") {
-                allFacts[0] shouldBe TransitionDetected(
+                val fact0 = allFacts[0] as TransitionDetected
+                fact0.copy(twinSnapshot = null) shouldBe TransitionDetected(
                     bed = bed3,
                     night = night1,
                     at = time03_00_00,
                     from = PersonState.Lying,
                     to = PersonState.BedEdge,
                 )
+                assert(fact0.twinSnapshot != null)
+                assert(fact0.twinSnapshot!!.state == PersonState.BedEdge)
             }
 
             Then("facts[1] = TransitionDetected(BED_EDGE, STANDING)") {
-                allFacts[1] shouldBe TransitionDetected(
+                val fact1 = allFacts[1] as TransitionDetected
+                fact1.copy(twinSnapshot = null) shouldBe TransitionDetected(
                     bed = bed3,
                     night = night1,
                     at = time03_00_02,
                     from = PersonState.BedEdge,
                     to = PersonState.Standing,
                 )
+                assert(fact1.twinSnapshot != null)
+                assert(fact1.twinSnapshot!!.state == PersonState.Standing)
             }
 
             Then("facts contiene DwellExceeded(STANDING)") {

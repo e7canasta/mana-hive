@@ -126,12 +126,14 @@ internal class SceneInterpreterImpl(
                     night = twin.night,
                     at = now,
                     staff = null,
+                    twinSnapshot = updatedTwin.toSnapshot(),
                 )
             field == "staff" && newScene.staff == com.manahive.contracts.scene.PresenceState.NotPresent ->
                 StaffLeftDetected(
                     bed = twin.bed,
                     night = twin.night,
                     at = now,
+                    twinSnapshot = updatedTwin.toSnapshot(),
                 )
             else ->
                 updatedTwin.emitSceneStateChanged(

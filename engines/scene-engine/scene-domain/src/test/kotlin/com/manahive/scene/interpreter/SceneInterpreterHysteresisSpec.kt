@@ -70,13 +70,16 @@ class SceneInterpreterHysteresisSpec : BehaviorSpec({
 
                 Then("se emite TransitionDetected") {
                     result.value.facts shouldHaveSize 1
-                    result.value.facts.first() shouldBe TransitionDetected(
+                    val fact = result.value.facts.first() as TransitionDetected
+                    fact.copy(twinSnapshot = null) shouldBe TransitionDetected(
                         bed = bed3,
                         night = night1,
                         at = time03_00_02,
                         from = PersonState.Lying,
                         to = PersonState.BedEdge,
                     )
+                    assert(fact.twinSnapshot != null) { "twinSnapshot must not be null" }
+                    assert(fact.twinSnapshot!!.state == PersonState.BedEdge)
                 }
             }
         }
