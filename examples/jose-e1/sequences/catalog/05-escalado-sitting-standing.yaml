@@ -1,0 +1,31 @@
+# 05 — Escalado SITTING WARNING → STANDING CRITICAL
+# Negocio: "José sentado (aviso), se paró 3 min → empeoró a CRITICAL. Enfermera lo acostó."
+# Director: rampa severidad — mismo episodio que escala, no dos.
+# Perfil v6: SITTING onEntry WARNING, STANDING dwell 2m/3m CRITICAL.
+profile: "/home/visiona/workspace/mana-dist/config/mana-hive/profiles/jose-v22.json"
+clean: true
+autoDate: false
+start: "2026-09-07T22:00:00Z"
+residentId: "jose"
+bed: "bed-4"
+monitor: "m1"
+hubUrl: "http://localhost:8080"
+natsUrl: "nats://localhost:4222"
+expect:
+  episodes:
+    - { status: "resolved", severity: "CRITICAL", count: 1 }
+  minSceneEvents: 4
+  minSignals: 1
+steps:
+  - useManual: "2026-09-07T22:00:00Z"
+  - obs: { kind: IN_BED }
+  - advance: "PT5M"
+  - obs: { kind: SITTING_IN_BED }
+  - advance: "PT1M"
+  - obs: { kind: STANDING }
+  - advance: "PT3M"
+  - advance: "PT2M"
+  - obs: { kind: STAFF_ENTERED }
+  - advance: "PT2M"
+  - obs: { kind: IN_BED }
+  - useSystem: true

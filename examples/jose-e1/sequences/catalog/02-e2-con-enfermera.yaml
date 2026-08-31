@@ -1,0 +1,30 @@
+# 02 — José se queda sentado y viene la enfermera
+# Negocio: "José se sentó a las 22:05, a las 22:13 ya llevaba 8 min fuera de cama → alerta. Entró la enfermera a las 22:18 y lo acostó a las 22:20. Episodio cerrado por personal."
+# Director: prueba cierre STAFF_OR_SAFE — basta que entre personal aunque siga sentado para poder cerrar.
+# Enfermería: episodio que requiere visita, se marca presente y luego seguro.
+# Esperado: 1 episodio resolved WARNING (abrió 22:05 con v6 onEntry) → cerrado 22:20 por IN_BED+STAFF.
+profile: "/home/visiona/workspace/mana-dist/config/mana-hive/profiles/jose-v14.json"
+clean: true
+autoDate: false
+start: "2026-09-04T22:00:00Z"
+residentId: "jose"
+bed: "bed-4"
+monitor: "m1"
+hubUrl: "http://localhost:8080"
+natsUrl: "nats://localhost:4222"
+expect:
+  episodes:
+    - { status: "resolved", severity: "WARNING", count: 1 }
+  minSceneEvents: 2
+  minSignals: 1
+steps:
+  - useManual: "2026-09-04T22:00:00Z"
+  - obs: { kind: IN_BED }
+  - advance: "PT5M"
+  - obs: { kind: SITTING_IN_BED }
+  - advance: "PT8M"
+  - advance: "PT5M"
+  - obs: { kind: STAFF_ENTERED }
+  - advance: "PT2M"
+  - obs: { kind: IN_BED }
+  - useSystem: true

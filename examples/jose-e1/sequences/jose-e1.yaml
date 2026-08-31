@@ -1,0 +1,14 @@
+start: "2024-01-15T22:00:00Z"
+bed: "bed-4"
+monitor: "m1"
+steps:
+  - useManual: "2024-01-15T22:00:00Z"
+  - obs: { kind: IN_BED, conf: 0.95 }
+  - advance: "PT5M"
+  - obs: { kind: SITTING_IN_BED }
+  - advance: "PT8M"
+  - advance: "PT5M"
+  - obs: { kind: STAFF_ENTERED, conf: 0.95 }
+  - advance: "PT2M"
+  - obs: { kind: IN_BED }
+  - useSystem: true

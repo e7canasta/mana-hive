@@ -25,7 +25,7 @@ import java.util.UUID
  */
 fun main() {
     val mapper = NatsObjectMapper.mapper
-    val START = Instant.parse("2024-01-26T22:00:00Z")
+    val START = Instant.parse("2024-01-27T22:00:00Z")
     val bed = "bed-4"
     val monitor = "m1"
 

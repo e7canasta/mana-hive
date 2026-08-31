@@ -1,0 +1,38 @@
+# 03 — Noche normal (1 episodio + 2 cortas)
+# Negocio: "Noche tranquila: 4 min sentado 23:30 y 3 min 05:00 — no alertamos. 12 min sentado 02:30 → 1 alerta que atendimos."
+# Director: valida que no sobre-alertamos por sentadas cortas (PT5M) y que 1 larga sí genera. Ledger limpio.
+# Enfermería: 1 episodio comeBack LYING 5m/8m → cerrado por STAFF_OR_SAFE.
+# Perfil v3: SITTING observeOnly, LYING comeBack 5m/8m.
+profile: "/home/visiona/workspace/mana-dist/config/mana-hive/profiles/jose-v20.json"
+clean: true
+autoDate: false
+start: "2026-09-05T22:00:00Z"
+residentId: "jose"
+bed: "bed-4"
+monitor: "m1"
+hubUrl: "http://localhost:8080"
+natsUrl: "nats://localhost:4222"
+expect:
+  episodes:
+    - { status: "pending", severity: "WARNING", count: 1 }
+  minSceneEvents: 4
+  minSignals: 1
+steps:
+  - useManual: "2026-09-05T22:00:00Z"
+  - obs: { kind: IN_BED }
+  - advance: "PT1H30M"
+  - obs: { kind: SITTING_IN_BED }
+  - advance: "PT4M"
+  - obs: { kind: IN_BED }
+  - advance: "PT2H56M"
+  - obs: { kind: SITTING_IN_BED }
+  - advance: "PT8M"
+  - advance: "PT2M"
+  - obs: { kind: STAFF_ENTERED }
+  - advance: "PT2M"
+  - obs: { kind: IN_BED }
+  - advance: "PT2H18M"
+  - obs: { kind: SITTING_IN_BED }
+  - advance: "PT3M"
+  - obs: { kind: IN_BED }
+  - useSystem: true

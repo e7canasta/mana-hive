@@ -1,0 +1,28 @@
+# 01 — José se sienta mucho y vuelve solo (E1 canónico)
+# Negocio: José 22:00 acostado → 23:15 se sienta 17m → 23:32 se vuelve a acostar solo.
+# Con perfil v6: SITTING onEntry abre WARNING inmediato a las 23:15, IN_BED lo cierra solo (AUTO_RECOVERY/SAFE_ONLY).
+# Director: valida que avisamos sin enfermera y no queda colgado.
+# Enfermería: 1 episodio que pasa de pending a resolved solo, sin intervención.
+# Esperado: 1 episodio resolved (abrió 23:15, cerró 23:32) + 2 scene Transitions + signal OPENED/CLOSED.
+profile: "/home/visiona/workspace/mana-dist/config/mana-hive/profiles/jose-v13.json"
+clean: true
+autoDate: false
+start: "2026-09-03T22:00:00Z"
+residentId: "jose"
+bed: "bed-4"
+monitor: "m1"
+hubUrl: "http://localhost:8080"
+natsUrl: "nats://localhost:4222"
+expect:
+  episodes:
+    - { status: "resolved", severity: "WARNING", count: 1 }
+  minSceneEvents: 2
+  minSignals: 1
+steps:
+  - useManual: "2026-09-03T22:00:00Z"
+  - obs: { kind: IN_BED }
+  - advance: "PT1H15M"
+  - obs: { kind: SITTING_IN_BED }
+  - advance: "PT17M"
+  - obs: { kind: IN_BED }
+  - useSystem: true

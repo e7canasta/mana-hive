@@ -1,0 +1,169 @@
+{
+  "meta" : {
+    "scenario" : "01-e1-vuelve-solo",
+    "profile" : "/home/visiona/workspace/mana-dist/config/mana-hive/profiles/jose-v13.json",
+    "hubUrl" : "http://localhost:8080",
+    "natsUrl" : "nats://localhost:4222",
+    "residentId" : "jose",
+    "bed" : "bed-4",
+    "from" : "2026-09-03T22:00:00Z",
+    "to" : "2026-09-04T00:32:00Z",
+    "generatedAt" : "2026-08-31T01:30:03.118925289Z"
+  },
+  "steps" : [ {
+    "useManual" : "2026-09-03T22:00:00Z"
+  }, {
+    "obs" : {
+      "kind" : "IN_BED"
+    }
+  }, {
+    "advance" : "PT1H15M"
+  }, {
+    "obs" : {
+      "kind" : "SITTING_IN_BED"
+    }
+  }, {
+    "advance" : "PT17M"
+  }, {
+    "obs" : {
+      "kind" : "IN_BED"
+    }
+  }, {
+    "useSystem" : true
+  } ],
+  "episodes" : [ ],
+  "sceneEvents" : [ {
+    "eventType" : "SignalRecovered",
+    "at" : "2026-09-03T22:00:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "TransitionDetected",
+    "at" : "2026-09-03T22:00:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "SignalLost",
+    "at" : "2026-09-03T23:15:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "TransitionDetected",
+    "at" : "2026-09-03T23:15:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "ComeBackExceeded",
+    "at" : "2026-09-03T23:32:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "SignalLost",
+    "at" : "2026-09-03T23:32:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "TransitionDetected",
+    "at" : "2026-09-03T23:32:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "ComeBackExceeded",
+    "at" : "2026-09-03T23:32:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "SignalLost",
+    "at" : "2026-09-03T23:32:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "SignalRecovered",
+    "at" : "2026-09-03T22:00:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "TransitionDetected",
+    "at" : "2026-09-03T22:00:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "SignalLost",
+    "at" : "2026-09-03T23:15:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "TransitionDetected",
+    "at" : "2026-09-03T23:15:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "TransitionDetected",
+    "at" : "2026-09-03T23:32:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "SignalLost",
+    "at" : "2026-09-03T22:00:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "SignalRecovered",
+    "at" : "2026-09-03T22:00:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "TransitionDetected",
+    "at" : "2026-09-03T22:00:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "SignalLost",
+    "at" : "2026-09-03T23:15:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "TransitionDetected",
+    "at" : "2026-09-03T23:15:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "ComeBackExceeded",
+    "at" : "2026-09-03T23:32:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "SignalLost",
+    "at" : "2026-09-03T23:32:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "TransitionDetected",
+    "at" : "2026-09-03T23:32:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "SignalLost",
+    "at" : "2026-09-03T22:00:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  }, {
+    "eventType" : "SignalLost",
+    "at" : "2026-09-03T22:00:00Z",
+    "bed" : "bed-4",
+    "residentId" : ""
+  } ],
+  "signals" : [ {
+    "raw" : "{\"timestamp\":\"2026-08-31T01:30:03.116Z\",\"status\":404,\"error\":\"Not Found\",\"path\":\"/api/v1/admin/signals\"}"
+  } ],
+  "expect" : {
+    "episodes" : [ {
+      "status" : "resolved",
+      "severity" : "WARNING",
+      "count" : 1
+    } ],
+    "minSceneEvents" : 2,
+    "minSignals" : 1
+  },
+  "verified" : false
+}

@@ -248,6 +248,14 @@ class ResidentRuntime(
         recorderEngine = createRecorderEngine(newCalibrations.recorder)
         twin = twin.copy(calibration = newCalibrations.scene)
     }
+
+    fun reset() {
+        episodes = EpisodeLedger.empty(residentId)
+        harborState = HarborState()
+        recordingLedger = RecordingLedger(emptyMap())
+        dwellMarks = DwellMarks.NONE
+        lastObservedAt = null
+    }
 }
 
 /**

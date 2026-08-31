@@ -67,5 +67,6 @@ include(":platform:serialization")
 
 // ── examples: pruebas de integración y arranque en frío ─────────────────────
 include(":examples:jose-e1")
+include(":examples:scenario-simulator")
 
 // Los *-service de motor viven en .archive: night-watch-runtime los reemplaza.

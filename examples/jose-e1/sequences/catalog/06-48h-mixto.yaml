@@ -1,0 +1,48 @@
+# 06 — 48h mixto (cortas / largas / staff sola)
+# Negocio: "Dos días mixto: cortas 4m/3m no alertan, 3 largas sí, 2 rondas staff sola sin episodio."
+# Director: robustez 48h — ledger limpio entre episodios, staff sola no rompe.
+# Perfil v3: SITTING observeOnly, comeBack 5m/8m — cortas no abren.
+profile: "/home/visiona/workspace/mana-dist/config/mana-hive/profiles/jose-v23.json"
+clean: true
+autoDate: false
+start: "2026-09-08T22:00:00Z"
+residentId: "jose"
+bed: "bed-4"
+monitor: "m1"
+hubUrl: "http://localhost:8080"
+natsUrl: "nats://localhost:4222"
+expect:
+  episodes:
+    - { status: "resolved", severity: "WARNING", count: 4 }
+  minSceneEvents: 8
+  minSignals: 4
+steps:
+  - useManual: "2026-09-08T22:00:00Z"
+  - obs: { kind: IN_BED }
+  - advance: "PT1H30M"
+  - obs: { kind: SITTING_IN_BED }
+  - advance: "PT4M"
+  - obs: { kind: IN_BED }
+  - advance: "PT2H56M"
+  - obs: { kind: SITTING_IN_BED }
+  - advance: "PT8M"
+  - advance: "PT2M"
+  - obs: { kind: STAFF_ENTERED }
+  - advance: "PT2M"
+  - obs: { kind: IN_BED }
+  - advance: "PT2H18M"
+  - obs: { kind: STAFF_ENTERED }
+  - advance: "PT2M"
+  - obs: { kind: STAFF_LEFT }
+  - advance: "PT4H58M"
+  - obs: { kind: SITTING_IN_BED }
+  - advance: "PT3M"
+  - obs: { kind: IN_BED }
+  - advance: "PT3H57M"
+  - obs: { kind: SITTING_IN_BED }
+  - advance: "PT8M"
+  - advance: "PT2M"
+  - obs: { kind: STAFF_ENTERED }
+  - advance: "PT2M"
+  - obs: { kind: IN_BED }
+  - useSystem: true

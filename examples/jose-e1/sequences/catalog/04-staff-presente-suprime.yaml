@@ -1,0 +1,26 @@
+# 04 — Enfermera ya está → sentada larga no abre
+# Negocio: "Enfermera en ronda 22:02 se quedó con José. José sentado 15 min 22:05 pero vigilado → no abrimos."
+# Director: supresión STAFF_PRESENT — no ruido con personal presente.
+# Esperado: 0 episodios, SuppressedWithRecord STAFF_PRESENT.
+profile: "/home/visiona/workspace/mana-dist/config/mana-hive/profiles/jose-v21.json"
+clean: true
+autoDate: false
+start: "2026-09-06T22:00:00Z"
+residentId: "jose"
+bed: "bed-4"
+monitor: "m1"
+hubUrl: "http://localhost:8080"
+natsUrl: "nats://localhost:4222"
+expect:
+  episodes: []
+  minSceneEvents: 2
+  minSignals: 0
+steps:
+  - useManual: "2026-09-06T22:00:00Z"
+  - obs: { kind: IN_BED }
+  - obs: { kind: STAFF_ENTERED }
+  - advance: "PT5M"
+  - obs: { kind: SITTING_IN_BED }
+  - advance: "PT15M"
+  - obs: { kind: IN_BED }
+  - useSystem: true
