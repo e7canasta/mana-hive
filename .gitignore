@@ -1,16 +1,57 @@
+# === Gradle / Build ===
 .gradle/
 build/
-.kotlin/
-.idea/
-*.iml
-local.properties
-.obsidian/
-archive/
-.archive/
-crates/
+out/
 # NO ignorar gradle/ — ahi viven el wrapper y libs.versions.toml.
 # La cache es .gradle/ (linea 1), que es otra cosa. Sin gradle/ en el
 # repo, un clone limpio no compila: no hay wrapper ni catalogo de versiones.
-.archive
 
-build-logic
+# === Kotlin / JVM ===
+.kotlin/
+*.class
+hs_err_pid*
+replay_pid*
+
+# === IDE - IntelliJ ===
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# === IDE - VS Code ===
+.vscode/
+
+# === OS ===
+.DS_Store
+.DS_Store?
+Thumbs.db
+ehthumbs.db
+*~
+
+# === Secrets / Local ===
+local.properties
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+
+# === Obsidian ===
+.obsidian/
+
+# === Logs / Temp ===
+*.log
+*.tmp
+*.swp
+*.swo
+
+# === Archives / Legacy ===
+archive/
+.archive/
+crates/
+
+# === AOT / Cache (no versionar - excede limite 100MB de GitHub) ===
+*.aot
+aot-jvm/cache/
+aot-jvm/cache-bridge/
+aot-jvm/cache-hub/
