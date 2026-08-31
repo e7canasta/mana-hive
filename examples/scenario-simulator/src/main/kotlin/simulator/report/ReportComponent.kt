@@ -27,9 +27,16 @@ object ReportComponent {
         expect: Map<String, Any>?,
         verified: Boolean
     ): File {
-        val episodesJson = try { Http.get("$hubUrl/api/v1/episodes?residentId=$residentId&from=$from&to=$to&bedId=$bed") } catch (e: Exception) { "[]" }
+        val episodesJson = try { Http.get("$hubUrl/api/v1/episodes?residentId=$residentId&from=$from&to=$to") } catch (e: Exception) { "[]" }
         val scenesJson = try { Http.get("$hubUrl/api/v1/admin/scene-events?residentId=$residentId&from=$from&to=$to&bedId=$bed") } catch (e: Exception) { "[]" }
-        val signalsJson = try { Http.get("$hubUrl/api/v1/admin/signals?residentId=$residentId&from=$from&to=$to&bedId=$bed") } catch (e: Exception) { "[]" }
+        // hub no expone /admin/signals -> fallback a episodes como proxy (ExpectVerifier.kt:60)
+        val signalsJson = try {
+            val s = Http.get("$hubUrl/api/v1/admin/signals?residentId=$residentId&from=$from&to=$to&bedId=$bed")
+            if (s.contains("\"status\":404") || s.contains("Not Found")) throw IllegalStateException("admin/signals 404")
+            s
+        } catch (e: Exception) {
+            try { Http.get("$hubUrl/api/v1/episodes?residentId=$residentId&from=$from&to=$to") } catch (_: Exception) { "[]" }
+        }
 
         fun parseList(s: String): List<Map<String, Any>> = try {
             @Suppress("UNCHECKED_CAST")

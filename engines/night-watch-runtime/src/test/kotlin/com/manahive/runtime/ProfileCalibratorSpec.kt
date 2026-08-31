@@ -146,7 +146,7 @@ class ProfileCalibratorSpec {
     fun `un perfil invalido se rechaza entero`() {
         val (cal, runtime) = montado(aLas("03"))
         val roto = ProfileExamples.ELENA.copy(
-            provenance = ProfileExamples.ELENA.provenance.copy(reason = "  "),
+            provenance = ProfileExamples.ELENA.provenance!!.copy(reason = "  "),
         )
         assertFalse(cal.accept(roto))
         assertNull(runtime.get(elena))
@@ -161,7 +161,7 @@ class ProfileCalibratorSpec {
             cal.accept(
                 ProfileExamples.ELENA.copy(
                     version = 9, supersedes = 8,
-                    provenance = ProfileExamples.ELENA.provenance.copy(reason = ""),
+                    provenance = ProfileExamples.ELENA.provenance!!.copy(reason = ""),
                 ),
             ),
         )

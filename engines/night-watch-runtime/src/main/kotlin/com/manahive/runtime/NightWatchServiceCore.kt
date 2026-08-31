@@ -170,21 +170,21 @@ class NightWatchServiceCore(
             publisher.publishSceneEvent(bed, fact)
         }
 
-        // Deduplicate signals by (type, episode) — sweep + observation can produce the same signal
+        // Deduplicate signals by (type, episode) — sweep + observation can produce same signal twice, but Umbrella vs Closed must not be deduped
         val seen = mutableSetOf<String>()
         for (signal in out.signals) {
-            val key = "${signal.type}:${signal::class.simpleName}"
             val episodeKey = when (signal) {
-                is com.manahive.contracts.sentinel.SentinelSignal.EpisodeOpened -> "EP:${signal.episode.value}"
-                is com.manahive.contracts.sentinel.SentinelSignal.EpisodeClosed -> "EP:${signal.episode.value}"
-                is com.manahive.contracts.sentinel.SentinelSignal.AutoRecovery -> "EP:${signal.episode.value}"
-                is com.manahive.contracts.sentinel.SentinelSignal.UmbrellaEvent -> "EP:${signal.episode.value}"
-                else -> key
+                is com.manahive.contracts.sentinel.SentinelSignal.EpisodeOpened -> "OPEN:${signal.episode.value}"
+                is com.manahive.contracts.sentinel.SentinelSignal.EpisodeClosed -> "CLOSED:${signal.episode.value}"
+                is com.manahive.contracts.sentinel.SentinelSignal.AutoRecovery -> "RECOVERY:${signal.episode.value}"
+                is com.manahive.contracts.sentinel.SentinelSignal.UmbrellaEvent -> "UMBRELLA:${signal.episode.value}:${signal.state.name}"
+                else -> "${signal.type}:${signal::class.simpleName}:${signal.hashCode()}"
             }
             if (seen.add(episodeKey)) {
+                log.info("Publishing signal {} for episode {}", signal.type, episodeKey)
                 publisher.publishSentinelSignal(bed, signal)
             } else {
-                log.debug("Skipping duplicate signal: {}", episodeKey)
+                log.info("Skipping duplicate signal: {}", episodeKey)
             }
         }
 
