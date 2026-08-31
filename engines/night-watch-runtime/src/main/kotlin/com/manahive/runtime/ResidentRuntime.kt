@@ -249,12 +249,31 @@ class ResidentRuntime(
         twin = twin.copy(calibration = newCalibrations.scene)
     }
 
+    /** Partial reset: keeps twin (Fowler: temp reset for tests). Use [resetFull] for cold. */
     fun reset() {
         episodes = EpisodeLedger.empty(residentId)
         harborState = HarborState()
         recordingLedger = RecordingLedger(emptyMap())
         dwellMarks = DwellMarks.NONE
         lastObservedAt = null
+    }
+
+    /** Full cold reset: twin -> Unknown + ledger + harbor + marks (Fowler: Aggregate recreation). */
+    fun resetFull() {
+        episodes = EpisodeLedger.empty(residentId)
+        harborState = HarborState()
+        recordingLedger = RecordingLedger(emptyMap())
+        dwellMarks = DwellMarks.NONE
+        lastObservedAt = null
+        twin = DigitalTwin(
+            bed = bed,
+            night = night,
+            occupant = residentId,
+            state = PersonState.Unknown(UnknownCause.SIGNAL_LOST),
+            stateSince = Instant.EPOCH,
+            signal = SignalHealth(monitor = monitor, lastHeartbeat = Instant.EPOCH, lost = true),
+            calibration = calibrations.scene,
+        )
     }
 }
 

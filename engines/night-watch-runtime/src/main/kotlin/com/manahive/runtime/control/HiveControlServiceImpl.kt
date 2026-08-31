@@ -30,54 +30,33 @@ class HiveControlServiceImpl(
 
         val oldVersion = calibrator.current(rid)?.version
         val oldFp = calibrator.fingerprint(rid)
-        val oldCals = runtime.get(rid)?.calibrations
-        log.info("HiveControl reload {} bed={} oldVersion={} oldFp={} -> cold evict", rid.value, bedId?.value ?: "*", oldVersion, oldFp)
+        log.info("HiveControl reload {} bed={} oldVersion={} oldFp={} -> cold fetch", rid.value, bedId?.value ?: "*", oldVersion, oldFp)
 
-        // Full evict: remove from calibrator vigentes and runtime (save cals for fallback)
-        val removed = evictFully(rid, bedId)
-        log.info("HiveControl evicted {} (runtime removed={})", rid.value, removed)
-
-        // Cold fetch from hub — fallback to resetFull with saved calibrations if fetch fails (cleanProfiles deleted hub)
+        // Cold fetch first (before evict) — if hub deleted profile, fallback to resetFull with current calibrations
         val dto = try {
             profileFetcher.fetch(rid)
         } catch (e: Exception) {
-            log.warn("HiveControl reload fetch failed for {}: {} -> fallback resetFull with oldCals", rid.value, e.message)
-            if (oldCals != null) {
-                val entry = census.bedFor(rid)
-                if (entry != null) runtime.register(rid, entry.bed, entry.night, entry.monitor, oldCals)
-                else runtime.register(rid, bedId ?: BedId("unknown"), com.manahive.kernel.NightId("unknown"), com.manahive.kernel.MonitorId("unknown"), oldCals)
-                // re-put calibrator vigente without version check (bypass)
-                // We evicted, so re-insert old profile vigente via internal map — for fallback we keep old version
-                // Instead, just publish fallback and rely on next profile push to recalibrate
-                val evFallback = HiveControlEvent(
-                    type = "HiveResetFullFallback",
-                    residentId = rid.value,
-                    bedId = bedId?.value ?: census.bedFor(rid)?.bed?.value ?: "unknown",
-                    at = clock.instant(),
-                    oldVersion = oldVersion,
-                    newVersion = oldVersion,
-                    fingerprint = oldFp,
-                    twinState = "Unknown(SIGNAL_LOST)",
-                    message = "fetch failed, fallback resetFull with oldCals",
-                )
-                controlPublisher.publish(evFallback)
-                log.info("HiveControl fallback recreated runtime for {} with oldCals {}", rid.value, oldFp)
-                return evFallback
-            }
-            val evFail = HiveControlEvent(
-                type = "HiveReloadFailed",
+            log.warn("HiveControl reload fetch failed for {}: {} -> fallback resetFull", rid.value, e.message)
+            runtime.get(rid)?.let { rt -> synchronized(rt) { rt.resetFull() } }
+            val evFallback = HiveControlEvent(
+                type = "HiveResetFullFallback",
                 residentId = rid.value,
                 bedId = bedId?.value ?: census.bedFor(rid)?.bed?.value ?: "unknown",
                 at = clock.instant(),
                 oldVersion = oldVersion,
-                newVersion = null,
-                fingerprint = null,
-                twinState = null,
-                message = e.message,
+                newVersion = oldVersion,
+                fingerprint = oldFp,
+                twinState = "Unknown(SIGNAL_LOST)",
+                message = "fetch failed, fallback resetFull",
             )
-            controlPublisher.publish(evFail)
-            return evFail
+            controlPublisher.publish(evFallback)
+            log.info("HiveControl fallback resetFull for {} with oldCals {}", rid.value, oldFp)
+            return evFallback
         }
+
+        // Fetch ok -> full evict then accept
+        val removed = evictFully(rid, bedId)
+        log.info("HiveControl evicted {} (runtime removed={})", rid.value, removed)
 
         val accepted = calibrator.accept(dto)
         val newVersion = if (accepted) dto.version else calibrator.current(rid)?.version
@@ -140,19 +119,8 @@ class HiveControlServiceImpl(
         val bedId = cmd.bedId?.let { BedId(it) } ?: census.bedFor(rid)?.bed
         val oldVersion = calibrator.current(rid)?.version
         val oldFp = calibrator.fingerprint(rid)
-        // Full twin recreation: remove and re-register with same calibrations
-        val existing = runtime.get(rid)
-        if (existing != null) {
-            val cal = existing.calibrations
-            runtime.unregister(rid)
-            // re-register with same calibrations but fresh twin
-            val entry = census.bedFor(rid)
-            if (entry != null) {
-                runtime.register(rid, entry.bed, entry.night, entry.monitor, cal)
-            } else {
-                runtime.register(rid, bedId ?: BedId("unknown"), com.manahive.kernel.NightId("unknown"), com.manahive.kernel.MonitorId("unknown"), cal)
-            }
-        }
+        // Fowler: Aggregate recreation via domain method, not unregister/register dance
+        runtime.get(rid)?.let { rt -> synchronized(rt) { rt.resetFull() } }
         val ev = HiveControlEvent(
             type = "HiveResetFull",
             residentId = rid.value,
