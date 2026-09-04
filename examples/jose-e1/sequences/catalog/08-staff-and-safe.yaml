@@ -1,0 +1,29 @@
+# 08 — Cierre STAFF_AND_SAFE: staff + safe state
+# Negocio: "José se sentó, vino la enfermera → NO cierra (falta safe state). José se acostó → cierra."
+# Director: prueba cierre STAFF_AND_SAFE — necesita staff Y safe state.
+# Esperado: 1 episodio RESOLVED WARNING → cerrado por STAFF_AND_SAFE.
+profile: "/home/visiona/workspace/mana-dist/config/mana-hive/profiles/jose-staff-and-safe.json"
+monitoringProfile: { riskLevel: MEDIUM, mobilityAid: NONE, autopilot: false, mode: PRESET, templateId: standard, updatedBy: scenario-simulator, reason: "08-staff-and-safe scenario" }
+clean: true
+autoDate: false
+start: "2026-09-04T22:00:00Z"
+residentId: "jose"
+bed: "bed-4"
+monitor: "m1"
+hubUrl: "http://localhost:8080"
+natsUrl: "nats://localhost:4222"
+expect:
+  episodes:
+    - { status: "RESOLVED", severity: "WARNING", count: 1 }
+  minSceneEvents: 2
+  minSignals: 1
+steps:
+  - useManual: "2026-09-04T22:00:00Z"
+  - obs: { kind: IN_BED }
+  - advance: "PT5M"
+  - obs: { kind: SITTING_IN_BED }
+  - advance: "PT5M"
+  - obs: { kind: STAFF_ENTERED }
+  - advance: "PT2M"
+  - obs: { kind: IN_BED }
+  - useSystem: true

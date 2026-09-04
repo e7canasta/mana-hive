@@ -59,6 +59,16 @@ class NightWatchServiceCore(
         val out = runtime.onObservation(entry.resident, obs)
         log.info("[OBS] Runtime produced: sceneFacts={}, signals={}, harborCmds={}, recorderCmds={}",
             out.sceneFacts.size, out.signals.size, out.harborCommands.size, out.recorderCommands.size)
+        for (sig in out.signals) {
+            log.info("[OBS] Signal detail: type={} class={} episode={}", sig.type, sig::class.simpleName,
+                when (sig) {
+                    is com.manahive.contracts.sentinel.SentinelSignal.EpisodeOpened -> sig.episode.value
+                    is com.manahive.contracts.sentinel.SentinelSignal.EpisodeClosed -> sig.episode.value
+                    is com.manahive.contracts.sentinel.SentinelSignal.UmbrellaEvent -> "${sig.episode.value}:${sig.state}"
+                    is com.manahive.contracts.sentinel.SentinelSignal.AutoRecovery -> sig.episode.value
+                    else -> "?"
+                })
+        }
         publish(obs.bed, out)
     }
 
@@ -166,13 +176,12 @@ class NightWatchServiceCore(
     }
 
     private fun publish(bed: com.manahive.kernel.BedId, out: Outbound) {
-        for (fact in out.sceneFacts) {
-            publisher.publishSceneEvent(bed, fact)
-        }
+        // NATS preserves order per subject, not across subjects. Build one
+        // causal publication order before fanning out to the individual subjects.
+        data class Publication(val at: Instant, val priority: Int, val action: () -> Unit)
 
-        // Deduplicate signals by (type, episode) — sweep + observation can produce same signal twice, but Umbrella vs Closed must not be deduped
         val seen = mutableSetOf<String>()
-        for (signal in out.signals) {
+        val signals = out.signals.filter { signal ->
             val episodeKey = when (signal) {
                 is com.manahive.contracts.sentinel.SentinelSignal.EpisodeOpened -> "OPEN:${signal.episode.value}"
                 is com.manahive.contracts.sentinel.SentinelSignal.EpisodeClosed -> "CLOSED:${signal.episode.value}"
@@ -180,26 +189,44 @@ class NightWatchServiceCore(
                 is com.manahive.contracts.sentinel.SentinelSignal.UmbrellaEvent -> "UMBRELLA:${signal.episode.value}:${signal.state.name}"
                 else -> "${signal.type}:${signal::class.simpleName}:${signal.hashCode()}"
             }
-            if (seen.add(episodeKey)) {
-                log.info("Publishing signal {} for episode {}", signal.type, episodeKey)
-                publisher.publishSentinelSignal(bed, signal)
-            } else {
+            if (!seen.add(episodeKey)) {
                 log.info("Skipping duplicate signal: {}", episodeKey)
+                false
+            } else {
+                true
             }
         }
 
-        for ((signal, command) in out.harborCommands) {
-            publisher.publishNoticeEvent(bed, toNoticeEvent(signal, command))
+        val publications = mutableListOf<Publication>()
+        out.sceneFacts.forEach { fact ->
+            publications += Publication(fact.at, 0) { publisher.publishSceneEvent(bed, fact) }
+        }
+        signals.forEach { signal ->
+            publications += Publication(signal.at, 1) {
+                log.info("Publishing signal {}", signal.type)
+                publisher.publishSentinelSignal(bed, signal)
+            }
+        }
+        out.harborCommands.forEach { notice ->
+            val at = (notice.command as? NoticeCommand.Resolve)?.at ?: notice.signal.at
+            publications += Publication(at, 2) {
+                publisher.publishNoticeEvent(bed, toNoticeEvent(notice.signal, notice.command))
+            }
+        }
+        out.recorderCommands.forEach { command ->
+            publications += Publication(command.at, 3) {
+                publisher.publishRecordingCommand(bed, command, command.at)
+            }
+        }
+        out.evidenceRecords.forEach { record ->
+            publications += Publication(record.at, 4) {
+                publisher.publishEvidenceRecord(bed, record)
+            }
         }
 
-        for (command in out.recorderCommands) {
-            publisher.publishRecordingCommand(bed, command)
-        }
-
+        publications.sortedWith(compareBy<Publication> { it.at }.thenBy { it.priority })
+            .forEach { it.action() }
         log.info("[EVIDENCE] evidenceRecords={}", out.evidenceRecords.size)
-        for (record in out.evidenceRecords) {
-            publisher.publishEvidenceRecord(bed, record)
-        }
     }
 
     private fun parseWatchLevel(value: String): WatchLevel? =

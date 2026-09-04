@@ -1,0 +1,469 @@
+{
+  "meta" : {
+    "scenario" : "06-48h-mixto",
+    "profile" : "/home/visiona/workspace/mana-dist/config/mana-hive/profiles/jose-v23.json",
+    "hubUrl" : "http://localhost:8080",
+    "natsUrl" : "nats://localhost:4222",
+    "residentId" : "jose",
+    "bed" : "bed-4",
+    "from" : "2026-09-08T22:00:00Z",
+    "to" : "2026-09-09T15:12:00Z",
+    "generatedAt" : "2026-09-02T16:29:26.646993690Z"
+  },
+  "steps" : [ {
+    "useManual" : "2026-09-08T22:00:00Z"
+  }, {
+    "obs" : {
+      "kind" : "IN_BED"
+    }
+  }, {
+    "advance" : "PT1H30M"
+  }, {
+    "obs" : {
+      "kind" : "SITTING_IN_BED"
+    }
+  }, {
+    "advance" : "PT4M"
+  }, {
+    "obs" : {
+      "kind" : "IN_BED"
+    }
+  }, {
+    "advance" : "PT2H56M"
+  }, {
+    "obs" : {
+      "kind" : "SITTING_IN_BED"
+    }
+  }, {
+    "advance" : "PT8M"
+  }, {
+    "advance" : "PT2M"
+  }, {
+    "obs" : {
+      "kind" : "STAFF_ENTERED"
+    }
+  }, {
+    "advance" : "PT2M"
+  }, {
+    "obs" : {
+      "kind" : "IN_BED"
+    }
+  }, {
+    "advance" : "PT2H18M"
+  }, {
+    "obs" : {
+      "kind" : "STAFF_ENTERED"
+    }
+  }, {
+    "advance" : "PT2M"
+  }, {
+    "obs" : {
+      "kind" : "STAFF_LEFT"
+    }
+  }, {
+    "advance" : "PT4H58M"
+  }, {
+    "obs" : {
+      "kind" : "SITTING_IN_BED"
+    }
+  }, {
+    "advance" : "PT3M"
+  }, {
+    "obs" : {
+      "kind" : "IN_BED"
+    }
+  }, {
+    "advance" : "PT3H57M"
+  }, {
+    "obs" : {
+      "kind" : "SITTING_IN_BED"
+    }
+  }, {
+    "advance" : "PT8M"
+  }, {
+    "advance" : "PT2M"
+  }, {
+    "obs" : {
+      "kind" : "STAFF_ENTERED"
+    }
+  }, {
+    "advance" : "PT2M"
+  }, {
+    "obs" : {
+      "kind" : "IN_BED"
+    }
+  }, {
+    "useSystem" : true
+  } ],
+  "episodes" : [ {
+    "id" : "bed-4-f6001c95-4ce3-4670-9e2c-6f79c2ed8c6d",
+    "residentId" : "jose",
+    "bedId" : "bed-4",
+    "severity" : "WARNING",
+    "status" : "RESOLVED",
+    "title" : "alert-sitting_in_bed: bed-4",
+    "detail" : "Trigger: SITTING_IN_BED",
+    "occurredAt" : "2026-09-08T23:30:00Z",
+    "escalationLevel" : 0,
+    "isPending" : false,
+    "pending" : false
+  }, {
+    "id" : "bed-4-55aedfdb-5b1d-44cb-82b5-89b6f3dbf6c5",
+    "residentId" : "jose",
+    "bedId" : "bed-4",
+    "severity" : "WARNING",
+    "status" : "RESOLVED",
+    "title" : "alert-sitting_in_bed: bed-4",
+    "detail" : "Trigger: SITTING_IN_BED",
+    "occurredAt" : "2026-09-09T02:30:00Z",
+    "escalationLevel" : 0,
+    "isPending" : false,
+    "pending" : false
+  }, {
+    "id" : "bed-4-792d6410-9529-45b0-b705-eea6ebfaf655",
+    "residentId" : "jose",
+    "bedId" : "bed-4",
+    "severity" : "WARNING",
+    "status" : "RESOLVED",
+    "title" : "alert-sitting_in_bed: bed-4",
+    "detail" : "Trigger: SITTING_IN_BED",
+    "occurredAt" : "2026-09-09T10:00:00Z",
+    "escalationLevel" : 0,
+    "isPending" : false,
+    "pending" : false
+  }, {
+    "id" : "bed-4-a20c2a04-226b-43cc-b10a-abeec516551d",
+    "residentId" : "jose",
+    "bedId" : "bed-4",
+    "severity" : "WARNING",
+    "status" : "RESOLVED",
+    "title" : "alert-sitting_in_bed: bed-4",
+    "detail" : "Trigger: SITTING_IN_BED",
+    "occurredAt" : "2026-09-09T14:00:00Z",
+    "escalationLevel" : 0,
+    "isPending" : false,
+    "pending" : false
+  } ],
+  "sceneEvents" : [ {
+    "eventType" : "STATE_CHANGED",
+    "at" : "2026-09-08T22:00:00Z",
+    "bed" : "bed-4",
+    "residentId" : "jose",
+    "from" : "UNKNOWN",
+    "to" : "UNKNOWN",
+    "twinSnapshot" : "{\"scene\": 1023, \"state\": \"Lying\", \"monitor\": \"m1\", \"sceneSince\": \"1970-01-01T00:00:00Z\", \"sceneStaff\": \"Unknown\", \"signalLost\": false, \"stateSince\": \"2026-09-08T22:00:00Z\", \"sceneWalker\": \"Unknown\", \"sceneBedLeft\": \"Unknown\", \"sceneBedRight\": \"Unknown\", \"sceneWheelchair\": \"Unknown\", \"signalLastHeartbeat\": \"1970-01-01T00:00:00Z\"}",
+    "stateSince" : "2026-09-08T22:00:00Z",
+    "sceneSince" : "1970-01-01T00:00:00Z",
+    "signalLost" : false,
+    "monitorId" : "m1"
+  }, {
+    "eventType" : "STATE_CHANGED",
+    "at" : "2026-09-08T23:30:00Z",
+    "bed" : "bed-4",
+    "residentId" : "jose",
+    "from" : "UNKNOWN",
+    "to" : "UNKNOWN",
+    "twinSnapshot" : "{\"scene\": 1023, \"state\": \"SittingInBed\", \"monitor\": \"m1\", \"sceneSince\": \"1970-01-01T00:00:00Z\", \"sceneStaff\": \"Unknown\", \"signalLost\": false, \"stateSince\": \"2026-09-08T23:30:00Z\", \"sceneWalker\": \"Unknown\", \"sceneBedLeft\": \"Unknown\", \"sceneBedRight\": \"Unknown\", \"sceneWheelchair\": \"Unknown\", \"signalLastHeartbeat\": \"1970-01-01T00:00:00Z\"}",
+    "stateSince" : "2026-09-08T23:30:00Z",
+    "sceneSince" : "1970-01-01T00:00:00Z",
+    "signalLost" : false,
+    "monitorId" : "m1"
+  }, {
+    "eventType" : "STATE_CHANGED",
+    "at" : "2026-09-08T23:34:00Z",
+    "bed" : "bed-4",
+    "residentId" : "jose",
+    "from" : "UNKNOWN",
+    "to" : "UNKNOWN",
+    "twinSnapshot" : "{\"scene\": 1023, \"state\": \"Lying\", \"monitor\": \"m1\", \"sceneSince\": \"1970-01-01T00:00:00Z\", \"sceneStaff\": \"Unknown\", \"signalLost\": false, \"stateSince\": \"2026-09-08T23:34:00Z\", \"sceneWalker\": \"Unknown\", \"sceneBedLeft\": \"Unknown\", \"sceneBedRight\": \"Unknown\", \"sceneWheelchair\": \"Unknown\", \"signalLastHeartbeat\": \"1970-01-01T00:00:00Z\"}",
+    "stateSince" : "2026-09-08T23:34:00Z",
+    "sceneSince" : "1970-01-01T00:00:00Z",
+    "signalLost" : false,
+    "monitorId" : "m1"
+  }, {
+    "eventType" : "STATE_CHANGED",
+    "at" : "2026-09-09T02:30:00Z",
+    "bed" : "bed-4",
+    "residentId" : "jose",
+    "from" : "UNKNOWN",
+    "to" : "UNKNOWN",
+    "twinSnapshot" : "{\"scene\": 1023, \"state\": \"SittingInBed\", \"monitor\": \"m1\", \"sceneSince\": \"1970-01-01T00:00:00Z\", \"sceneStaff\": \"Unknown\", \"signalLost\": false, \"stateSince\": \"2026-09-09T02:30:00Z\", \"sceneWalker\": \"Unknown\", \"sceneBedLeft\": \"Unknown\", \"sceneBedRight\": \"Unknown\", \"sceneWheelchair\": \"Unknown\", \"signalLastHeartbeat\": \"1970-01-01T00:00:00Z\"}",
+    "stateSince" : "2026-09-09T02:30:00Z",
+    "sceneSince" : "1970-01-01T00:00:00Z",
+    "signalLost" : false,
+    "monitorId" : "m1"
+  }, {
+    "eventType" : "STATE_CHANGED",
+    "at" : "2026-09-09T02:40:00Z",
+    "bed" : "bed-4",
+    "residentId" : "jose",
+    "twinSnapshot" : "{\"scene\": 1023, \"state\": \"SittingInBed\", \"monitor\": \"m1\", \"sceneSince\": \"1970-01-01T00:00:00Z\", \"sceneStaff\": \"Unknown\", \"signalLost\": false, \"stateSince\": \"2026-09-09T02:30:00Z\", \"sceneWalker\": \"Unknown\", \"sceneBedLeft\": \"Unknown\", \"sceneBedRight\": \"Unknown\", \"sceneWheelchair\": \"Unknown\", \"signalLastHeartbeat\": \"1970-01-01T00:00:00Z\"}",
+    "stateSince" : "2026-09-09T02:30:00Z",
+    "sceneSince" : "1970-01-01T00:00:00Z",
+    "signalLost" : false,
+    "monitorId" : "m1"
+  }, {
+    "eventType" : "STATE_CHANGED",
+    "at" : "2026-09-09T02:40:00Z",
+    "bed" : "bed-4",
+    "residentId" : "jose",
+    "twinSnapshot" : "{\"scene\": 1021, \"state\": \"SittingInBed\", \"monitor\": \"m1\", \"sceneSince\": \"2026-09-09T02:40:00Z\", \"sceneStaff\": \"Present\", \"signalLost\": false, \"stateSince\": \"2026-09-09T02:30:00Z\", \"sceneWalker\": \"Unknown\", \"sceneBedLeft\": \"Unknown\", \"sceneBedRight\": \"Unknown\", \"sceneWheelchair\": \"Unknown\", \"signalLastHeartbeat\": \"1970-01-01T00:00:00Z\"}",
+    "stateSince" : "2026-09-09T02:30:00Z",
+    "sceneSince" : "2026-09-09T02:40:00Z",
+    "signalLost" : false,
+    "monitorId" : "m1"
+  }, {
+    "eventType" : "STATE_CHANGED",
+    "at" : "2026-09-09T02:42:00Z",
+    "bed" : "bed-4",
+    "residentId" : "jose",
+    "twinSnapshot" : "{\"scene\": 1021, \"state\": \"SittingInBed\", \"monitor\": \"m1\", \"sceneSince\": \"2026-09-09T02:40:00Z\", \"sceneStaff\": \"Present\", \"signalLost\": false, \"stateSince\": \"2026-09-09T02:30:00Z\", \"sceneWalker\": \"Unknown\", \"sceneBedLeft\": \"Unknown\", \"sceneBedRight\": \"Unknown\", \"sceneWheelchair\": \"Unknown\", \"signalLastHeartbeat\": \"1970-01-01T00:00:00Z\"}",
+    "stateSince" : "2026-09-09T02:30:00Z",
+    "sceneSince" : "2026-09-09T02:40:00Z",
+    "signalLost" : false,
+    "monitorId" : "m1"
+  }, {
+    "eventType" : "STATE_CHANGED",
+    "at" : "2026-09-09T02:42:00Z",
+    "bed" : "bed-4",
+    "residentId" : "jose",
+    "from" : "UNKNOWN",
+    "to" : "UNKNOWN",
+    "twinSnapshot" : "{\"scene\": 1021, \"state\": \"Lying\", \"monitor\": \"m1\", \"sceneSince\": \"2026-09-09T02:40:00Z\", \"sceneStaff\": \"Present\", \"signalLost\": false, \"stateSince\": \"2026-09-09T02:42:00Z\", \"sceneWalker\": \"Unknown\", \"sceneBedLeft\": \"Unknown\", \"sceneBedRight\": \"Unknown\", \"sceneWheelchair\": \"Unknown\", \"signalLastHeartbeat\": \"1970-01-01T00:00:00Z\"}",
+    "stateSince" : "2026-09-09T02:42:00Z",
+    "sceneSince" : "2026-09-09T02:40:00Z",
+    "signalLost" : false,
+    "monitorId" : "m1"
+  }, {
+    "eventType" : "STATE_CHANGED",
+    "at" : "2026-09-09T05:02:00Z",
+    "bed" : "bed-4",
+    "residentId" : "jose",
+    "twinSnapshot" : "{\"scene\": 1020, \"state\": \"Lying\", \"monitor\": \"m1\", \"sceneSince\": \"2026-09-09T05:02:00Z\", \"sceneStaff\": \"NotPresent\", \"signalLost\": false, \"stateSince\": \"2026-09-09T02:42:00Z\", \"sceneWalker\": \"Unknown\", \"sceneBedLeft\": \"Unknown\", \"sceneBedRight\": \"Unknown\", \"sceneWheelchair\": \"Unknown\", \"signalLastHeartbeat\": \"1970-01-01T00:00:00Z\"}",
+    "stateSince" : "2026-09-09T02:42:00Z",
+    "sceneSince" : "2026-09-09T05:02:00Z",
+    "signalLost" : false,
+    "monitorId" : "m1"
+  }, {
+    "eventType" : "STATE_CHANGED",
+    "at" : "2026-09-09T10:00:00Z",
+    "bed" : "bed-4",
+    "residentId" : "jose",
+    "from" : "UNKNOWN",
+    "to" : "UNKNOWN",
+    "twinSnapshot" : "{\"scene\": 1020, \"state\": \"SittingInBed\", \"monitor\": \"m1\", \"sceneSince\": \"2026-09-09T05:02:00Z\", \"sceneStaff\": \"NotPresent\", \"signalLost\": false, \"stateSince\": \"2026-09-09T10:00:00Z\", \"sceneWalker\": \"Unknown\", \"sceneBedLeft\": \"Unknown\", \"sceneBedRight\": \"Unknown\", \"sceneWheelchair\": \"Unknown\", \"signalLastHeartbeat\": \"1970-01-01T00:00:00Z\"}",
+    "stateSince" : "2026-09-09T10:00:00Z",
+    "sceneSince" : "2026-09-09T05:02:00Z",
+    "signalLost" : false,
+    "monitorId" : "m1"
+  }, {
+    "eventType" : "STATE_CHANGED",
+    "at" : "2026-09-09T10:03:00Z",
+    "bed" : "bed-4",
+    "residentId" : "jose",
+    "from" : "UNKNOWN",
+    "to" : "UNKNOWN",
+    "twinSnapshot" : "{\"scene\": 1020, \"state\": \"Lying\", \"monitor\": \"m1\", \"sceneSince\": \"2026-09-09T05:02:00Z\", \"sceneStaff\": \"NotPresent\", \"signalLost\": false, \"stateSince\": \"2026-09-09T10:03:00Z\", \"sceneWalker\": \"Unknown\", \"sceneBedLeft\": \"Unknown\", \"sceneBedRight\": \"Unknown\", \"sceneWheelchair\": \"Unknown\", \"signalLastHeartbeat\": \"1970-01-01T00:00:00Z\"}",
+    "stateSince" : "2026-09-09T10:03:00Z",
+    "sceneSince" : "2026-09-09T05:02:00Z",
+    "signalLost" : false,
+    "monitorId" : "m1"
+  }, {
+    "eventType" : "STATE_CHANGED",
+    "at" : "2026-09-09T14:00:00Z",
+    "bed" : "bed-4",
+    "residentId" : "jose",
+    "from" : "UNKNOWN",
+    "to" : "UNKNOWN",
+    "twinSnapshot" : "{\"scene\": 1020, \"state\": \"SittingInBed\", \"monitor\": \"m1\", \"sceneSince\": \"2026-09-09T05:02:00Z\", \"sceneStaff\": \"NotPresent\", \"signalLost\": false, \"stateSince\": \"2026-09-09T14:00:00Z\", \"sceneWalker\": \"Unknown\", \"sceneBedLeft\": \"Unknown\", \"sceneBedRight\": \"Unknown\", \"sceneWheelchair\": \"Unknown\", \"signalLastHeartbeat\": \"1970-01-01T00:00:00Z\"}",
+    "stateSince" : "2026-09-09T14:00:00Z",
+    "sceneSince" : "2026-09-09T05:02:00Z",
+    "signalLost" : false,
+    "monitorId" : "m1"
+  }, {
+    "eventType" : "STATE_CHANGED",
+    "at" : "2026-09-09T14:10:00Z",
+    "bed" : "bed-4",
+    "residentId" : "jose",
+    "twinSnapshot" : "{\"scene\": 1020, \"state\": \"SittingInBed\", \"monitor\": \"m1\", \"sceneSince\": \"2026-09-09T05:02:00Z\", \"sceneStaff\": \"NotPresent\", \"signalLost\": false, \"stateSince\": \"2026-09-09T14:00:00Z\", \"sceneWalker\": \"Unknown\", \"sceneBedLeft\": \"Unknown\", \"sceneBedRight\": \"Unknown\", \"sceneWheelchair\": \"Unknown\", \"signalLastHeartbeat\": \"1970-01-01T00:00:00Z\"}",
+    "stateSince" : "2026-09-09T14:00:00Z",
+    "sceneSince" : "2026-09-09T05:02:00Z",
+    "signalLost" : false,
+    "monitorId" : "m1"
+  }, {
+    "eventType" : "STATE_CHANGED",
+    "at" : "2026-09-09T14:10:00Z",
+    "bed" : "bed-4",
+    "residentId" : "jose",
+    "twinSnapshot" : "{\"scene\": 1021, \"state\": \"SittingInBed\", \"monitor\": \"m1\", \"sceneSince\": \"2026-09-09T14:10:00Z\", \"sceneStaff\": \"Present\", \"signalLost\": false, \"stateSince\": \"2026-09-09T14:00:00Z\", \"sceneWalker\": \"Unknown\", \"sceneBedLeft\": \"Unknown\", \"sceneBedRight\": \"Unknown\", \"sceneWheelchair\": \"Unknown\", \"signalLastHeartbeat\": \"1970-01-01T00:00:00Z\"}",
+    "stateSince" : "2026-09-09T14:00:00Z",
+    "sceneSince" : "2026-09-09T14:10:00Z",
+    "signalLost" : false,
+    "monitorId" : "m1"
+  }, {
+    "eventType" : "STATE_CHANGED",
+    "at" : "2026-09-09T14:12:00Z",
+    "bed" : "bed-4",
+    "residentId" : "jose",
+    "twinSnapshot" : "{\"scene\": 1021, \"state\": \"SittingInBed\", \"monitor\": \"m1\", \"sceneSince\": \"2026-09-09T14:10:00Z\", \"sceneStaff\": \"Present\", \"signalLost\": false, \"stateSince\": \"2026-09-09T14:00:00Z\", \"sceneWalker\": \"Unknown\", \"sceneBedLeft\": \"Unknown\", \"sceneBedRight\": \"Unknown\", \"sceneWheelchair\": \"Unknown\", \"signalLastHeartbeat\": \"1970-01-01T00:00:00Z\"}",
+    "stateSince" : "2026-09-09T14:00:00Z",
+    "sceneSince" : "2026-09-09T14:10:00Z",
+    "signalLost" : false,
+    "monitorId" : "m1"
+  }, {
+    "eventType" : "STATE_CHANGED",
+    "at" : "2026-09-09T14:12:00Z",
+    "bed" : "bed-4",
+    "residentId" : "jose",
+    "from" : "UNKNOWN",
+    "to" : "UNKNOWN",
+    "twinSnapshot" : "{\"scene\": 1021, \"state\": \"Lying\", \"monitor\": \"m1\", \"sceneSince\": \"2026-09-09T14:10:00Z\", \"sceneStaff\": \"Present\", \"signalLost\": false, \"stateSince\": \"2026-09-09T14:12:00Z\", \"sceneWalker\": \"Unknown\", \"sceneBedLeft\": \"Unknown\", \"sceneBedRight\": \"Unknown\", \"sceneWheelchair\": \"Unknown\", \"signalLastHeartbeat\": \"1970-01-01T00:00:00Z\"}",
+    "stateSince" : "2026-09-09T14:12:00Z",
+    "sceneSince" : "2026-09-09T14:10:00Z",
+    "signalLost" : false,
+    "monitorId" : "m1"
+  } ],
+  "signals" : [ {
+    "type" : "NO_MOVEMENT",
+    "at" : "2026-09-08T23:30:00Z",
+    "bed" : "bed-4",
+    "residentId" : "jose",
+    "episodeId" : "bed-4-f6001c95-4ce3-4670-9e2c-6f79c2ed8c6d",
+    "severity" : "WARNING",
+    "trigger" : "SITTING_IN_BED",
+    "ruleId" : "alert-sitting_in_bed",
+    "rulesFingerprint" : "alert-sitting_in_bed,alert-standing,comeback-lying",
+    "reversible" : true,
+    "requiresNvr" : false,
+    "confirmationWindow" : "PT1M"
+  }, {
+    "type" : "NO_MOVEMENT",
+    "at" : "2026-09-08T23:34:00Z",
+    "bed" : "bed-4",
+    "residentId" : "jose",
+    "episodeId" : "bed-4-f6001c95-4ce3-4670-9e2c-6f79c2ed8c6d",
+    "cause" : "AUTO_RECOVERY",
+    "rulesFingerprint" : "alert-sitting_in_bed,alert-standing,comeback-lying",
+    "gapDuration" : "PT4M"
+  }, {
+    "type" : "NO_MOVEMENT",
+    "at" : "2026-09-09T02:30:00Z",
+    "bed" : "bed-4",
+    "residentId" : "jose",
+    "episodeId" : "bed-4-55aedfdb-5b1d-44cb-82b5-89b6f3dbf6c5",
+    "severity" : "WARNING",
+    "trigger" : "SITTING_IN_BED",
+    "ruleId" : "alert-sitting_in_bed",
+    "rulesFingerprint" : "alert-sitting_in_bed,alert-standing,comeback-lying",
+    "reversible" : true,
+    "requiresNvr" : false,
+    "confirmationWindow" : "PT1M"
+  }, {
+    "type" : "NO_MOVEMENT",
+    "at" : "2026-09-09T02:40:00Z",
+    "bed" : "bed-4",
+    "residentId" : "jose",
+    "episodeId" : "bed-4-55aedfdb-5b1d-44cb-82b5-89b6f3dbf6c5",
+    "severity" : "WARNING",
+    "trigger" : "LYING",
+    "triggerOn" : "COME_BACK",
+    "state" : "LYING",
+    "rulesFingerprint" : "alert-sitting_in_bed,alert-standing,comeback-lying",
+    "originalSeverity" : "WARNING"
+  }, {
+    "type" : "NO_MOVEMENT",
+    "at" : "2026-09-09T02:42:00Z",
+    "bed" : "bed-4",
+    "residentId" : "jose",
+    "episodeId" : "unknown",
+    "trigger" : "LYING",
+    "baseline" : "LYING",
+    "rulesFingerprint" : "alert-sitting_in_bed,alert-standing,comeback-lying",
+    "elapsed" : "PT12M",
+    "threshold" : "PT5M"
+  }, {
+    "type" : "NO_MOVEMENT",
+    "at" : "2026-09-09T02:42:00Z",
+    "bed" : "bed-4",
+    "residentId" : "jose",
+    "episodeId" : "bed-4-55aedfdb-5b1d-44cb-82b5-89b6f3dbf6c5",
+    "cause" : "AUTO_RECOVERY",
+    "rulesFingerprint" : "alert-sitting_in_bed,alert-standing,comeback-lying"
+  }, {
+    "type" : "NO_MOVEMENT",
+    "at" : "2026-09-09T10:00:00Z",
+    "bed" : "bed-4",
+    "residentId" : "jose",
+    "episodeId" : "bed-4-792d6410-9529-45b0-b705-eea6ebfaf655",
+    "severity" : "WARNING",
+    "trigger" : "SITTING_IN_BED",
+    "ruleId" : "alert-sitting_in_bed",
+    "rulesFingerprint" : "alert-sitting_in_bed,alert-standing,comeback-lying",
+    "reversible" : true,
+    "requiresNvr" : false,
+    "confirmationWindow" : "PT1M"
+  }, {
+    "type" : "NO_MOVEMENT",
+    "at" : "2026-09-09T10:03:00Z",
+    "bed" : "bed-4",
+    "residentId" : "jose",
+    "episodeId" : "bed-4-792d6410-9529-45b0-b705-eea6ebfaf655",
+    "cause" : "AUTO_RECOVERY",
+    "rulesFingerprint" : "alert-sitting_in_bed,alert-standing,comeback-lying",
+    "gapDuration" : "PT3M"
+  }, {
+    "type" : "NO_MOVEMENT",
+    "at" : "2026-09-09T14:00:00Z",
+    "bed" : "bed-4",
+    "residentId" : "jose",
+    "episodeId" : "bed-4-a20c2a04-226b-43cc-b10a-abeec516551d",
+    "severity" : "WARNING",
+    "trigger" : "SITTING_IN_BED",
+    "ruleId" : "alert-sitting_in_bed",
+    "rulesFingerprint" : "alert-sitting_in_bed,alert-standing,comeback-lying",
+    "reversible" : true,
+    "requiresNvr" : false,
+    "confirmationWindow" : "PT1M"
+  }, {
+    "type" : "NO_MOVEMENT",
+    "at" : "2026-09-09T14:10:00Z",
+    "bed" : "bed-4",
+    "residentId" : "jose",
+    "episodeId" : "bed-4-a20c2a04-226b-43cc-b10a-abeec516551d",
+    "severity" : "WARNING",
+    "trigger" : "LYING",
+    "triggerOn" : "COME_BACK",
+    "state" : "LYING",
+    "rulesFingerprint" : "alert-sitting_in_bed,alert-standing,comeback-lying",
+    "originalSeverity" : "WARNING"
+  }, {
+    "type" : "NO_MOVEMENT",
+    "at" : "2026-09-09T14:12:00Z",
+    "bed" : "bed-4",
+    "residentId" : "jose",
+    "episodeId" : "unknown",
+    "trigger" : "LYING",
+    "baseline" : "LYING",
+    "rulesFingerprint" : "alert-sitting_in_bed,alert-standing,comeback-lying",
+    "elapsed" : "PT12M",
+    "threshold" : "PT5M"
+  }, {
+    "type" : "NO_MOVEMENT",
+    "at" : "2026-09-09T14:12:00Z",
+    "bed" : "bed-4",
+    "residentId" : "jose",
+    "episodeId" : "bed-4-a20c2a04-226b-43cc-b10a-abeec516551d",
+    "cause" : "AUTO_RECOVERY",
+    "rulesFingerprint" : "alert-sitting_in_bed,alert-standing,comeback-lying"
+  } ],
+  "expect" : {
+    "episodes" : [ {
+      "status" : "RESOLVED",
+      "severity" : "WARNING",
+      "count" : 4
+    } ],
+    "minSceneEvents" : 8,
+    "minSignals" : 4
+  },
+  "verified" : true
+}

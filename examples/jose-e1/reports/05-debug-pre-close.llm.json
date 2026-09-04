@@ -1,14 +1,14 @@
 {
   "meta" : {
-    "scenario" : "05-escalado-sitting-standing",
+    "scenario" : "05-debug-pre-close",
     "profile" : "/home/visiona/workspace/mana-dist/config/mana-hive/profiles/jose-v22.json",
     "hubUrl" : "http://localhost:8080",
     "natsUrl" : "nats://localhost:4222",
     "residentId" : "jose",
     "bed" : "bed-4",
     "from" : "2026-09-07T22:00:00Z",
-    "to" : "2026-09-07T23:13:00Z",
-    "generatedAt" : "2026-09-02T16:28:53.066928854Z"
+    "to" : "2026-09-07T23:12:00Z",
+    "generatedAt" : "2026-09-02T11:50:29.243861594Z"
   },
   "steps" : [ {
     "useManual" : "2026-09-07T22:00:00Z"
@@ -37,26 +37,20 @@
       "kind" : "STAFF_ENTERED"
     }
   }, {
-    "advance" : "PT2M"
-  }, {
-    "obs" : {
-      "kind" : "IN_BED"
-    }
-  }, {
-    "useSystem" : true
+    "advance" : "PT1M"
   } ],
   "episodes" : [ {
-    "id" : "bed-4-0741a18e-3f1a-44db-b9a2-cfe2671172fa",
+    "id" : "bed-4-b13249b9-35ec-41b2-af9e-a9ce1ca4beaf",
     "residentId" : "jose",
     "bedId" : "bed-4",
     "severity" : "CRITICAL",
-    "status" : "RESOLVED",
+    "status" : "PENDING",
     "title" : "alert-sitting_in_bed: bed-4",
     "detail" : "Trigger: SITTING_IN_BED",
     "occurredAt" : "2026-09-07T22:05:00Z",
     "escalationLevel" : 0,
-    "isPending" : false,
-    "pending" : false
+    "isPending" : true,
+    "pending" : true
   } ],
   "sceneEvents" : [ {
     "eventType" : "STATE_CHANGED",
@@ -99,9 +93,9 @@
     "at" : "2026-09-07T22:11:00Z",
     "bed" : "bed-4",
     "residentId" : "jose",
-    "twinSnapshot" : "{\"scene\": 1023, \"state\": \"Standing\", \"monitor\": \"m1\", \"sceneSince\": \"1970-01-01T00:00:00Z\", \"sceneStaff\": \"Unknown\", \"signalLost\": false, \"stateSince\": \"2026-09-07T22:06:00Z\", \"sceneWalker\": \"Unknown\", \"sceneBedLeft\": \"Unknown\", \"sceneBedRight\": \"Unknown\", \"sceneWheelchair\": \"Unknown\", \"signalLastHeartbeat\": \"1970-01-01T00:00:00Z\"}",
+    "twinSnapshot" : "{\"scene\": 1021, \"state\": \"Standing\", \"monitor\": \"m1\", \"sceneSince\": \"2026-09-07T22:11:00Z\", \"sceneStaff\": \"Present\", \"signalLost\": false, \"stateSince\": \"2026-09-07T22:06:00Z\", \"sceneWalker\": \"Unknown\", \"sceneBedLeft\": \"Unknown\", \"sceneBedRight\": \"Unknown\", \"sceneWheelchair\": \"Unknown\", \"signalLastHeartbeat\": \"1970-01-01T00:00:00Z\"}",
     "stateSince" : "2026-09-07T22:06:00Z",
-    "sceneSince" : "1970-01-01T00:00:00Z",
+    "sceneSince" : "2026-09-07T22:11:00Z",
     "signalLost" : false,
     "monitorId" : "m1"
   }, {
@@ -119,41 +113,9 @@
     "at" : "2026-09-07T22:11:00Z",
     "bed" : "bed-4",
     "residentId" : "jose",
-    "twinSnapshot" : "{\"scene\": 1021, \"state\": \"Standing\", \"monitor\": \"m1\", \"sceneSince\": \"2026-09-07T22:11:00Z\", \"sceneStaff\": \"Present\", \"signalLost\": false, \"stateSince\": \"2026-09-07T22:06:00Z\", \"sceneWalker\": \"Unknown\", \"sceneBedLeft\": \"Unknown\", \"sceneBedRight\": \"Unknown\", \"sceneWheelchair\": \"Unknown\", \"signalLastHeartbeat\": \"1970-01-01T00:00:00Z\"}",
+    "twinSnapshot" : "{\"scene\": 1023, \"state\": \"Standing\", \"monitor\": \"m1\", \"sceneSince\": \"1970-01-01T00:00:00Z\", \"sceneStaff\": \"Unknown\", \"signalLost\": false, \"stateSince\": \"2026-09-07T22:06:00Z\", \"sceneWalker\": \"Unknown\", \"sceneBedLeft\": \"Unknown\", \"sceneBedRight\": \"Unknown\", \"sceneWheelchair\": \"Unknown\", \"signalLastHeartbeat\": \"1970-01-01T00:00:00Z\"}",
     "stateSince" : "2026-09-07T22:06:00Z",
-    "sceneSince" : "2026-09-07T22:11:00Z",
-    "signalLost" : false,
-    "monitorId" : "m1"
-  }, {
-    "eventType" : "STATE_CHANGED",
-    "at" : "2026-09-07T22:13:00Z",
-    "bed" : "bed-4",
-    "residentId" : "jose",
-    "twinSnapshot" : "{\"scene\": 1021, \"state\": \"Standing\", \"monitor\": \"m1\", \"sceneSince\": \"2026-09-07T22:11:00Z\", \"sceneStaff\": \"Present\", \"signalLost\": false, \"stateSince\": \"2026-09-07T22:06:00Z\", \"sceneWalker\": \"Unknown\", \"sceneBedLeft\": \"Unknown\", \"sceneBedRight\": \"Unknown\", \"sceneWheelchair\": \"Unknown\", \"signalLastHeartbeat\": \"1970-01-01T00:00:00Z\"}",
-    "stateSince" : "2026-09-07T22:06:00Z",
-    "sceneSince" : "2026-09-07T22:11:00Z",
-    "signalLost" : false,
-    "monitorId" : "m1"
-  }, {
-    "eventType" : "STATE_CHANGED",
-    "at" : "2026-09-07T22:13:00Z",
-    "bed" : "bed-4",
-    "residentId" : "jose",
-    "twinSnapshot" : "{\"scene\": 1021, \"state\": \"Standing\", \"monitor\": \"m1\", \"sceneSince\": \"2026-09-07T22:11:00Z\", \"sceneStaff\": \"Present\", \"signalLost\": false, \"stateSince\": \"2026-09-07T22:06:00Z\", \"sceneWalker\": \"Unknown\", \"sceneBedLeft\": \"Unknown\", \"sceneBedRight\": \"Unknown\", \"sceneWheelchair\": \"Unknown\", \"signalLastHeartbeat\": \"1970-01-01T00:00:00Z\"}",
-    "stateSince" : "2026-09-07T22:06:00Z",
-    "sceneSince" : "2026-09-07T22:11:00Z",
-    "signalLost" : false,
-    "monitorId" : "m1"
-  }, {
-    "eventType" : "STATE_CHANGED",
-    "at" : "2026-09-07T22:13:00Z",
-    "bed" : "bed-4",
-    "residentId" : "jose",
-    "from" : "UNKNOWN",
-    "to" : "UNKNOWN",
-    "twinSnapshot" : "{\"scene\": 1021, \"state\": \"Lying\", \"monitor\": \"m1\", \"sceneSince\": \"2026-09-07T22:11:00Z\", \"sceneStaff\": \"Present\", \"signalLost\": false, \"stateSince\": \"2026-09-07T22:13:00Z\", \"sceneWalker\": \"Unknown\", \"sceneBedLeft\": \"Unknown\", \"sceneBedRight\": \"Unknown\", \"sceneWheelchair\": \"Unknown\", \"signalLastHeartbeat\": \"1970-01-01T00:00:00Z\"}",
-    "stateSince" : "2026-09-07T22:13:00Z",
-    "sceneSince" : "2026-09-07T22:11:00Z",
+    "sceneSince" : "1970-01-01T00:00:00Z",
     "signalLost" : false,
     "monitorId" : "m1"
   } ],
@@ -162,7 +124,7 @@
     "at" : "2026-09-07T22:05:00Z",
     "bed" : "bed-4",
     "residentId" : "jose",
-    "episodeId" : "bed-4-0741a18e-3f1a-44db-b9a2-cfe2671172fa",
+    "episodeId" : "bed-4-b13249b9-35ec-41b2-af9e-a9ce1ca4beaf",
     "severity" : "WARNING",
     "trigger" : "SITTING_IN_BED",
     "ruleId" : "alert-sitting_in_bed",
@@ -175,7 +137,7 @@
     "at" : "2026-09-07T22:06:00Z",
     "bed" : "bed-4",
     "residentId" : "jose",
-    "episodeId" : "bed-4-0741a18e-3f1a-44db-b9a2-cfe2671172fa",
+    "episodeId" : "bed-4-b13249b9-35ec-41b2-af9e-a9ce1ca4beaf",
     "severity" : "CRITICAL",
     "trigger" : "STANDING",
     "triggerOn" : "ENTRY",
@@ -187,7 +149,7 @@
     "at" : "2026-09-07T22:11:00Z",
     "bed" : "bed-4",
     "residentId" : "jose",
-    "episodeId" : "bed-4-0741a18e-3f1a-44db-b9a2-cfe2671172fa",
+    "episodeId" : "bed-4-b13249b9-35ec-41b2-af9e-a9ce1ca4beaf",
     "severity" : "CRITICAL",
     "trigger" : "STANDING",
     "ruleId" : "alert-standing",
@@ -207,41 +169,10 @@
     "rulesFingerprint" : "alert-sitting_in_bed,alert-standing,comeback-lying",
     "elapsed" : "PT6M",
     "threshold" : "PT5M"
-  }, {
-    "type" : "NO_MOVEMENT",
-    "at" : "2026-09-07T22:13:00Z",
-    "bed" : "bed-4",
-    "residentId" : "jose",
-    "episodeId" : "unknown",
-    "trigger" : "STANDING",
-    "state" : "STANDING",
-    "rulesFingerprint" : "alert-sitting_in_bed,alert-standing,comeback-lying",
-    "elapsed" : "PT7M",
-    "threshold" : "PT2M"
-  }, {
-    "type" : "NO_MOVEMENT",
-    "at" : "2026-09-07T22:13:00Z",
-    "bed" : "bed-4",
-    "residentId" : "jose",
-    "episodeId" : "bed-4-0741a18e-3f1a-44db-b9a2-cfe2671172fa",
-    "severity" : "CRITICAL",
-    "trigger" : "LYING",
-    "triggerOn" : "COME_BACK",
-    "state" : "LYING",
-    "rulesFingerprint" : "alert-sitting_in_bed,alert-standing,comeback-lying",
-    "originalSeverity" : "CRITICAL"
-  }, {
-    "type" : "NO_MOVEMENT",
-    "at" : "2026-09-07T22:13:00Z",
-    "bed" : "bed-4",
-    "residentId" : "jose",
-    "episodeId" : "bed-4-0741a18e-3f1a-44db-b9a2-cfe2671172fa",
-    "cause" : "STAFF_AND_SAFE",
-    "rulesFingerprint" : "alert-sitting_in_bed,alert-standing,comeback-lying"
   } ],
   "expect" : {
     "episodes" : [ {
-      "status" : "RESOLVED",
+      "status" : "PENDING",
       "severity" : "CRITICAL",
       "count" : 1
     } ],

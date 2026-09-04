@@ -72,7 +72,6 @@ fun main() {
         clock.setTo(eventTime)
 
         val obs = Observation(
-            sourceEventId = "core-${event.offset}",
             monitor = monitor,
             bed = bed,
             kind = event.kind,

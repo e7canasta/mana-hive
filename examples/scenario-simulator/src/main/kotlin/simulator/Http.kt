@@ -30,6 +30,14 @@ object Http {
         return r.statusCode() to r.body()
     }
 
+    fun patchJson(url: String, json: String): Pair<Int, String> {
+        val req = HttpRequest.newBuilder(URI.create(url)).timeout(Duration.ofSeconds(8))
+            .method("PATCH", HttpRequest.BodyPublishers.ofString(json))
+            .header("Content-Type", "application/json").build()
+        val r = client.send(req, HttpResponse.BodyHandlers.ofString())
+        return r.statusCode() to r.body()
+    }
+
     fun delete(url: String): Pair<Int, String> {
         val req = HttpRequest.newBuilder(URI.create(url)).timeout(Duration.ofSeconds(5)).DELETE().build()
         val r = client.send(req, HttpResponse.BodyHandlers.ofString())

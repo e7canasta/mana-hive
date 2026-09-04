@@ -114,7 +114,6 @@ class PoliticaToSceneIntegrationSpec : BehaviorSpec({
 
             Then("interpreter uses the calibration for confidence filtering") {
                 val obs = Observation(
-                    sourceEventId = "obs-1",
                     monitor = MonitorId("monitor-1"),
                     bed = BedId("3"),
                     kind = ObservationKind.BED_EDGE,
@@ -129,7 +128,6 @@ class PoliticaToSceneIntegrationSpec : BehaviorSpec({
 
             Then("interpreter accepts observation above confidence threshold") {
                 val obs = Observation(
-                    sourceEventId = "obs-2",
                     monitor = MonitorId("monitor-1"),
                     bed = BedId("3"),
                     kind = ObservationKind.BED_EDGE,
@@ -224,7 +222,6 @@ class PoliticaToSceneIntegrationSpec : BehaviorSpec({
 
                 And("both receive BED_EDGE observation with confidence 0.8") {
                     val obs = Observation(
-                        sourceEventId = "obs-3",
                         monitor = MonitorId("monitor-1"),
                         bed = BedId("3"),
                         kind = ObservationKind.BED_EDGE,

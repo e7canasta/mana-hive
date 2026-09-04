@@ -66,7 +66,6 @@ fun main() {
     fun pubObservation(offset: Duration, kind: ObservationKind) {
         val at = START + offset
         val obs = Observation(
-            sourceEventId = "cold-boot-${offset}",
             monitor = com.manahive.kernel.MonitorId(monitor),
             bed = com.manahive.kernel.BedId(bed),
             kind = kind,

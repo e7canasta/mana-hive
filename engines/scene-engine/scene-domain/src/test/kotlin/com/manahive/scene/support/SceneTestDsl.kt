@@ -96,7 +96,6 @@ object SceneTestDsl {
 
     class ObsBuilder(private val kind: ObservationKind, private val confidence: Double) {
         infix fun at(time: Instant): Observation = Observation(
-            sourceEventId = "test-${System.nanoTime()}",
             monitor = monitor1,
             bed = bed3,
             kind = kind,

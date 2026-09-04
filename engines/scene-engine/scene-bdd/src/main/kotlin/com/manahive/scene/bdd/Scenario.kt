@@ -36,7 +36,6 @@ class EpisodeBuilder(private val ctx: BddContext) {
         infix fun withConfidence(confidence: Double): ObservedAt {
             val obs = ObservedAt(
                 Observation(
-                    sourceEventId = "episode-${at.toEpochMilli()}",
                     monitor = ctx.monitor,
                     bed = ctx.bed,
                     kind = kind,
@@ -178,7 +177,6 @@ class ScenarioBuilder(private val ctx: BddContext) {
         infix fun withConfidence(confidence: Double): ObservedAt =
             ObservedAt(
                 Observation(
-                    sourceEventId = "scenario-${at.toEpochMilli()}",
                     monitor = ctx.monitor,
                     bed = ctx.bed,
                     kind = kind,

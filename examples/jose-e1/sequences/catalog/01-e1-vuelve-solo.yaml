@@ -4,7 +4,8 @@
 # Director: valida que avisamos sin enfermera y no queda colgado.
 # Enfermería: 1 episodio que pasa de pending a resolved solo, sin intervención.
 # Esperado: 1 episodio resolved (abrió 23:15, cerró 23:32) + 2 scene Transitions + signal OPENED/CLOSED.
-profile: "/home/visiona/workspace/mana-dist/config/mana-hive/profiles/jose-v13.json"
+profile: "/home/visiona/workspace/mana-dist/config/mana-hive/profiles/jose-v-min.json"
+monitoringProfile: { riskLevel: LOW, mobilityAid: NONE, autopilot: false, mode: PRESET, templateId: standard, updatedBy: scenario-simulator, reason: "01-e1-vuelve-solo scenario" }
 clean: true
 autoDate: false
 start: "2026-09-03T22:00:00Z"
@@ -15,7 +16,7 @@ hubUrl: "http://localhost:8080"
 natsUrl: "nats://localhost:4222"
 expect:
   episodes:
-    - { status: "resolved", severity: "WARNING", count: 1 }
+    - { status: "RESOLVED", severity: "WARNING", count: 1 }
   minSceneEvents: 2
   minSignals: 1
 steps:

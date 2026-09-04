@@ -3,6 +3,7 @@
 # Director: rampa severidad — mismo episodio que escala, no dos.
 # Perfil v6: SITTING onEntry WARNING, STANDING dwell 2m/3m CRITICAL.
 profile: "/home/visiona/workspace/mana-dist/config/mana-hive/profiles/jose-v22.json"
+monitoringProfile: { riskLevel: HIGH, mobilityAid: NONE, autopilot: false, mode: PRESET, templateId: fall_risk, updatedBy: scenario-simulator, reason: "05-escalado-sitting-standing scenario" }
 clean: true
 autoDate: false
 start: "2026-09-07T22:00:00Z"
@@ -13,7 +14,7 @@ hubUrl: "http://localhost:8080"
 natsUrl: "nats://localhost:4222"
 expect:
   episodes:
-    - { status: "resolved", severity: "CRITICAL", count: 1 }
+    - { status: "RESOLVED", severity: "CRITICAL", count: 1 }
   minSceneEvents: 4
   minSignals: 1
 steps:

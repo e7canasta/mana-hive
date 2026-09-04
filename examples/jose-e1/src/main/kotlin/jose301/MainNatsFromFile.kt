@@ -85,7 +85,7 @@ fun main(args: Array<String>) {
                 val obsMap = step["obs"] as Map<String, Any>
                 val kind = obsMap["kind"] as String
                 val conf = (obsMap["conf"] as? Number)?.toDouble() ?: 0.92
-                val obs = Observation(sourceEventId = "file-${i}", monitor = com.manahive.kernel.MonitorId(monitor), bed = com.manahive.kernel.BedId(bed), kind = com.manahive.contracts.perception.ObservationKind.valueOf(kind), confidence = conf, observedAt = now)
+                val obs = Observation(monitor = com.manahive.kernel.MonitorId(monitor), bed = com.manahive.kernel.BedId(bed), kind = com.manahive.contracts.perception.ObservationKind.valueOf(kind), confidence = conf, observedAt = now)
                 publishEnveloped(Subjects.perceptionObservation(com.manahive.kernel.BedId(bed)), "Observation", now, obs)
                 println("${i+1}. → OBS $kind at $now")
             }

@@ -1,0 +1,139 @@
+{
+  "meta" : {
+    "scenario" : "11-fall-detection",
+    "profile" : "/home/visiona/workspace/mana-dist/config/mana-hive/profiles/jose-fall.json",
+    "hubUrl" : "http://localhost:8080",
+    "natsUrl" : "nats://localhost:4222",
+    "residentId" : "jose",
+    "bed" : "bed-4",
+    "from" : "2026-09-10T22:00:00Z",
+    "to" : "2026-09-10T23:09:01Z",
+    "generatedAt" : "2026-09-02T14:05:43.940415470Z"
+  },
+  "steps" : [ {
+    "useManual" : "2026-09-10T22:00:00Z"
+  }, {
+    "obs" : {
+      "kind" : "IN_BED"
+    }
+  }, {
+    "advance" : "PT5M"
+  }, {
+    "obs" : {
+      "kind" : "ON_FLOOR",
+      "conf" : 0.98
+    }
+  }, {
+    "advance" : "PT1S"
+  }, {
+    "obs" : {
+      "kind" : "ON_FLOOR",
+      "conf" : 0.98
+    }
+  }, {
+    "advance" : "PT2M"
+  }, {
+    "obs" : {
+      "kind" : "STAFF_ENTERED"
+    }
+  }, {
+    "advance" : "PT2M"
+  }, {
+    "obs" : {
+      "kind" : "IN_BED"
+    }
+  }, {
+    "useSystem" : true
+  } ],
+  "episodes" : [ {
+    "id" : "bed-4-ece8ca07-1bac-4503-a6c4-dae7c98f45c3",
+    "residentId" : "jose",
+    "bedId" : "bed-4",
+    "severity" : "CRITICAL",
+    "status" : "RESOLVED",
+    "title" : "alert-on_floor: bed-4",
+    "detail" : "Trigger: ON_FLOOR",
+    "occurredAt" : "2026-09-10T22:05:00Z",
+    "escalationLevel" : 0,
+    "isPending" : false,
+    "pending" : false
+  } ],
+  "sceneEvents" : [ {
+    "eventType" : "STATE_CHANGED",
+    "at" : "2026-09-10T22:00:00Z",
+    "bed" : "bed-4",
+    "residentId" : "jose",
+    "from" : "UNKNOWN",
+    "to" : "UNKNOWN",
+    "twinSnapshot" : "{\"scene\": 1023, \"state\": \"Lying\", \"monitor\": \"m1\", \"sceneSince\": \"1970-01-01T00:00:00Z\", \"sceneStaff\": \"Unknown\", \"signalLost\": false, \"stateSince\": \"2026-09-10T22:00:00Z\", \"sceneWalker\": \"Unknown\", \"sceneBedLeft\": \"Unknown\", \"sceneBedRight\": \"Unknown\", \"sceneWheelchair\": \"Unknown\", \"signalLastHeartbeat\": \"1970-01-01T00:00:00Z\"}",
+    "stateSince" : "2026-09-10T22:00:00Z",
+    "sceneSince" : "1970-01-01T00:00:00Z",
+    "signalLost" : false,
+    "monitorId" : "m1"
+  }, {
+    "eventType" : "STATE_CHANGED",
+    "at" : "2026-09-10T22:05:00Z",
+    "bed" : "bed-4",
+    "residentId" : "jose",
+    "from" : "UNKNOWN",
+    "to" : "UNKNOWN",
+    "twinSnapshot" : "{\"scene\": 1023, \"state\": \"OnFloor\", \"monitor\": \"m1\", \"sceneSince\": \"1970-01-01T00:00:00Z\", \"sceneStaff\": \"Unknown\", \"signalLost\": false, \"stateSince\": \"2026-09-10T22:05:00Z\", \"sceneWalker\": \"Unknown\", \"sceneBedLeft\": \"Unknown\", \"sceneBedRight\": \"Unknown\", \"sceneWheelchair\": \"Unknown\", \"signalLastHeartbeat\": \"1970-01-01T00:00:00Z\"}",
+    "stateSince" : "2026-09-10T22:05:00Z",
+    "sceneSince" : "1970-01-01T00:00:00Z",
+    "signalLost" : false,
+    "monitorId" : "m1"
+  }, {
+    "eventType" : "STATE_CHANGED",
+    "at" : "2026-09-10T22:07:01Z",
+    "bed" : "bed-4",
+    "residentId" : "jose",
+    "twinSnapshot" : "{\"scene\": 1021, \"state\": \"OnFloor\", \"monitor\": \"m1\", \"sceneSince\": \"2026-09-10T22:07:01Z\", \"sceneStaff\": \"Present\", \"signalLost\": false, \"stateSince\": \"2026-09-10T22:05:00Z\", \"sceneWalker\": \"Unknown\", \"sceneBedLeft\": \"Unknown\", \"sceneBedRight\": \"Unknown\", \"sceneWheelchair\": \"Unknown\", \"signalLastHeartbeat\": \"1970-01-01T00:00:00Z\"}",
+    "stateSince" : "2026-09-10T22:05:00Z",
+    "sceneSince" : "2026-09-10T22:07:01Z",
+    "signalLost" : false,
+    "monitorId" : "m1"
+  }, {
+    "eventType" : "STATE_CHANGED",
+    "at" : "2026-09-10T22:09:01Z",
+    "bed" : "bed-4",
+    "residentId" : "jose",
+    "from" : "UNKNOWN",
+    "to" : "UNKNOWN",
+    "twinSnapshot" : "{\"scene\": 1021, \"state\": \"Lying\", \"monitor\": \"m1\", \"sceneSince\": \"2026-09-10T22:07:01Z\", \"sceneStaff\": \"Present\", \"signalLost\": false, \"stateSince\": \"2026-09-10T22:09:01Z\", \"sceneWalker\": \"Unknown\", \"sceneBedLeft\": \"Unknown\", \"sceneBedRight\": \"Unknown\", \"sceneWheelchair\": \"Unknown\", \"signalLastHeartbeat\": \"1970-01-01T00:00:00Z\"}",
+    "stateSince" : "2026-09-10T22:09:01Z",
+    "sceneSince" : "2026-09-10T22:07:01Z",
+    "signalLost" : false,
+    "monitorId" : "m1"
+  } ],
+  "signals" : [ {
+    "type" : "NO_MOVEMENT",
+    "at" : "2026-09-10T22:05:00Z",
+    "bed" : "bed-4",
+    "residentId" : "jose",
+    "episodeId" : "bed-4-ece8ca07-1bac-4503-a6c4-dae7c98f45c3",
+    "severity" : "CRITICAL",
+    "trigger" : "ON_FLOOR",
+    "ruleId" : "alert-on_floor",
+    "rulesFingerprint" : "alert-on_floor",
+    "reversible" : true,
+    "requiresNvr" : false
+  }, {
+    "type" : "NO_MOVEMENT",
+    "at" : "2026-09-10T22:09:01Z",
+    "bed" : "bed-4",
+    "residentId" : "jose",
+    "episodeId" : "bed-4-ece8ca07-1bac-4503-a6c4-dae7c98f45c3",
+    "cause" : "STAFF_AND_SAFE",
+    "rulesFingerprint" : "alert-on_floor"
+  } ],
+  "expect" : {
+    "episodes" : [ {
+      "status" : "RESOLVED",
+      "severity" : "CRITICAL",
+      "count" : 1
+    } ],
+    "minSceneEvents" : 2,
+    "minSignals" : 1
+  },
+  "verified" : true
+}

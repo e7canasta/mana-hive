@@ -3,6 +3,7 @@
 # Director: robustez 48h — ledger limpio entre episodios, staff sola no rompe.
 # Perfil v3: SITTING observeOnly, comeBack 5m/8m — cortas no abren.
 profile: "/home/visiona/workspace/mana-dist/config/mana-hive/profiles/jose-v23.json"
+monitoringProfile: { riskLevel: LOW, mobilityAid: NONE, autopilot: false, mode: PRESET, templateId: standard, updatedBy: scenario-simulator, reason: "06-48h-mixto scenario" }
 clean: true
 autoDate: false
 start: "2026-09-08T22:00:00Z"
@@ -13,7 +14,7 @@ hubUrl: "http://localhost:8080"
 natsUrl: "nats://localhost:4222"
 expect:
   episodes:
-    - { status: "resolved", severity: "WARNING", count: 4 }
+    - { status: "RESOLVED", severity: "WARNING", count: 4 }
   minSceneEvents: 8
   minSignals: 4
 steps:

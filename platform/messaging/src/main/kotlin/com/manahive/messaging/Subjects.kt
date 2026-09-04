@@ -28,6 +28,7 @@ public object Subjects {
     public fun recordingCommand(bed: BedId): String = "recorder.command.v1.${bed.value}"
     public fun evidenceRecord(bed: BedId): String = "evidence.record.v1.${bed.value}"
     public fun noticeEvent(noticeId: NoticeId): String = "notice.event.v1.${noticeId.value}"
+    public fun hubEpisode(bed: BedId): String = "hub.episode.v1.${bed.value}"
 
     public const val CENSUS_SNAPSHOT: String = "hub.census.snapshot.v1"
 
@@ -39,4 +40,6 @@ public object Subjects {
     public const val RECORDER_WILDCARD: String = "recorder.command.v1.>"
     public const val EVIDENCE_WILDCARD: String = "evidence.record.v1.>"
     public const val NOTICE_WILDCARD: String = "notice.event.v1.>"
+    public const val HUB_EPISODE_WILDCARD: String = "hub.episode.v1.>"
+    public const val HUB_SCENE_WILDCARD: String = "hub.scene.v1.>"
 }

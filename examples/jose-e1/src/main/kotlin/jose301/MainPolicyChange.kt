@@ -69,7 +69,6 @@ fun main() {
     fun pubObservation(offset: Duration, kind: ObservationKind) {
         val at = START + offset
         val obs = Observation(
-            sourceEventId = "policy-test-${offset}",
             monitor = monitor,
             bed = bed,
             kind = kind,

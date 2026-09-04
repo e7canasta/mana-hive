@@ -24,7 +24,7 @@ import java.time.Instant
  * knowing clinical rules (hub policy), measuring dwells (ClockSweeper).
  *
  * Invariants: stateSince only advances when state changes, never backwards;
- * a duplicate observation (same sourceEventId) is an identical no-op.
+ * duplicate state observations are an identical no-op.
  */
 public interface SceneInterpreter : Engine {
     public fun interpret(

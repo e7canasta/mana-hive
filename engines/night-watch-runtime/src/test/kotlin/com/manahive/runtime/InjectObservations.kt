@@ -53,7 +53,6 @@ class InjectObservations {
             fun observar(kind: ObservationKind, avanzar: Long) {
                 t = t.plusSeconds(avanzar)
                 val obs = Observation(
-                    sourceEventId = UUID.randomUUID().toString(),
                     monitor = camara, bed = cama, kind = kind,
                     confidence = 0.95, observedAt = t,
                 )

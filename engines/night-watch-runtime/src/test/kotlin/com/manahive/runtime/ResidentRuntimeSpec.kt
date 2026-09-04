@@ -31,7 +31,6 @@ class ResidentRuntimeSpec {
     private val t0 = Instant.parse("2024-01-15T22:00:00Z")
 
     private fun obs(kind: ObservationKind, bed: BedId, at: Instant): Observation = Observation(
-        sourceEventId = "obs-${at.toEpochMilli()}",
         monitor = cam,
         bed = bed,
         kind = kind,
@@ -78,6 +77,7 @@ class ResidentRuntimeSpec {
 
         val opened = sweepOut.signals.filterIsInstance<SentinelSignal.EpisodeOpened>()
         assertEquals(1, opened.size, "Expected one EpisodeOpened signal")
+        assertTrue(sweepOut.recorderCommands.isNotEmpty(), "Sweep-generated episode must reach Recorder")
     }
 
     @Test

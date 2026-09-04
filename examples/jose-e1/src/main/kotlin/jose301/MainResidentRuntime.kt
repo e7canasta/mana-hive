@@ -77,7 +77,6 @@ fun main() {
 
         // Observe: sweep runs automatically BEFORE inside onObservation
         val obs = Observation(
-            sourceEventId = "runtime-${event.offset}",
             monitor = monitor,
             bed = bed,
             kind = event.kind,

@@ -93,7 +93,6 @@ private fun runScenario1_LyingToBedEdge(interpreter: SceneInterpreter) {
     )
 
     val obs = Observation(
-        sourceEventId = "obs-001",
         monitor = monitor,
         bed = bed,
         kind = ObservationKind.BED_EDGE,
@@ -133,7 +132,6 @@ private fun runScenario2_SignalLostAndRecovered(interpreter: SceneInterpreter) {
     )
 
     val obs = Observation(
-        sourceEventId = "obs-002",
         monitor = monitor,
         bed = bed,
         kind = ObservationKind.SITTING_IN_BED,
@@ -172,7 +170,6 @@ private fun runScenario3_DwellWarningAndExceeded(interpreter: SceneInterpreter) 
     )
 
     val obs = Observation(
-        sourceEventId = "obs-003",
         monitor = monitor,
         bed = bed,
         kind = ObservationKind.STANDING,
@@ -214,7 +211,6 @@ private fun runScenario4_IllegalTransition(interpreter: SceneInterpreter) {
     )
 
     val obs = Observation(
-        sourceEventId = "obs-004",
         monitor = monitor,
         bed = bed,
         kind = ObservationKind.IN_BATHROOM,
@@ -253,7 +249,6 @@ private fun runScenario5_LowConfidence(interpreter: SceneInterpreter) {
     )
 
     val obs = Observation(
-        sourceEventId = "obs-005",
         monitor = monitor,
         bed = bed,
         kind = ObservationKind.BED_EDGE,
@@ -292,7 +287,6 @@ private fun runScenario6_HysteresisBlock(interpreter: SceneInterpreter) {
     )
 
     val obs = Observation(
-        sourceEventId = "obs-006",
         monitor = monitor,
         bed = bed,
         kind = ObservationKind.BED_EDGE,
@@ -332,7 +326,6 @@ private fun runScenario7_SittingInBedToStanding(interpreter: SceneInterpreter) {
     )
 
     val obs = Observation(
-        sourceEventId = "obs-007",
         monitor = monitor,
         bed = bed,
         kind = ObservationKind.STANDING,
@@ -382,7 +375,6 @@ private fun runScenario8_OutdoorSequence(interpreter: SceneInterpreter) {
     steps.forEachIndexed { index, step ->
         val t = t0.plusSeconds(step.offsetSeconds)
         val obs = Observation(
-            sourceEventId = "obs-step-${index + 1}",
             monitor = monitor,
             bed = bed,
             kind = step.kind,

@@ -40,7 +40,7 @@ public object BusContract {
      *
      * `Observation` es:
      * ```json
-     * { "sourceEventId":"…", "monitor":"CAMERA_MAIN", "bed":"bed-301",
+     * { "monitor":"CAMERA_MAIN", "bed":"bed-301",
      *   "kind":"ON_FLOOR", "confidence":0.95, "observedAt":"2026-01-15T22:02:40Z" }
      * ```
      * `kind` es un `ObservationKind`; `confidence` va en [0,1] y por debajo del

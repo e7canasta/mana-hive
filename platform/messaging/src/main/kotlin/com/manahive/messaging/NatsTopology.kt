@@ -18,20 +18,21 @@ import java.time.Duration
 public class NatsTopology(private val jsm: JetStreamManagement) {
 
     public fun ensureAll() {
-        ensure("PERCEPTION", Subjects.PERCEPTION_WILDCARD, Duration.ofDays(7))
-        ensure("SCENE", Subjects.SCENE_WILDCARD, Duration.ofDays(7))
-        ensure("SENTINEL", Subjects.SENTINEL_WILDCARD, Duration.ofDays(7))
-        ensure("ALARM", Subjects.ALARM_WILDCARD, Duration.ofDays(7))
-        ensure("POLICY", Subjects.POLICY_WILDCARD, Duration.ofDays(7))
-        ensure("RECORDER", Subjects.RECORDER_WILDCARD, Duration.ofDays(7))
-        ensure("EVIDENCE", Subjects.EVIDENCE_WILDCARD, Duration.ofDays(7))
-        ensure("NOTICE", Subjects.NOTICE_WILDCARD, Duration.ofDays(7))
+        ensure("PERCEPTION", Duration.ofDays(7), Subjects.PERCEPTION_WILDCARD)
+        ensure("SCENE", Duration.ofDays(7), Subjects.SCENE_WILDCARD)
+        ensure("SENTINEL", Duration.ofDays(7), Subjects.SENTINEL_WILDCARD)
+        ensure("ALARM", Duration.ofDays(7), Subjects.ALARM_WILDCARD)
+        ensure("POLICY", Duration.ofDays(7), Subjects.POLICY_WILDCARD)
+        ensure("RECORDER", Duration.ofDays(7), Subjects.RECORDER_WILDCARD)
+        ensure("EVIDENCE", Duration.ofDays(7), Subjects.EVIDENCE_WILDCARD)
+        ensure("NOTICE", Duration.ofDays(7), Subjects.NOTICE_WILDCARD)
+        ensure("HUB", Duration.ofDays(30), Subjects.HUB_EPISODE_WILDCARD, Subjects.HUB_SCENE_WILDCARD)
     }
 
-    private fun ensure(name: String, subjects: String, maxAge: Duration) {
+    private fun ensure(name: String, maxAge: Duration, vararg subjects: String) {
         val config = StreamConfiguration.builder()
             .name(name)
-            .subjects(subjects)
+            .subjects(*subjects)
             .storageType(StorageType.File)
             .retentionPolicy(RetentionPolicy.Limits)
             .maxAge(maxAge)

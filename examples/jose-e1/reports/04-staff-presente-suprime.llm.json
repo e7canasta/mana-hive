@@ -8,7 +8,7 @@
     "bed" : "bed-4",
     "from" : "2026-09-06T22:00:00Z",
     "to" : "2026-09-06T23:20:00Z",
-    "generatedAt" : "2026-08-31T01:39:20.176242501Z"
+    "generatedAt" : "2026-09-02T16:28:02.128334110Z"
   },
   "steps" : [ {
     "useManual" : "2026-09-06T22:00:00Z"
@@ -35,157 +35,89 @@
   }, {
     "useSystem" : true
   } ],
-  "episodes" : [ {
-    "id" : "bed-4-042119a9-e113-41b3-a27b-050799c02602",
-    "residentId" : "jose",
-    "bedId" : "bed-4",
-    "severity" : "WARNING",
-    "status" : "resolved",
-    "title" : "alert-sitting_in_bed: bed-4",
-    "detail" : "Trigger: SITTING_IN_BED",
-    "occurredAt" : "2026-09-06T22:05:00Z",
-    "escalationLevel" : 0,
-    "isPending" : false,
-    "pending" : false
-  } ],
+  "episodes" : [ ],
   "sceneEvents" : [ {
-    "eventType" : "SignalRecovered",
+    "eventType" : "STATE_CHANGED",
     "at" : "2026-09-06T22:00:00Z",
     "bed" : "bed-4",
-    "residentId" : ""
+    "residentId" : "jose",
+    "twinSnapshot" : "{\"scene\": 1021, \"state\": \"Lying\", \"monitor\": \"m1\", \"sceneSince\": \"2026-09-06T22:00:00Z\", \"sceneStaff\": \"Present\", \"signalLost\": false, \"stateSince\": \"2026-09-06T22:00:00Z\", \"sceneWalker\": \"Unknown\", \"sceneBedLeft\": \"Unknown\", \"sceneBedRight\": \"Unknown\", \"sceneWheelchair\": \"Unknown\", \"signalLastHeartbeat\": \"1970-01-01T00:00:00Z\"}",
+    "stateSince" : "2026-09-06T22:00:00Z",
+    "sceneSince" : "2026-09-06T22:00:00Z",
+    "signalLost" : false,
+    "monitorId" : "m1"
   }, {
-    "eventType" : "StaffPresenceDetected",
-    "at" : "2026-09-06T22:00:00Z",
-    "bed" : "bed-4",
-    "residentId" : ""
-  }, {
-    "eventType" : "ComeBackExceeded",
+    "eventType" : "STATE_CHANGED",
     "at" : "2026-09-06T22:20:00Z",
     "bed" : "bed-4",
-    "residentId" : ""
+    "residentId" : "jose",
+    "twinSnapshot" : "{\"scene\": 1021, \"state\": \"SittingInBed\", \"monitor\": \"m1\", \"sceneSince\": \"2026-09-06T22:00:00Z\", \"sceneStaff\": \"Present\", \"signalLost\": false, \"stateSince\": \"2026-09-06T22:05:00Z\", \"sceneWalker\": \"Unknown\", \"sceneBedLeft\": \"Unknown\", \"sceneBedRight\": \"Unknown\", \"sceneWheelchair\": \"Unknown\", \"signalLastHeartbeat\": \"1970-01-01T00:00:00Z\"}",
+    "stateSince" : "2026-09-06T22:05:00Z",
+    "sceneSince" : "2026-09-06T22:00:00Z",
+    "signalLost" : false,
+    "monitorId" : "m1"
   }, {
-    "eventType" : "TransitionDetected",
-    "at" : "2026-09-06T22:20:00Z",
-    "bed" : "bed-4",
-    "residentId" : ""
-  }, {
-    "eventType" : "TransitionDetected",
+    "eventType" : "STATE_CHANGED",
     "at" : "2026-09-06T22:00:00Z",
     "bed" : "bed-4",
-    "residentId" : ""
+    "residentId" : "jose",
+    "from" : "UNKNOWN",
+    "to" : "UNKNOWN",
+    "twinSnapshot" : "{\"scene\": 1023, \"state\": \"Lying\", \"monitor\": \"m1\", \"sceneSince\": \"1970-01-01T00:00:00Z\", \"sceneStaff\": \"Unknown\", \"signalLost\": false, \"stateSince\": \"2026-09-06T22:00:00Z\", \"sceneWalker\": \"Unknown\", \"sceneBedLeft\": \"Unknown\", \"sceneBedRight\": \"Unknown\", \"sceneWheelchair\": \"Unknown\", \"signalLastHeartbeat\": \"1970-01-01T00:00:00Z\"}",
+    "stateSince" : "2026-09-06T22:00:00Z",
+    "sceneSince" : "1970-01-01T00:00:00Z",
+    "signalLost" : false,
+    "monitorId" : "m1"
   }, {
-    "eventType" : "SignalLost",
-    "at" : "2026-09-06T22:00:00Z",
-    "bed" : "bed-4",
-    "residentId" : ""
-  }, {
-    "eventType" : "TransitionDetected",
+    "eventType" : "STATE_CHANGED",
     "at" : "2026-09-06T22:05:00Z",
     "bed" : "bed-4",
-    "residentId" : ""
+    "residentId" : "jose",
+    "from" : "UNKNOWN",
+    "to" : "UNKNOWN",
+    "twinSnapshot" : "{\"scene\": 1021, \"state\": \"SittingInBed\", \"monitor\": \"m1\", \"sceneSince\": \"2026-09-06T22:00:00Z\", \"sceneStaff\": \"Present\", \"signalLost\": false, \"stateSince\": \"2026-09-06T22:05:00Z\", \"sceneWalker\": \"Unknown\", \"sceneBedLeft\": \"Unknown\", \"sceneBedRight\": \"Unknown\", \"sceneWheelchair\": \"Unknown\", \"signalLastHeartbeat\": \"1970-01-01T00:00:00Z\"}",
+    "stateSince" : "2026-09-06T22:05:00Z",
+    "sceneSince" : "2026-09-06T22:00:00Z",
+    "signalLost" : false,
+    "monitorId" : "m1"
   }, {
-    "eventType" : "SignalLost",
+    "eventType" : "STATE_CHANGED",
     "at" : "2026-09-06T22:20:00Z",
     "bed" : "bed-4",
-    "residentId" : ""
-  }, {
-    "eventType" : "TransitionDetected",
-    "at" : "2026-09-06T22:00:00Z",
-    "bed" : "bed-4",
-    "residentId" : ""
-  }, {
-    "eventType" : "StaffPresenceDetected",
-    "at" : "2026-09-06T22:00:00Z",
-    "bed" : "bed-4",
-    "residentId" : ""
-  }, {
-    "eventType" : "ComeBackExceeded",
-    "at" : "2026-09-06T22:20:00Z",
-    "bed" : "bed-4",
-    "residentId" : ""
-  }, {
-    "eventType" : "SignalLost",
-    "at" : "2026-09-06T22:20:00Z",
-    "bed" : "bed-4",
-    "residentId" : ""
-  }, {
-    "eventType" : "TransitionDetected",
-    "at" : "2026-09-06T22:20:00Z",
-    "bed" : "bed-4",
-    "residentId" : ""
-  }, {
-    "eventType" : "SignalRecovered",
-    "at" : "2026-09-06T22:00:00Z",
-    "bed" : "bed-4",
-    "residentId" : ""
-  }, {
-    "eventType" : "SignalLost",
-    "at" : "2026-09-06T22:00:00Z",
-    "bed" : "bed-4",
-    "residentId" : ""
-  }, {
-    "eventType" : "TransitionDetected",
-    "at" : "2026-09-06T22:05:00Z",
-    "bed" : "bed-4",
-    "residentId" : ""
-  }, {
-    "eventType" : "SignalLost",
-    "at" : "2026-09-06T22:00:00Z",
-    "bed" : "bed-4",
-    "residentId" : ""
-  }, {
-    "eventType" : "TransitionDetected",
-    "at" : "2026-09-06T22:05:00Z",
-    "bed" : "bed-4",
-    "residentId" : ""
-  }, {
-    "eventType" : "ComeBackExceeded",
-    "at" : "2026-09-06T22:20:00Z",
-    "bed" : "bed-4",
-    "residentId" : ""
-  }, {
-    "eventType" : "SignalLost",
-    "at" : "2026-09-06T22:20:00Z",
-    "bed" : "bed-4",
-    "residentId" : ""
-  }, {
-    "eventType" : "TransitionDetected",
-    "at" : "2026-09-06T22:20:00Z",
-    "bed" : "bed-4",
-    "residentId" : ""
-  }, {
-    "eventType" : "TransitionDetected",
-    "at" : "2026-09-06T22:05:00Z",
-    "bed" : "bed-4",
-    "residentId" : ""
-  }, {
-    "eventType" : "ComeBackExceeded",
-    "at" : "2026-09-06T22:20:00Z",
-    "bed" : "bed-4",
-    "residentId" : ""
-  }, {
-    "eventType" : "SignalLost",
-    "at" : "2026-09-06T22:20:00Z",
-    "bed" : "bed-4",
-    "residentId" : ""
-  }, {
-    "eventType" : "SignalLost",
-    "at" : "2026-09-06T22:00:00Z",
-    "bed" : "bed-4",
-    "residentId" : ""
-  }, {
-    "eventType" : "TransitionDetected",
-    "at" : "2026-09-06T22:20:00Z",
-    "bed" : "bed-4",
-    "residentId" : ""
+    "residentId" : "jose",
+    "from" : "UNKNOWN",
+    "to" : "UNKNOWN",
+    "twinSnapshot" : "{\"scene\": 1021, \"state\": \"Lying\", \"monitor\": \"m1\", \"sceneSince\": \"2026-09-06T22:00:00Z\", \"sceneStaff\": \"Present\", \"signalLost\": false, \"stateSince\": \"2026-09-06T22:20:00Z\", \"sceneWalker\": \"Unknown\", \"sceneBedLeft\": \"Unknown\", \"sceneBedRight\": \"Unknown\", \"sceneWheelchair\": \"Unknown\", \"signalLastHeartbeat\": \"1970-01-01T00:00:00Z\"}",
+    "stateSince" : "2026-09-06T22:20:00Z",
+    "sceneSince" : "2026-09-06T22:00:00Z",
+    "signalLost" : false,
+    "monitorId" : "m1"
   } ],
   "signals" : [ {
-    "raw" : "{\"timestamp\":\"2026-08-31T01:39:20.173Z\",\"status\":404,\"error\":\"Not Found\",\"path\":\"/api/v1/admin/signals\"}"
+    "type" : "NO_MOVEMENT",
+    "at" : "2026-09-06T22:05:00Z",
+    "bed" : "bed-4",
+    "residentId" : "jose",
+    "episodeId" : "unknown",
+    "trigger" : "alert-sitting_in_bed",
+    "ruleId" : "alert-sitting_in_bed",
+    "cause" : "STAFF_PRESENT",
+    "rulesFingerprint" : "alert-sitting_in_bed,alert-standing,comeback-lying"
+  }, {
+    "type" : "NO_MOVEMENT",
+    "at" : "2026-09-06T22:20:00Z",
+    "bed" : "bed-4",
+    "residentId" : "jose",
+    "episodeId" : "unknown",
+    "trigger" : "comeback-lying",
+    "ruleId" : "comeback-lying",
+    "cause" : "STAFF_PRESENT",
+    "rulesFingerprint" : "alert-sitting_in_bed,alert-standing,comeback-lying"
   } ],
   "expect" : {
     "episodes" : [ ],
     "minSceneEvents" : 2,
     "minSignals" : 0
   },
-  "verified" : false
+  "verified" : true
 }

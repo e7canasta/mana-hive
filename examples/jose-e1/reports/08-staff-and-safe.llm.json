@@ -1,0 +1,131 @@
+{
+  "meta" : {
+    "scenario" : "08-staff-and-safe",
+    "profile" : "/home/visiona/workspace/mana-dist/config/mana-hive/profiles/jose-staff-and-safe.json",
+    "hubUrl" : "http://localhost:8080",
+    "natsUrl" : "nats://localhost:4222",
+    "residentId" : "jose",
+    "bed" : "bed-4",
+    "from" : "2026-09-04T22:00:00Z",
+    "to" : "2026-09-04T23:12:00Z",
+    "generatedAt" : "2026-09-02T18:44:00.646899849Z"
+  },
+  "steps" : [ {
+    "useManual" : "2026-09-04T22:00:00Z"
+  }, {
+    "obs" : {
+      "kind" : "IN_BED"
+    }
+  }, {
+    "advance" : "PT5M"
+  }, {
+    "obs" : {
+      "kind" : "SITTING_IN_BED"
+    }
+  }, {
+    "advance" : "PT5M"
+  }, {
+    "obs" : {
+      "kind" : "STAFF_ENTERED"
+    }
+  }, {
+    "advance" : "PT2M"
+  }, {
+    "obs" : {
+      "kind" : "IN_BED"
+    }
+  }, {
+    "useSystem" : true
+  } ],
+  "episodes" : [ {
+    "id" : "bed-4-909fb9f6-864e-434b-96e5-0df48f0e018d",
+    "residentId" : "jose",
+    "bedId" : "bed-4",
+    "severity" : "WARNING",
+    "status" : "RESOLVED",
+    "title" : "alert-sitting_in_bed: bed-4",
+    "detail" : "Trigger: SITTING_IN_BED",
+    "occurredAt" : "2026-09-04T22:05:00Z",
+    "escalationLevel" : 0,
+    "isPending" : false,
+    "pending" : false
+  } ],
+  "sceneEvents" : [ {
+    "eventType" : "STATE_CHANGED",
+    "at" : "2026-09-04T22:00:00Z",
+    "bed" : "bed-4",
+    "residentId" : "jose",
+    "from" : "UNKNOWN",
+    "to" : "UNKNOWN",
+    "twinSnapshot" : "{\"scene\": 1023, \"state\": \"Lying\", \"monitor\": \"m1\", \"sceneSince\": \"1970-01-01T00:00:00Z\", \"sceneStaff\": \"Unknown\", \"signalLost\": false, \"stateSince\": \"2026-09-04T22:00:00Z\", \"sceneWalker\": \"Unknown\", \"sceneBedLeft\": \"Unknown\", \"sceneBedRight\": \"Unknown\", \"sceneWheelchair\": \"Unknown\", \"signalLastHeartbeat\": \"1970-01-01T00:00:00Z\"}",
+    "stateSince" : "2026-09-04T22:00:00Z",
+    "sceneSince" : "1970-01-01T00:00:00Z",
+    "signalLost" : false,
+    "monitorId" : "m1"
+  }, {
+    "eventType" : "STATE_CHANGED",
+    "at" : "2026-09-04T22:05:00Z",
+    "bed" : "bed-4",
+    "residentId" : "jose",
+    "from" : "UNKNOWN",
+    "to" : "UNKNOWN",
+    "twinSnapshot" : "{\"scene\": 1023, \"state\": \"SittingInBed\", \"monitor\": \"m1\", \"sceneSince\": \"1970-01-01T00:00:00Z\", \"sceneStaff\": \"Unknown\", \"signalLost\": false, \"stateSince\": \"2026-09-04T22:05:00Z\", \"sceneWalker\": \"Unknown\", \"sceneBedLeft\": \"Unknown\", \"sceneBedRight\": \"Unknown\", \"sceneWheelchair\": \"Unknown\", \"signalLastHeartbeat\": \"1970-01-01T00:00:00Z\"}",
+    "stateSince" : "2026-09-04T22:05:00Z",
+    "sceneSince" : "1970-01-01T00:00:00Z",
+    "signalLost" : false,
+    "monitorId" : "m1"
+  }, {
+    "eventType" : "STATE_CHANGED",
+    "at" : "2026-09-04T22:10:00Z",
+    "bed" : "bed-4",
+    "residentId" : "jose",
+    "twinSnapshot" : "{\"scene\": 1021, \"state\": \"SittingInBed\", \"monitor\": \"m1\", \"sceneSince\": \"2026-09-04T22:10:00Z\", \"sceneStaff\": \"Present\", \"signalLost\": false, \"stateSince\": \"2026-09-04T22:05:00Z\", \"sceneWalker\": \"Unknown\", \"sceneBedLeft\": \"Unknown\", \"sceneBedRight\": \"Unknown\", \"sceneWheelchair\": \"Unknown\", \"signalLastHeartbeat\": \"1970-01-01T00:00:00Z\"}",
+    "stateSince" : "2026-09-04T22:05:00Z",
+    "sceneSince" : "2026-09-04T22:10:00Z",
+    "signalLost" : false,
+    "monitorId" : "m1"
+  }, {
+    "eventType" : "STATE_CHANGED",
+    "at" : "2026-09-04T22:12:00Z",
+    "bed" : "bed-4",
+    "residentId" : "jose",
+    "from" : "UNKNOWN",
+    "to" : "UNKNOWN",
+    "twinSnapshot" : "{\"scene\": 1021, \"state\": \"Lying\", \"monitor\": \"m1\", \"sceneSince\": \"2026-09-04T22:10:00Z\", \"sceneStaff\": \"Present\", \"signalLost\": false, \"stateSince\": \"2026-09-04T22:12:00Z\", \"sceneWalker\": \"Unknown\", \"sceneBedLeft\": \"Unknown\", \"sceneBedRight\": \"Unknown\", \"sceneWheelchair\": \"Unknown\", \"signalLastHeartbeat\": \"1970-01-01T00:00:00Z\"}",
+    "stateSince" : "2026-09-04T22:12:00Z",
+    "sceneSince" : "2026-09-04T22:10:00Z",
+    "signalLost" : false,
+    "monitorId" : "m1"
+  } ],
+  "signals" : [ {
+    "type" : "NO_MOVEMENT",
+    "at" : "2026-09-04T22:05:00Z",
+    "bed" : "bed-4",
+    "residentId" : "jose",
+    "episodeId" : "bed-4-909fb9f6-864e-434b-96e5-0df48f0e018d",
+    "severity" : "WARNING",
+    "trigger" : "SITTING_IN_BED",
+    "ruleId" : "alert-sitting_in_bed",
+    "rulesFingerprint" : "alert-sitting_in_bed",
+    "reversible" : true,
+    "requiresNvr" : false
+  }, {
+    "type" : "NO_MOVEMENT",
+    "at" : "2026-09-04T22:12:00Z",
+    "bed" : "bed-4",
+    "residentId" : "jose",
+    "episodeId" : "bed-4-909fb9f6-864e-434b-96e5-0df48f0e018d",
+    "cause" : "STAFF_AND_SAFE",
+    "rulesFingerprint" : "alert-sitting_in_bed"
+  } ],
+  "expect" : {
+    "episodes" : [ {
+      "status" : "RESOLVED",
+      "severity" : "WARNING",
+      "count" : 1
+    } ],
+    "minSceneEvents" : 2,
+    "minSignals" : 1
+  },
+  "verified" : true
+}

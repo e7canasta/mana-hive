@@ -78,13 +78,13 @@ class FileEventWriter(
         )
     }
 
-    override fun publishRecordingCommand(bed: BedId, command: RecordingCommand) {
+    override fun publishRecordingCommand(bed: BedId, command: RecordingCommand, occurredAt: Instant) {
         recorderCommands += command
         events += mapOf(
             "type" to "RecordingCommand",
             "bed" to bed.value,
-            "at" to Instant.now().toString(),
-            "offset" to java.time.Duration.between(startTime, Instant.now()).toString(),
+            "at" to occurredAt.toString(),
+            "offset" to java.time.Duration.between(startTime, occurredAt).toString(),
             "payload" to command.toString(),
         )
     }

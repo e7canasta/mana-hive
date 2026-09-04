@@ -7,6 +7,7 @@ import com.manahive.harbor.NoticeCommand
 import com.manahive.contracts.notice.NoticeEvent
 import com.manahive.recorder.RecordingCommand
 import com.manahive.recorder.EvidenceRecord
+import java.time.Instant
 
 /**
  * Composite [EventPublisher] that fans out to multiple publishers.
@@ -39,8 +40,8 @@ class CompositePublisher(
         delegates.forEach { it.publishNoticeEvent(bed, event) }
     }
 
-    override fun publishRecordingCommand(bed: BedId, command: RecordingCommand) {
-        delegates.forEach { it.publishRecordingCommand(bed, command) }
+    override fun publishRecordingCommand(bed: BedId, command: RecordingCommand, occurredAt: Instant) {
+        delegates.forEach { it.publishRecordingCommand(bed, command, occurredAt) }
     }
 
     override fun publishEvidenceRecord(bed: BedId, record: EvidenceRecord) {

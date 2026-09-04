@@ -4,6 +4,7 @@
 # Enfermería: episodio que requiere visita, se marca presente y luego seguro.
 # Esperado: 1 episodio resolved WARNING (abrió 22:05 con v6 onEntry) → cerrado 22:20 por IN_BED+STAFF.
 profile: "/home/visiona/workspace/mana-dist/config/mana-hive/profiles/jose-v14.json"
+monitoringProfile: { riskLevel: LOW, mobilityAid: NONE, autopilot: false, mode: PRESET, templateId: standard, updatedBy: scenario-simulator, reason: "02-e2-con-enfermera scenario" }
 clean: true
 autoDate: false
 start: "2026-09-04T22:00:00Z"
@@ -14,7 +15,7 @@ hubUrl: "http://localhost:8080"
 natsUrl: "nats://localhost:4222"
 expect:
   episodes:
-    - { status: "resolved", severity: "WARNING", count: 1 }
+    - { status: "RESOLVED", severity: "WARNING", count: 1 }
   minSceneEvents: 2
   minSignals: 1
 steps:

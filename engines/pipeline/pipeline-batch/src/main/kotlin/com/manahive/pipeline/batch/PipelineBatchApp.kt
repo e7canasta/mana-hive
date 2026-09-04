@@ -195,7 +195,6 @@ fun main(args: Array<String>) {
 
         // Run interpreter
         val observation = Observation(
-            sourceEventId = "batch-${event.offset}",
             monitor = monitorId,
             bed = bedId,
             kind = event.kind,

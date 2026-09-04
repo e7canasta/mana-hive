@@ -303,7 +303,6 @@ private fun pipelineVaYVuelve(conn: Connection) {
     )
     for ((kind, at) in noche) {
         val obs = Observation(
-            sourceEventId = UUID.randomUUID().toString(),
             monitor = CAM, bed = BED, kind = kind, confidence = 0.95, observedAt = at,
         )
         js.publish(

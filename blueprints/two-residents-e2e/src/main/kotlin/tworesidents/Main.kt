@@ -104,7 +104,7 @@ class Scenario(val name: String, val runtime: NightWatchRuntime) {
 
     fun observe(who: ResidentId, bed: BedId, cam: MonitorId, kind: ObservationKind, at: Instant) {
         val o = Observation(
-            sourceEventId = "${who.value}-${at.epochSecond}", monitor = cam, bed = bed,
+            monitor = cam, bed = bed,
             kind = kind, confidence = 0.95, observedAt = at,
         )
         out.getOrPut(who) { mutableListOf() } += runtime.onObservation(who, o)

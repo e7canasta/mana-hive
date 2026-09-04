@@ -46,7 +46,7 @@ fun main() {
         println("  → TIME: ${cmd.action} ${cmd.duration ?: cmd.startAt ?: ""}")
     }
     fun pubObs(at: Instant, kind: String) {
-        val obs = Observation(sourceEventId = "esc-${at}", monitor = com.manahive.kernel.MonitorId(monitor), bed = com.manahive.kernel.BedId(bed), kind = com.manahive.contracts.perception.ObservationKind.valueOf(kind), confidence = 0.95, observedAt = at)
+        val obs = Observation(monitor = com.manahive.kernel.MonitorId(monitor), bed = com.manahive.kernel.BedId(bed), kind = com.manahive.contracts.perception.ObservationKind.valueOf(kind), confidence = 0.95, observedAt = at)
         publishEnveloped(Subjects.perceptionObservation(com.manahive.kernel.BedId(bed)), "Observation", at, obs)
         println("  → OBS: $kind at $at")
     }

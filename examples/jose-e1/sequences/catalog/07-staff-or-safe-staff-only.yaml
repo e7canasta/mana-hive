@@ -1,0 +1,27 @@
+# 07 — Cierre STAFF_OR_SAFE: staff solo cierra
+# Negocio: "José se sentó, vino la enfermera pero siguió sentado → episodio cierra por staff."
+# Director: prueba cierre STAFF_OR_SAFE — staff alone is enough.
+# Esperado: 1 episodio RESOLVED WARNING → cerrado por STAFF_PRESENT.
+profile: "/home/visiona/workspace/mana-dist/config/mana-hive/profiles/jose-staff-or-safe.json"
+monitoringProfile: { riskLevel: LOW, mobilityAid: NONE, autopilot: false, mode: PRESET, templateId: standard, updatedBy: scenario-simulator, reason: "07-staff-or-safe-staff-only scenario" }
+clean: true
+autoDate: false
+start: "2026-09-04T22:00:00Z"
+residentId: "jose"
+bed: "bed-4"
+monitor: "m1"
+hubUrl: "http://localhost:8080"
+natsUrl: "nats://localhost:4222"
+expect:
+  episodes:
+    - { status: "RESOLVED", severity: "WARNING", count: 1 }
+  minSceneEvents: 2
+  minSignals: 1
+steps:
+  - useManual: "2026-09-04T22:00:00Z"
+  - obs: { kind: IN_BED }
+  - advance: "PT5M"
+  - obs: { kind: SITTING_IN_BED }
+  - advance: "PT5M"
+  - obs: { kind: STAFF_ENTERED }
+  - useSystem: true

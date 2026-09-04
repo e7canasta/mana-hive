@@ -11,7 +11,6 @@ import java.time.Instant
  * downstream ever sees hardware words.
  */
 public data class Observation(
-    public val sourceEventId: String,
     public val monitor: MonitorId,
     public val bed: BedId,
     public val kind: ObservationKind,

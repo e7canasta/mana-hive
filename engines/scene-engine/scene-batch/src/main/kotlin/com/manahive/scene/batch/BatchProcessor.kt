@@ -62,7 +62,6 @@ object BatchProcessor {
 
         // 2. Run interpreter for this event
         val obs = Observation(
-            sourceEventId = "batch-${event.lineNumber}",
             monitor = ctx.config.monitorId,
             bed = ctx.config.bedId,
             kind = event.kind,

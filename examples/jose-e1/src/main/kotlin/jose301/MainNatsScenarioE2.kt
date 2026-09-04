@@ -61,7 +61,6 @@ fun main() {
     fun pubObservation(offset: Duration, kind: String, confidence: Double) {
         val at = START + offset
         val obs = Observation(
-            sourceEventId = "nats-e2-${offset}",
             monitor = com.manahive.kernel.MonitorId(monitor),
             bed = com.manahive.kernel.BedId(bed),
             kind = com.manahive.contracts.perception.ObservationKind.valueOf(kind),

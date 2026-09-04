@@ -164,7 +164,6 @@ class PipelineScenarioBuilder(private val ctx: PipelineContext) {
         val instant = ctx.start.plusSeconds(parseDuration(offset))
         observations.add(ObservedAt(
             Observation(
-                sourceEventId = "obs-${instant.toEpochMilli()}",
                 monitor = ctx.monitor,
                 bed = ctx.bed,
                 kind = kind,
@@ -178,7 +177,6 @@ class PipelineScenarioBuilder(private val ctx: PipelineContext) {
     fun obsAt(instant: Instant, kind: ObservationKind, confidence: Double = 0.9) {
         observations.add(ObservedAt(
             Observation(
-                sourceEventId = "obs-${instant.toEpochMilli()}",
                 monitor = ctx.monitor,
                 bed = ctx.bed,
                 kind = kind,

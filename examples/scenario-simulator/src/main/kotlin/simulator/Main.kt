@@ -30,6 +30,8 @@ fun main(args: Array<String>) {
     val monitor = (data["monitor"] as? String) ?: "m1"
 
     val profile = data["profile"] as? String
+    @Suppress("UNCHECKED_CAST")
+    val monitoringProfile = data["monitoringProfile"] as? Map<String, Any?>
     val clean = data["clean"] as? Boolean ?: false
     val autoDate = data["autoDate"] as? Boolean ?: false
 
@@ -47,6 +49,10 @@ fun main(args: Array<String>) {
     if (profile != null) {
         println("  → profile=$profile → aplicando")
         ProfileApplier.apply(hubUrl, profile)
+    }
+    if (monitoringProfile != null) {
+        println("  → monitoringProfile=$monitoringProfile → aplicando")
+        ProfileApplier.applyMonitoringProfile(hubUrl, residentId, monitoringProfile)
     }
 
     println("═══════════════════════════════════════════════════════════════")
@@ -123,7 +129,7 @@ fun main(args: Array<String>) {
                 val obsMap = step["obs"] as Map<String, Any>
                 val kind = obsMap["kind"] as String
                 val conf = (obsMap["conf"] as? Number)?.toDouble() ?: 0.92
-                val obs = Observation(sourceEventId = "sim-${i}", monitor = com.manahive.kernel.MonitorId(monitor), bed = com.manahive.kernel.BedId(bed), kind = com.manahive.contracts.perception.ObservationKind.valueOf(kind), confidence = conf, observedAt = now)
+                val obs = Observation(monitor = com.manahive.kernel.MonitorId(monitor), bed = com.manahive.kernel.BedId(bed), kind = com.manahive.contracts.perception.ObservationKind.valueOf(kind), confidence = conf, observedAt = now)
                 publishEnveloped(Subjects.perceptionObservation(com.manahive.kernel.BedId(bed)), "Observation", now, obs)
                 println("${i+1}. OBS $kind at $now")
             }

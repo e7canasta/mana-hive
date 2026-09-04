@@ -1,0 +1,29 @@
+# 09 — Retorno excedido: no vuelve en 10 min
+# Negocio: "José se levantó y no volvió en 10 min → alerta de retorno."
+# Director: prueba regla de retorno (comeBack).
+# Esperado: 1 episodio RESOLVED WARNING → cerrado por AUTO_RECOVERY.
+profile: "/home/visiona/workspace/mana-dist/config/mana-hive/profiles/jose-comeback.json"
+monitoringProfile: { riskLevel: MEDIUM, mobilityAid: NONE, autopilot: false, mode: PRESET, templateId: standard, updatedBy: scenario-simulator, reason: "09-comeback-exceeded scenario" }
+clean: true
+autoDate: false
+start: "2026-09-08T22:00:00Z"
+residentId: "jose"
+bed: "bed-4"
+monitor: "m1"
+hubUrl: "http://localhost:8080"
+natsUrl: "nats://localhost:4222"
+expect:
+  episodes:
+    - { status: "RESOLVED", severity: "WARNING", count: 1 }
+  minSceneEvents: 2
+  minSignals: 1
+steps:
+  - useManual: "2026-09-08T22:00:00Z"
+  - obs: { kind: IN_BED }
+  - advance: "PT5M"
+  - obs: { kind: SITTING_IN_BED }
+  - advance: "PT5M"
+  - obs: { kind: STANDING }
+  - advance: "PT10M"
+  - obs: { kind: IN_BED }
+  - useSystem: true

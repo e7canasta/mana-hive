@@ -3,6 +3,7 @@
 # Director: supresión STAFF_PRESENT — no ruido con personal presente.
 # Esperado: 0 episodios, SuppressedWithRecord STAFF_PRESENT.
 profile: "/home/visiona/workspace/mana-dist/config/mana-hive/profiles/jose-v21.json"
+monitoringProfile: { riskLevel: LOW, mobilityAid: NONE, autopilot: false, mode: PRESET, templateId: standard, updatedBy: scenario-simulator, reason: "04-staff-presente-suprime scenario" }
 clean: true
 autoDate: false
 start: "2026-09-06T22:00:00Z"

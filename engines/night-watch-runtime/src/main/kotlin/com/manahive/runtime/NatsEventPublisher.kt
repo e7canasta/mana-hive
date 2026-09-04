@@ -4,7 +4,6 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.manahive.contracts.EventEnvelope
 import com.manahive.kernel.BedId
 import com.manahive.kernel.EventRef
-import com.manahive.kernel.SystemClock
 import com.manahive.contracts.scene.SceneEvent
 import com.manahive.contracts.sentinel.SentinelSignal
 import com.manahive.contracts.alarm.AlertKey
@@ -65,8 +64,8 @@ class NatsEventPublisher(
         emit(Subjects.noticeEvent(event.noticeId), "NoticeEvent", event.at, mapper.writeValueAsString(event))
     }
 
-    override fun publishRecordingCommand(bed: BedId, command: RecordingCommand) {
-        emit(Subjects.recordingCommand(bed), "RecordingCommand", SystemClock.instant(), mapper.writeValueAsString(command))
+    override fun publishRecordingCommand(bed: BedId, command: RecordingCommand, occurredAt: java.time.Instant) {
+        emit(Subjects.recordingCommand(bed), "RecordingCommand", occurredAt, mapper.writeValueAsString(command))
     }
 
     override fun publishEvidenceRecord(bed: BedId, record: EvidenceRecord) {

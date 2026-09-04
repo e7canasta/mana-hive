@@ -54,7 +54,6 @@ fun main() {
     }
     fun pubObservation(at: Instant, kind: String, conf: Double = 0.92) {
         val obs = Observation(
-            sourceEventId = "48h-${at}-${UUID.randomUUID().toString().take(4)}",
             monitor = com.manahive.kernel.MonitorId(monitor),
             bed = com.manahive.kernel.BedId(bed),
             kind = com.manahive.contracts.perception.ObservationKind.valueOf(kind),

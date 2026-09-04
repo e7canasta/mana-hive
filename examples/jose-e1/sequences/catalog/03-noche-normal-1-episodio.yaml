@@ -4,6 +4,7 @@
 # Enfermería: 1 episodio comeBack LYING 5m/8m → cerrado por STAFF_OR_SAFE.
 # Perfil v3: SITTING observeOnly, LYING comeBack 5m/8m.
 profile: "/home/visiona/workspace/mana-dist/config/mana-hive/profiles/jose-v20.json"
+monitoringProfile: { riskLevel: LOW, mobilityAid: NONE, autopilot: false, mode: PRESET, templateId: standard, updatedBy: scenario-simulator, reason: "03-noche-normal-1-episodio scenario" }
 clean: true
 autoDate: false
 start: "2026-09-05T22:00:00Z"
@@ -14,7 +15,7 @@ hubUrl: "http://localhost:8080"
 natsUrl: "nats://localhost:4222"
 expect:
   episodes:
-    - { status: "pending", severity: "WARNING", count: 1 }
+    - { status: "RESOLVED", severity: "WARNING", count: 1 }
   minSceneEvents: 4
   minSignals: 1
 steps:

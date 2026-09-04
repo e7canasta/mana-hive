@@ -69,7 +69,7 @@ fun main() {
         sceneEvents.addAll(sweep.value.facts)
         marks = sweep.value.marks
         val obs = com.manahive.contracts.perception.Observation(
-            sourceEventId = "e1-${ev.at}", monitor = MONITOR, bed = BED_4, kind = ev.kind, confidence = 0.92, observedAt = ev.at
+            monitor = MONITOR, bed = BED_4, kind = ev.kind, confidence = 0.92, observedAt = ev.at
         )
         val res = interpreter.interpret(twin, obs, ev.at)
         twin = res.value.twin

@@ -1,0 +1,26 @@
+# 10 — observeOnly: sentada corta no abre
+# Negocio: "José se sentó 3 min y volvió → no alertamos (observeOnly)."
+# Director: prueba que observeOnly no genera episodios.
+# Esperado: 0 episodios, ledger limpio.
+profile: "/home/visiona/workspace/mana-dist/config/mana-hive/profiles/jose-observe-only.json"
+monitoringProfile: { riskLevel: LOW, mobilityAid: NONE, autopilot: false, mode: PRESET, templateId: standard, updatedBy: scenario-simulator, reason: "10-observe-only scenario" }
+clean: true
+autoDate: false
+start: "2026-09-09T22:00:00Z"
+residentId: "jose"
+bed: "bed-4"
+monitor: "m1"
+hubUrl: "http://localhost:8080"
+natsUrl: "nats://localhost:4222"
+expect:
+  episodes: []
+  minSceneEvents: 1
+  minSignals: 0
+steps:
+  - useManual: "2026-09-09T22:00:00Z"
+  - obs: { kind: IN_BED }
+  - advance: "PT5M"
+  - obs: { kind: SITTING_IN_BED }
+  - advance: "PT3M"
+  - obs: { kind: IN_BED }
+  - useSystem: true

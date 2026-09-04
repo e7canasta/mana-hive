@@ -8,7 +8,7 @@
     "bed" : "bed-4",
     "from" : "2026-09-04T22:00:00Z",
     "to" : "2026-09-04T23:20:00Z",
-    "generatedAt" : "2026-08-31T01:38:08.124950281Z"
+    "generatedAt" : "2026-09-02T18:31:03.997642803Z"
   },
   "steps" : [ {
     "useManual" : "2026-09-04T22:00:00Z"
@@ -40,11 +40,11 @@
     "useSystem" : true
   } ],
   "episodes" : [ {
-    "id" : "bed-4-af6f80ba-1b98-430e-82bf-fcb5406587fe",
+    "id" : "bed-4-39d5c472-d9f8-4ccc-8a83-954c5b669046",
     "residentId" : "jose",
     "bedId" : "bed-4",
     "severity" : "WARNING",
-    "status" : "resolved",
+    "status" : "RESOLVED",
     "title" : "alert-sitting_in_bed: bed-4",
     "detail" : "Trigger: SITTING_IN_BED",
     "occurredAt" : "2026-09-04T22:05:00Z",
@@ -53,222 +53,120 @@
     "pending" : false
   } ],
   "sceneEvents" : [ {
-    "eventType" : "SignalRecovered",
+    "eventType" : "STATE_CHANGED",
     "at" : "2026-09-04T22:00:00Z",
     "bed" : "bed-4",
-    "residentId" : ""
+    "residentId" : "jose",
+    "from" : "UNKNOWN",
+    "to" : "UNKNOWN",
+    "twinSnapshot" : "{\"scene\": 1023, \"state\": \"Lying\", \"monitor\": \"m1\", \"sceneSince\": \"1970-01-01T00:00:00Z\", \"sceneStaff\": \"Unknown\", \"signalLost\": false, \"stateSince\": \"2026-09-04T22:00:00Z\", \"sceneWalker\": \"Unknown\", \"sceneBedLeft\": \"Unknown\", \"sceneBedRight\": \"Unknown\", \"sceneWheelchair\": \"Unknown\", \"signalLastHeartbeat\": \"1970-01-01T00:00:00Z\"}",
+    "stateSince" : "2026-09-04T22:00:00Z",
+    "sceneSince" : "1970-01-01T00:00:00Z",
+    "signalLost" : false,
+    "monitorId" : "m1"
   }, {
-    "eventType" : "SignalRecovered",
-    "at" : "2026-09-04T22:00:00Z",
-    "bed" : "bed-4",
-    "residentId" : ""
-  }, {
-    "eventType" : "TransitionDetected",
-    "at" : "2026-09-04T22:00:00Z",
-    "bed" : "bed-4",
-    "residentId" : ""
-  }, {
-    "eventType" : "SignalLost",
+    "eventType" : "STATE_CHANGED",
     "at" : "2026-09-04T22:05:00Z",
     "bed" : "bed-4",
-    "residentId" : ""
+    "residentId" : "jose",
+    "from" : "UNKNOWN",
+    "to" : "UNKNOWN",
+    "twinSnapshot" : "{\"scene\": 1023, \"state\": \"SittingInBed\", \"monitor\": \"m1\", \"sceneSince\": \"1970-01-01T00:00:00Z\", \"sceneStaff\": \"Unknown\", \"signalLost\": false, \"stateSince\": \"2026-09-04T22:05:00Z\", \"sceneWalker\": \"Unknown\", \"sceneBedLeft\": \"Unknown\", \"sceneBedRight\": \"Unknown\", \"sceneWheelchair\": \"Unknown\", \"signalLastHeartbeat\": \"1970-01-01T00:00:00Z\"}",
+    "stateSince" : "2026-09-04T22:05:00Z",
+    "sceneSince" : "1970-01-01T00:00:00Z",
+    "signalLost" : false,
+    "monitorId" : "m1"
   }, {
-    "eventType" : "TransitionDetected",
-    "at" : "2026-09-04T22:05:00Z",
-    "bed" : "bed-4",
-    "residentId" : ""
-  }, {
-    "eventType" : "ComeBackExceeded",
+    "eventType" : "STATE_CHANGED",
     "at" : "2026-09-04T22:18:00Z",
     "bed" : "bed-4",
-    "residentId" : ""
+    "residentId" : "jose",
+    "twinSnapshot" : "{\"scene\": 1023, \"state\": \"SittingInBed\", \"monitor\": \"m1\", \"sceneSince\": \"1970-01-01T00:00:00Z\", \"sceneStaff\": \"Unknown\", \"signalLost\": false, \"stateSince\": \"2026-09-04T22:05:00Z\", \"sceneWalker\": \"Unknown\", \"sceneBedLeft\": \"Unknown\", \"sceneBedRight\": \"Unknown\", \"sceneWheelchair\": \"Unknown\", \"signalLastHeartbeat\": \"1970-01-01T00:00:00Z\"}",
+    "stateSince" : "2026-09-04T22:05:00Z",
+    "sceneSince" : "1970-01-01T00:00:00Z",
+    "signalLost" : false,
+    "monitorId" : "m1"
   }, {
-    "eventType" : "SignalLost",
+    "eventType" : "STATE_CHANGED",
     "at" : "2026-09-04T22:18:00Z",
     "bed" : "bed-4",
-    "residentId" : ""
+    "residentId" : "jose",
+    "twinSnapshot" : "{\"scene\": 1023, \"state\": \"SittingInBed\", \"monitor\": \"m1\", \"sceneSince\": \"1970-01-01T00:00:00Z\", \"sceneStaff\": \"Unknown\", \"signalLost\": false, \"stateSince\": \"2026-09-04T22:05:00Z\", \"sceneWalker\": \"Unknown\", \"sceneBedLeft\": \"Unknown\", \"sceneBedRight\": \"Unknown\", \"sceneWheelchair\": \"Unknown\", \"signalLastHeartbeat\": \"1970-01-01T00:00:00Z\"}",
+    "stateSince" : "2026-09-04T22:05:00Z",
+    "sceneSince" : "1970-01-01T00:00:00Z",
+    "signalLost" : false,
+    "monitorId" : "m1"
   }, {
-    "eventType" : "ComeBackWarning",
+    "eventType" : "STATE_CHANGED",
+    "at" : "2026-09-04T22:18:00Z",
+    "bed" : "bed-4",
+    "residentId" : "jose",
+    "twinSnapshot" : "{\"scene\": 1021, \"state\": \"SittingInBed\", \"monitor\": \"m1\", \"sceneSince\": \"2026-09-04T22:18:00Z\", \"sceneStaff\": \"Present\", \"signalLost\": false, \"stateSince\": \"2026-09-04T22:05:00Z\", \"sceneWalker\": \"Unknown\", \"sceneBedLeft\": \"Unknown\", \"sceneBedRight\": \"Unknown\", \"sceneWheelchair\": \"Unknown\", \"signalLastHeartbeat\": \"1970-01-01T00:00:00Z\"}",
+    "stateSince" : "2026-09-04T22:05:00Z",
+    "sceneSince" : "2026-09-04T22:18:00Z",
+    "signalLost" : false,
+    "monitorId" : "m1"
+  }, {
+    "eventType" : "STATE_CHANGED",
     "at" : "2026-09-04T22:20:00Z",
     "bed" : "bed-4",
-    "residentId" : ""
-  }, {
-    "eventType" : "TransitionDetected",
-    "at" : "2026-09-04T22:20:00Z",
-    "bed" : "bed-4",
-    "residentId" : ""
-  }, {
-    "eventType" : "StaffPresenceDetected",
-    "at" : "2026-09-04T22:18:00Z",
-    "bed" : "bed-4",
-    "residentId" : ""
-  }, {
-    "eventType" : "SignalRecovered",
-    "at" : "2026-09-04T22:00:00Z",
-    "bed" : "bed-4",
-    "residentId" : ""
-  }, {
-    "eventType" : "TransitionDetected",
-    "at" : "2026-09-04T22:00:00Z",
-    "bed" : "bed-4",
-    "residentId" : ""
-  }, {
-    "eventType" : "SignalLost",
-    "at" : "2026-09-04T22:05:00Z",
-    "bed" : "bed-4",
-    "residentId" : ""
-  }, {
-    "eventType" : "TransitionDetected",
-    "at" : "2026-09-04T22:05:00Z",
-    "bed" : "bed-4",
-    "residentId" : ""
-  }, {
-    "eventType" : "ComeBackExceeded",
-    "at" : "2026-09-04T22:18:00Z",
-    "bed" : "bed-4",
-    "residentId" : ""
-  }, {
-    "eventType" : "SignalLost",
-    "at" : "2026-09-04T22:18:00Z",
-    "bed" : "bed-4",
-    "residentId" : ""
-  }, {
-    "eventType" : "StaffPresenceDetected",
-    "at" : "2026-09-04T22:18:00Z",
-    "bed" : "bed-4",
-    "residentId" : ""
-  }, {
-    "eventType" : "ComeBackWarning",
-    "at" : "2026-09-04T22:20:00Z",
-    "bed" : "bed-4",
-    "residentId" : ""
-  }, {
-    "eventType" : "TransitionDetected",
-    "at" : "2026-09-04T22:20:00Z",
-    "bed" : "bed-4",
-    "residentId" : ""
-  }, {
-    "eventType" : "TransitionDetected",
-    "at" : "2026-09-04T22:00:00Z",
-    "bed" : "bed-4",
-    "residentId" : ""
-  }, {
-    "eventType" : "TransitionDetected",
-    "at" : "2026-09-04T22:05:00Z",
-    "bed" : "bed-4",
-    "residentId" : ""
-  }, {
-    "eventType" : "StaffPresenceDetected",
-    "at" : "2026-09-04T22:18:00Z",
-    "bed" : "bed-4",
-    "residentId" : ""
-  }, {
-    "eventType" : "SignalLost",
-    "at" : "2026-09-04T22:05:00Z",
-    "bed" : "bed-4",
-    "residentId" : ""
-  }, {
-    "eventType" : "ComeBackExceeded",
-    "at" : "2026-09-04T22:18:00Z",
-    "bed" : "bed-4",
-    "residentId" : ""
-  }, {
-    "eventType" : "SignalLost",
-    "at" : "2026-09-04T22:18:00Z",
-    "bed" : "bed-4",
-    "residentId" : ""
-  }, {
-    "eventType" : "ComeBackWarning",
-    "at" : "2026-09-04T22:20:00Z",
-    "bed" : "bed-4",
-    "residentId" : ""
-  }, {
-    "eventType" : "TransitionDetected",
-    "at" : "2026-09-04T22:20:00Z",
-    "bed" : "bed-4",
-    "residentId" : ""
-  }, {
-    "eventType" : "SignalLost",
-    "at" : "2026-09-04T22:00:00Z",
-    "bed" : "bed-4",
-    "residentId" : ""
-  }, {
-    "eventType" : "TransitionDetected",
-    "at" : "2026-09-04T22:05:00Z",
-    "bed" : "bed-4",
-    "residentId" : ""
-  }, {
-    "eventType" : "ComeBackExceeded",
-    "at" : "2026-09-04T22:18:00Z",
-    "bed" : "bed-4",
-    "residentId" : ""
-  }, {
-    "eventType" : "SignalLost",
-    "at" : "2026-09-04T22:18:00Z",
-    "bed" : "bed-4",
-    "residentId" : ""
-  }, {
-    "eventType" : "ComeBackWarning",
-    "at" : "2026-09-04T22:18:00Z",
-    "bed" : "bed-4",
-    "residentId" : ""
-  }, {
-    "eventType" : "StaffPresenceDetected",
-    "at" : "2026-09-04T22:18:00Z",
-    "bed" : "bed-4",
-    "residentId" : ""
-  }, {
-    "eventType" : "TransitionDetected",
-    "at" : "2026-09-04T22:20:00Z",
-    "bed" : "bed-4",
-    "residentId" : ""
-  }, {
-    "eventType" : "SignalLost",
-    "at" : "2026-09-04T22:00:00Z",
-    "bed" : "bed-4",
-    "residentId" : ""
-  }, {
-    "eventType" : "TransitionDetected",
-    "at" : "2026-09-04T22:05:00Z",
-    "bed" : "bed-4",
-    "residentId" : ""
-  }, {
-    "eventType" : "ComeBackExceeded",
-    "at" : "2026-09-04T22:18:00Z",
-    "bed" : "bed-4",
-    "residentId" : ""
-  }, {
-    "eventType" : "StaffPresenceDetected",
-    "at" : "2026-09-04T22:18:00Z",
-    "bed" : "bed-4",
-    "residentId" : ""
-  }, {
-    "eventType" : "ComeBackWarning",
-    "at" : "2026-09-04T22:20:00Z",
-    "bed" : "bed-4",
-    "residentId" : ""
-  }, {
-    "eventType" : "SignalLost",
-    "at" : "2026-09-04T22:00:00Z",
-    "bed" : "bed-4",
-    "residentId" : ""
-  }, {
-    "eventType" : "SignalLost",
-    "at" : "2026-09-04T22:18:00Z",
-    "bed" : "bed-4",
-    "residentId" : ""
-  }, {
-    "eventType" : "TransitionDetected",
-    "at" : "2026-09-04T22:20:00Z",
-    "bed" : "bed-4",
-    "residentId" : ""
+    "residentId" : "jose",
+    "from" : "UNKNOWN",
+    "to" : "UNKNOWN",
+    "twinSnapshot" : "{\"scene\": 1021, \"state\": \"Lying\", \"monitor\": \"m1\", \"sceneSince\": \"2026-09-04T22:18:00Z\", \"sceneStaff\": \"Present\", \"signalLost\": false, \"stateSince\": \"2026-09-04T22:20:00Z\", \"sceneWalker\": \"Unknown\", \"sceneBedLeft\": \"Unknown\", \"sceneBedRight\": \"Unknown\", \"sceneWheelchair\": \"Unknown\", \"signalLastHeartbeat\": \"1970-01-01T00:00:00Z\"}",
+    "stateSince" : "2026-09-04T22:20:00Z",
+    "sceneSince" : "2026-09-04T22:18:00Z",
+    "signalLost" : false,
+    "monitorId" : "m1"
   } ],
   "signals" : [ {
-    "raw" : "{\"timestamp\":\"2026-08-31T01:38:08.122Z\",\"status\":404,\"error\":\"Not Found\",\"path\":\"/api/v1/admin/signals\"}"
+    "type" : "NO_MOVEMENT",
+    "at" : "2026-09-04T22:05:00Z",
+    "bed" : "bed-4",
+    "residentId" : "jose",
+    "episodeId" : "bed-4-39d5c472-d9f8-4ccc-8a83-954c5b669046",
+    "severity" : "WARNING",
+    "trigger" : "SITTING_IN_BED",
+    "ruleId" : "alert-sitting_in_bed",
+    "rulesFingerprint" : "alert-sitting_in_bed,alert-standing,comeback-lying",
+    "reversible" : true,
+    "requiresNvr" : false,
+    "confirmationWindow" : "PT1M"
+  }, {
+    "type" : "NO_MOVEMENT",
+    "at" : "2026-09-04T22:18:00Z",
+    "bed" : "bed-4",
+    "residentId" : "jose",
+    "episodeId" : "bed-4-39d5c472-d9f8-4ccc-8a83-954c5b669046",
+    "severity" : "WARNING",
+    "trigger" : "LYING",
+    "triggerOn" : "COME_BACK",
+    "state" : "LYING",
+    "rulesFingerprint" : "alert-sitting_in_bed,alert-standing,comeback-lying",
+    "originalSeverity" : "WARNING"
+  }, {
+    "type" : "NO_MOVEMENT",
+    "at" : "2026-09-04T22:18:00Z",
+    "bed" : "bed-4",
+    "residentId" : "jose",
+    "episodeId" : "unknown",
+    "trigger" : "LYING",
+    "baseline" : "LYING",
+    "rulesFingerprint" : "alert-sitting_in_bed,alert-standing,comeback-lying",
+    "elapsed" : "PT13M",
+    "threshold" : "PT5M"
+  }, {
+    "type" : "NO_MOVEMENT",
+    "at" : "2026-09-04T22:20:00Z",
+    "bed" : "bed-4",
+    "residentId" : "jose",
+    "episodeId" : "bed-4-39d5c472-d9f8-4ccc-8a83-954c5b669046",
+    "cause" : "AUTO_RECOVERY",
+    "rulesFingerprint" : "alert-sitting_in_bed,alert-standing,comeback-lying"
   } ],
   "expect" : {
     "episodes" : [ {
-      "status" : "resolved",
+      "status" : "RESOLVED",
       "severity" : "WARNING",
       "count" : 1
     } ],

@@ -164,43 +164,16 @@ class ResidentRuntime(
             result.value.commands.forEach { commands += NoticeFor(signal, it) }
         }
 
-        // Stage 4: Recorder
-        val recorderCommands = mutableListOf<RecordingCommand>()
-        val evidenceRecords = mutableListOf<com.manahive.recorder.EvidenceRecord>()
-
-        // Sweep signals (e.g. EpisodeOpened from dwell/comeback)
-        for (signal in sweepSignals) {
-            val trigger = SentinelSignalTrigger(signal, bed, signal.at)
-            val result = recorderEngine.evaluate(trigger, recordingLedger, signal.at)
-            recordingLedger = result.value.ledger
-            recorderCommands.addAll(result.value.commands)
-            evidenceRecords.addAll(result.value.evidenceRecords)
-        }
-
-        // Scene events
-        for (fact in sceneFacts) {
-            val trigger = SceneEventTrigger(fact, bed, fact.at)
-            val result = recorderEngine.evaluate(trigger, recordingLedger, fact.at)
-            recordingLedger = result.value.ledger
-            recorderCommands.addAll(result.value.commands)
-            evidenceRecords.addAll(result.value.evidenceRecords)
-        }
-
-        // Observation signals (e.g. EpisodeClosed from auto-recovery)
-        for (signal in signals) {
-            val trigger = SentinelSignalTrigger(signal, bed, signal.at)
-            val result = recorderEngine.evaluate(trigger, recordingLedger, signal.at)
-            recordingLedger = result.value.ledger
-            recorderCommands.addAll(result.value.commands)
-            evidenceRecords.addAll(result.value.evidenceRecords)
-        }
+        // Stage 4: Recorder. Sweep, scene and observation signals all use the
+        // same path so tick-generated episodes cannot skip video evidence.
+        val recorded = recordOutputs(sweepSignals, sweep.value.facts + sceneFacts, signals)
 
         return Outbound(
             sceneFacts = sweep.value.facts + sceneFacts,
             signals = sweepSignals + signals,
             harborCommands = sweepCommands + commands,
-            recorderCommands = recorderCommands,
-            evidenceRecords = evidenceRecords,
+            recorderCommands = recorded.first,
+            evidenceRecords = recorded.second,
         )
     }
 
@@ -234,7 +207,41 @@ class ResidentRuntime(
             eval.value.commands.forEach { commands += NoticeFor(signal, it) }
         }
 
-        return Outbound(sceneFacts, signals, commands, emptyList(), emptyList())
+        val recorded = recordOutputs(emptyList(), sceneFacts, signals)
+        return Outbound(sceneFacts, signals, commands, recorded.first, recorded.second)
+    }
+
+    private fun recordOutputs(
+        preSignals: List<SentinelSignal>,
+        sceneFacts: List<SceneEvent>,
+        postSignals: List<SentinelSignal>,
+    ): Pair<List<RecordingCommand>, List<com.manahive.recorder.EvidenceRecord>> {
+        val recorderCommands = mutableListOf<RecordingCommand>()
+        val evidenceRecords = mutableListOf<com.manahive.recorder.EvidenceRecord>()
+
+        fun record(signal: SentinelSignal) {
+            val result = recorderEngine.evaluate(
+                SentinelSignalTrigger(signal, bed, signal.at),
+                recordingLedger,
+                signal.at,
+            )
+            recordingLedger = result.value.ledger
+            recorderCommands.addAll(result.value.commands)
+            evidenceRecords.addAll(result.value.evidenceRecords)
+        }
+        preSignals.forEach(::record)
+        for (fact in sceneFacts) {
+            val result = recorderEngine.evaluate(
+                SceneEventTrigger(fact, bed, fact.at),
+                recordingLedger,
+                fact.at,
+            )
+            recordingLedger = result.value.ledger
+            recorderCommands.addAll(result.value.commands)
+            evidenceRecords.addAll(result.value.evidenceRecords)
+        }
+        postSignals.forEach(::record)
+        return recorderCommands to evidenceRecords
     }
 
     /**

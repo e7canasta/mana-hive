@@ -12,7 +12,6 @@ fun BddContext.obs(kind: ObservationKind, at: String, confidence: Double): Obser
     val instant = timeParser(at)
     return ObservedAt(
         com.manahive.contracts.perception.Observation(
-            sourceEventId = "pattern-${instant.toEpochMilli()}",
             monitor = monitor,
             bed = bed,
             kind = kind,
